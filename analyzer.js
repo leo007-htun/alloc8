@@ -377,7 +377,7 @@ async function performAnalysis(job) {
   saveAnalysis(saveData);
   
   // Also update partner_wp_skills for work_package analyses (so dashboard shows the scores)
-  if (analysisType === 'work_package' && wpId && analysisData.overall_score) {
+  if (analysisType === 'work_package' && wpId && analysisData.overall_score !== undefined) {
     try {
       const rationale = analysisData.rationale || analysisData.recommendation || '';
       db.prepare(`
