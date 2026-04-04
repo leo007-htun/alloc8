@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partner Dashboard - Alloc8</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #1f4e79;
+      --accent: #2e75b6;
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --border: #d0d7de;
+      --text: #24292f;
+      --muted: #57606a;
+      --danger: #cf222e;
+      --success: #1a7f37;
+      --wp-bg: #eef4fa;
+      --highlight-bg: #f0f9f4;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      background: linear-gradient(90deg, var(--primary), var(--accent)); color: #fff;
+      padding: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+    }
+    header h1 { margin: 0; font-size: 1.2rem; }
+    .btn {
+      border: none; padding: .5rem .8rem; border-radius: 6px; cursor: pointer; font-size: .9rem; font-weight: 600;
+    }
+    .btn-danger { background: #fff; color: var(--danger); }
+    .btn-primary { background: #fff; color: var(--primary); }
+    .btn-success { background: var(--success); color: #fff; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+    .card h2 { margin: 0 0 .8rem; font-size: 1.1rem; color: var(--primary); }
+    .hint { font-size: .85rem; color: var(--muted); margin-bottom: .8rem; line-height: 1.4; }
+
+    /* Legend */
+    .legend {
+      display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: .6rem;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: .4rem; font-size: .85rem; color: var(--muted);
+    }
+    .legend-box {
+      width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); background: #fff;
+    }
+    .legend-box.assigned { border-color: var(--success); background: var(--highlight-bg); }
+
+    /* WP Block */
+    .wp-block {
+      background: var(--wp-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .9rem 1rem;
+      margin-bottom: .8rem;
+    }
+    .wp-block.assigned {
+      border-color: var(--success);
+      background: var(--highlight-bg);
+    }
+    .wp-header {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: .95rem;
+      margin-bottom: .6rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid #d0e0ed;
+    }
+
+    /* Flowchart */
+    .flowchart {
+      display: flex; flex-direction: column; align-items: center; gap: .4rem; margin-bottom: .6rem;
+    }
+    .fc-wp-box {
+      background: var(--primary); color: #fff; padding: .5rem 1rem; border-radius: 8px;
+      font-weight: 600; font-size: .85rem; text-align: center;
+    }
+    .fc-line { width: 2px; height: 18px; background: #b0c4de; }
+    .fc-tasks {
+      display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; width: 100%;
+    }
+    .fc-task {
+      background: #fff; border: 1px solid var(--border); border-radius: 6px;
+      padding: .4rem .7rem; text-align: center; min-width: 140px; max-width: 260px;
+    }
+    .fc-task.assigned { border-color: var(--success); background: var(--highlight-bg); }
+    .fc-task .t-name { font-size: .78rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .fc-task .t-lead { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
+
+    /* Consortium / Skill Pool Cards */
+    .consortium-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+    .consortium-item {
+      background: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .8rem .6rem;
+      display: flex; flex-direction: column; gap: .4rem;
+    }
+    .consortium-item img {
+      width: 80px; height: 80px; object-fit: contain;
+      border-radius: 6px; background: #fff; margin: 0 auto;
+    }
+    .consortium-item .placeholder {
+      width: 80px; height: 80px; border: 1px dashed var(--border); border-radius: 6px;
+      display: grid; place-items: center; color: var(--muted); font-size: .7rem; margin: 0 auto;
+      background: #fff;
+    }
+    .consortium-item .name {
+      font-size: .9rem; font-weight: 600; color: var(--text);
+      word-break: break-word; text-align: center;
+    }
+    .consortium-item .self-badge {
+      display: inline-block; background: var(--success); color: #fff; font-size: .65rem;
+      padding: .15rem .4rem; border-radius: 4px; margin: 0 auto;
+    }
+    .consortium-item .contact {
+      font-size: .78rem; color: var(--muted); text-align: center; line-height: 1.3;
+    }
+    .consortium-item .skill-avg {
+      font-size: .85rem; color: var(--text); text-align: center; margin-top: .2rem;
+    }
+    .consortium-item .skill-avg strong { color: var(--primary); font-size: 1rem; }
+    .consortium-item .chart-wrap {
+      height: 220px; margin-top: .3rem;
+    }
+    .consortium-item .no-skills {
+      text-align: center; font-size: .8rem; color: var(--muted); padding: 1rem 0; margin-top: .3rem;
+      background: #f6f8fa; border-radius: 6px;
+    }
+
+    @media (max-width: 600px) {
+      .fc-task { min-width: 110px; max-width: 100%; }
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(31, 78, 121, 0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .loading-subtext {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      max-width: 400px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .loading-progress {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Analyzing Skills...</div>
+    <div class="loading-subtext" id="loadingSubtext">
+      AI is analyzing partner capabilities against Work Packages and Tasks.<br>
+      This may take a few minutes. Please do not close the browser.
+    </div>
+    <div class="loading-progress" id="loadingProgress"></div>
+  </div>
+
+  <header>
+    <h1 id="pageTitle">Alloc8 Partner Dashboard</h1>
+    <div style="display:flex;gap:.5rem;">
+      <button class="btn btn-primary" onclick="location.href='partner.html'">Edit Info & Budget</button>
+      <button class="btn btn-danger" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Work Package & Task Assignments</h2>
+      <div class="hint">This page shows the complete Alloc8 workflow. Green borders highlight the Work Packages and tasks assigned to your organisation.</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-box assigned"></div> Assigned to you</div>
+        <div class="legend-item"><div class="legend-box"></div> Assigned to another partner</div>
+      </div>
+      <div id="wpContainer"></div>
+      <div class="hint" id="noAssignments" style="display:none; text-align:center; padding:1rem;">
+        You currently have no assigned Work Packages or tasks. Please contact the project administrator.
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
+        <h2 style="margin:0;">Consortium Partners & Skill Pools</h2>
+        <button class="btn btn-primary" id="refreshSkillsBtn" title="Refresh skill analysis data">Refresh</button>
+      </div>
+      <div class="hint">All organisations in the Alloc8 consortium with contact details and AI-analysed skill relevance for each sub-task (1.0 – 5.0).</div>
+      <div class="consortium-grid" id="consortiumGrid"></div>
+    </div>
+  </div>
+
+  <script>
+    let partner = null;
+    let wps = [];
+    let analysisCheckInterval = null;
+
+    // Loading Overlay Functions
+    function showLoading(text = 'Analyzing Skills...', subtext = null) {
+      document.getElementById('loadingText').textContent = text;
+      if (subtext) {
+        document.getElementById('loadingSubtext').innerHTML = subtext;
+      }
+      document.getElementById('loadingOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function updateLoadingProgress(message) {
+      document.getElementById('loadingProgress').textContent = message;
+    }
+
+    // Check if analysis is in progress for current partner
+    async function isAnalysisInProgress() {
+      try {
+        const res = await fetch('/api/partner/analysis-status');
+        if (!res.ok) return false;
+        const data = await res.json();
+        return data.analyzing === true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Poll for analysis completion
+    function startAnalysisPolling() {
+      showLoading(
+        'Analyzing Skills...',
+        'AI is analyzing your organization\'s capabilities against Work Packages and Tasks.<br>This may take 2-5 minutes. Please do not close the browser.'
+      );
+      
+      let dots = 0;
+      const progressInterval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        updateLoadingProgress('Processing' + '.'.repeat(dots));
+      }, 500);
+
+      analysisCheckInterval = setInterval(async () => {
+        const stillAnalyzing = await isAnalysisInProgress();
+        if (!stillAnalyzing) {
+          clearInterval(analysisCheckInterval);
+          clearInterval(progressInterval);
+          hideLoading();
+          await loadSkills(); // Reload with new data
+        }
+      }, 3000); // Check every 3 seconds
+    }
+
+    async function load() {
+      const res = await fetch('/api/partner/overview');
+      if (!res.ok) return window.location.href = '/login.html';
+      const data = await res.json();
+      partner = data.partner;
+      wps = data.wps;
+      document.getElementById('pageTitle').textContent = partner.name + ' — Alloc8 Dashboard';
+      renderWPs();
+      
+      // Check if analysis is in progress before loading skills
+      const analyzing = await isAnalysisInProgress();
+      if (analyzing) {
+        startAnalysisPolling();
+      }
+      await loadSkills();
+    }
+
+    async function loadSkills() {
+      const res = await fetch('/api/partner/skills');
+      if (!res.ok) return;
+      const list = await res.json();
+      const grid = document.getElementById('consortiumGrid');
+      grid.innerHTML = list.map(p => {
+        const isSelf = partner && p.id === partner.id;
+        const img = p.logo_path
+          ? `<img src="${p.logo_path}?t=${Date.now()}" alt="${p.name}" />`
+          : `<div class="placeholder">No logo</div>`;
+        const contactParts = [
+          p.contact_name,
+          p.contact_position,
+          p.contact_email,
+          p.contact_phone
+        ].filter(Boolean);
+        const contactHtml = contactParts.length
+          ? `<div class="contact">${contactParts.join('<br>')}</div>`
+          : `<div class="contact">No contact details</div>`;
+        const hasSkills = p.skills && p.skills.length > 0;
+        const avgScore = hasSkills
+          ? (p.skills.reduce((a, s) => a + s.score, 0) / p.skills.length).toFixed(1)
+          : '0.0';
+        const scoreHtml = `<div class="skill-avg">Avg Skill Score: <strong>${avgScore}</strong> / 5.0</div>`;
+        const chartHtml = hasSkills
+          ? `<div class="chart-wrap"><canvas id="skillChart-${p.id}"></canvas></div>`
+          : `<div class="no-skills">No skill analysis yet.<br>Add URLs and save to generate.</div>`;
+        return `
+          <div class="consortium-item">
+            ${img}
+            <div class="name">${p.name}</div>
+            ${isSelf ? '<div class="self-badge">YOU</div>' : ''}
+            ${contactHtml}
+            ${scoreHtml}
+            ${chartHtml}
+          </div>
+        `;
+      }).join('');
+
+      // Initialize radar charts after DOM insertion
+      list.forEach(p => {
+        if (!p.skills || p.skills.length === 0) return;
+        const ctx = document.getElementById(`skillChart-${p.id}`);
+        if (!ctx) return;
+        const skillMap = {};
+        p.skills.forEach(s => skillMap[s.wp_id] = s.score);
+        const wpLabels = [];
+        const wpData = [];
+        wps.forEach(wp => {
+          wpLabels.push(wp.name.split('–')[0].trim());
+          wpData.push(skillMap[wp.id] !== undefined ? skillMap[wp.id] : 0);
+        });
+        new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: wpLabels,
+            datasets: [{
+              label: 'Skill Relevance',
+              data: wpData,
+              backgroundColor: 'rgba(46, 117, 182, 0.35)',
+              borderColor: 'rgba(46, 117, 182, 1)',
+              pointBackgroundColor: 'rgba(46, 117, 182, 1)',
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              borderWidth: 2,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                suggestedMin: 0,
+                suggestedMax: 5,
+                ticks: { display: false },
+                angleLines: { color: 'rgba(0,0,0,0.1)' },
+                grid: { color: 'rgba(0,0,0,0.1)' },
+                pointLabels: { font: { size: 11 }, color: '#57606a' }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: ${Number(ctx.raw).toFixed(1)}`
+                }
+              }
+            }
+          }
+        });
+      });
+    }
+
+    function renderWPs() {
+      const container = document.getElementById('wpContainer');
+      const hasAnyAssignment = wps.some(wp =>
+        wp.assigned_partner_ids.includes(partner.id) || wp.tasks.some(t => t.assigned_partner_ids.includes(partner.id))
+      );
+      document.getElementById('noAssignments').style.display = hasAnyAssignment ? 'none' : 'block';
+
+      container.innerHTML = wps.map(wp => {
+        const isWpAssigned = wp.assigned_partner_ids.includes(partner.id);
+        return `
+          <div class="wp-block ${isWpAssigned ? 'assigned' : ''}">
+            <div class="wp-header">${wp.name}</div>
+            <div class="flowchart">
+              <div class="fc-wp-box">${wp.assigned_names.join(', ') || '—'}</div>
+              <div class="fc-line"></div>
+              <div class="fc-tasks">
+                ${wp.tasks.map(t => {
+                  const isTaskAssigned = t.assigned_partner_ids.includes(partner.id);
+                  return `
+                    <div class="fc-task ${isTaskAssigned ? 'assigned' : ''}">
+                      <div class="t-name">${t.name}</div>
+                      <div class="t-lead">${t.assigned_names.join(', ') || '—'}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+    
+    document.getElementById('refreshSkillsBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('refreshSkillsBtn');
+      btn.textContent = '⏳ Loading...';
+      btn.disabled = true;
+      await load();
+      btn.textContent = 'Refresh';
+      btn.disabled = false;
+    });
+
+    load();
+
+    // Auto-refresh only every 60 seconds (not 5 seconds) to prevent UI flickering
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        load();
+      }
+    }, 60000);
+    
+    // Refresh when user returns to tab
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) load();
+    });
+  </script>
+</body>
+</html>

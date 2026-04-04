@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: alloc8-budget-calculator
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persist SQLite database
+      - ./data:/app/data
+      # Persist uploads
+      - ./uploads:/app/public/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_PATH=/app/data/data.sqlite
+      # Email configuration (optional - can be set in .env)
+      - RESEND_API_KEY=${RESEND_API_KEY:-re_GKPT2uXk_3nyTBW298JjSykpTUB5g6b3b}
+      - FROM_EMAIL=${FROM_EMAIL:-noreply@alloc8.org}
+      # Bytez AI API (optional)
+      - BYTEZ_API_KEY=${BYTEZ_API_KEY:-c83895ef7c4ccca7c35e864c70115b8d}
+      # Session secret (generate a random string for production)
+      - SESSION_SECRET=${SESSION_SECRET:-alloc8-default-secret-change-in-production}
+    restart: unless-stopped

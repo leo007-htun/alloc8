@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Alloc8</title>
+  <style>
+    :root {
+      --primary: #1f4e79;
+      --accent: #2e75b6;
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --border: #d0d7de;
+      --text: #24292f;
+      --muted: #57606a;
+      --danger: #cf222e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    }
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2rem; width: 100%; max-width: 400px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    }
+    h1 { margin: 0 0 1.5rem; font-size: 1.4rem; color: var(--primary); text-align: center; }
+    label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: .3rem; }
+    input {
+      width: 100%; padding: .6rem .8rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 1rem; margin-bottom: 1rem;
+    }
+    button {
+      width: 100%; padding: .7rem; border: none; border-radius: 8px;
+      background: var(--primary); color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+    button:hover { background: var(--accent); }
+    .error { color: var(--danger); font-size: .9rem; margin-top: .8rem; text-align: center; display: none; }
+    .hint { font-size: .8rem; color: var(--muted); text-align: center; margin-top: 1.2rem; }
+    .signup-section {
+      text-align: center;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .signup-section p {
+      margin: 0 0 .5rem;
+      font-size: .9rem;
+      color: var(--muted);
+    }
+    .btn-secondary {
+      background: #fff;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    .btn-secondary:hover {
+      background: var(--bg);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Alloc8</h1>
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" required autocomplete="username" />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required autocomplete="current-password" />
+      <button type="submit">Log in</button>
+      <div class="error" id="errorMsg">Invalid credentials</div>
+    </form>
+    <div class="hint">Default admin: <strong>admin / admin</strong><br>Default partner username is partner name lowercase without spaces.</div>
+    <div class="signup-section">
+      <p>Don't have an account?</p>
+      <button class="btn btn-secondary" onclick="window.location.href='/signup.html'">Create New Project</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        window.location.href = data.role === 'admin' ? '/admin.html' : '/partner-main.html';
+      } else {
+        document.getElementById('errorMsg').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

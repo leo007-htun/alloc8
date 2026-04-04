@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Alloc8</title>
+  <style>
+    :root {
+      --primary: #1f4e79;
+      --accent: #2e75b6;
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --border: #d0d7de;
+      --text: #24292f;
+      --muted: #57606a;
+      --danger: #cf222e;
+      --success: #1a7f37;
+      --row-alt: #f6f8fa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      background: linear-gradient(90deg, var(--primary), var(--accent)); color: #fff;
+      padding: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+    }
+    header h1 { margin: 0; font-size: 1.2rem; }
+    .btn {
+      border: none; padding: .5rem .8rem; border-radius: 6px; cursor: pointer; font-size: .9rem; font-weight: 600;
+    }
+    .btn-sm { padding: .35rem .55rem; font-size: .8rem; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+    .card h2 { margin: 0 0 .8rem; font-size: 1.1rem; color: var(--primary); }
+    .toolbar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-bottom: .8rem; }
+    label { font-size: .8rem; color: var(--muted); display: flex; flex-direction: column; gap: .2rem; }
+    input, select {
+      padding: .45rem .55rem; border: 1px solid var(--border); border-radius: 6px; font-size: .95rem;
+    }
+    .wp-block { border: 1px solid var(--border); border-radius: 8px; padding: .8rem; margin-bottom: .6rem; background: #fafbfc; }
+    .wp-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; flex-wrap: wrap; }
+    .wp-header input { font-weight: 700; color: var(--primary); border: none; background: transparent; font-size: 1rem; flex: 1 1 200px; }
+    .wp-header label { font-size: .78rem; color: var(--muted); }
+    .wp-header select { font-size: .85rem; padding: .25rem .4rem; }
+    .task-list { display: flex; flex-wrap: wrap; gap: .4rem; align-items: flex-start; padding-left: .5rem; }
+    .task-chip {
+      display: inline-flex; flex-direction: column; gap: .2rem;
+      background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: .35rem .45rem; min-width: 220px;
+    }
+    .task-chip input { border: none; background: transparent; width: 100%; font-size: .85rem; }
+    .task-chip select { font-size: .8rem; padding: .2rem .35rem; }
+
+    /* Checkbox dropdown */
+    .chk-dropdown { position: relative; display: inline-block; font-size: .85rem; }
+    .chk-dropdown-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: .35rem .6rem;
+      cursor: pointer; min-width: 140px; text-align: left;
+    }
+    .chk-dropdown-menu {
+      position: absolute; top: 100%; left: 0; z-index: 50;
+      background: #fff; border: 1px solid var(--border); border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.12); min-width: 180px; max-width: 260px;
+      max-height: 220px; overflow-y: auto; display: none; padding: .3rem 0;
+    }
+    .chk-dropdown.open .chk-dropdown-menu { display: block; }
+    .chk-dropdown-item {
+      display: flex; align-items: center; gap: .4rem; padding: .35rem .6rem; cursor: pointer;
+      white-space: nowrap;
+    }
+    .chk-dropdown-item:hover { background: #f0f4f8; }
+    .chk-dropdown-item input { margin: 0; flex-shrink: 0; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th, td { border: 1px solid var(--border); padding: .45rem .55rem; text-align: left; white-space: nowrap; }
+    th { background: #e8ecf1; }
+    tr:nth-child(even) { background: var(--row-alt); }
+    .actions { display: flex; gap: .3rem; }
+
+    .table-wrap { overflow-x: auto; }
+    .totals-row td { background: #dbe4ee; font-weight: 700; }
+
+    .section-title { font-size: 1rem; color: var(--primary); margin: 1.2rem 0 .5rem; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: none; align-items: center; justify-content: center; z-index: 100;
+      padding: 1rem;
+    }
+    .modal { background: var(--panel); border-radius: 10px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 1.5rem; }
+    .modal h3 { margin-top: 0; color: var(--primary); }
+    .modal .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+    .modal .task-col { display: flex; flex-direction: column; gap: .4rem; max-height: 50vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: .5rem; }
+    .modal .task-row { display: grid; grid-template-columns: 1fr 90px; gap: .4rem; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }
+    @media (max-width: 600px) {
+      .modal .grid2 { grid-template-columns: 1fr; }
+    }
+
+    .grand-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; }
+    .gt-box { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: .7rem; text-align: center; }
+    .gt-box .label { font-size: .8rem; color: var(--muted); }
+    .gt-box .value { font-size: 1.1rem; font-weight: 700; margin-top: .2rem; font-family: SFMono-Regular, Consolas, monospace; }
+
+    .logo-thumb { width: 40px; height: 40px; object-fit: contain; border: 1px solid var(--border); border-radius: 4px; background: #fff; }
+    .logo-preview { width: 100px; height: 100px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px; background: #fff; padding: .3rem; margin-bottom: .6rem; }
+    .logo-empty { width: 100px; height: 100px; border: 2px dashed var(--border); border-radius: 6px; display: grid; place-items: center; color: var(--muted); font-size: .8rem; margin-bottom: .6rem; }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(31, 78, 121, 0.9);
+      backdrop-filter: blur(4px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .loading-subtext {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      max-width: 400px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .loading-progress {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Processing...</div>
+    <div class="loading-subtext" id="loadingSubtext">
+      Please wait while the operation completes.<br>
+      This may take a few minutes.
+    </div>
+    <div class="loading-progress" id="loadingProgress"></div>
+  </div>
+
+  <header>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <h1 style="margin:0;">Alloc8</h1>
+      <div id="tenantSelector" style="display:none;align-items:center;gap:.5rem;">
+        <span style="color:rgba(255,255,255,.7);font-size:.9rem;">Project:</span>
+        <select id="tenantDropdown" class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:none;padding:.4rem .8rem;font-size:.9rem;cursor:pointer;">
+        </select>
+        <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;padding:.4rem .6rem;font-size:.8rem;" id="newProjectBtn">+ New</button>
+      </div>
+      <span id="currentProject" style="color:rgba(255,255,255,.9);font-size:.9rem;display:none;"></span>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center;">
+      <button class="btn btn-primary" id="addAdminBtn">+ Add Admin</button>
+      <button class="btn" style="background:#fff;color:var(--danger)" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Global Settings -->
+    <div class="card">
+      <h2>Global Settings</h2>
+      
+      <!-- Project Description -->
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;margin-bottom:.3rem;font-weight:600;">Project Description</label>
+        <textarea id="projectDescription" placeholder="Describe your project goals, objectives, and requirements. This helps AI analyze partner skills more accurately." 
+          style="width:100%;min-height:100px;padding:.5rem;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.9rem;resize:vertical;"></textarea>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem;">
+          This description will be used by the AI to better understand your project context when analyzing partner capabilities.
+        </div>
+      </div>
+      
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <label style="margin:0;">Indirect Cost (%)
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <input id="indirectCostPercent" type="number" min="0" max="100" step="1" placeholder="25" style="width:100px;" />
+            <span style="color:var(--muted);">%</span>
+          </div>
+        </label>
+        <label style="margin:0;">Project Duration (months)
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <input id="projectDurationMonths" type="number" min="1" max="120" step="1" placeholder="48" style="width:100px;" />
+            <span style="color:var(--muted);">months</span>
+          </div>
+        </label>
+        <button class="btn btn-success" id="saveSettingsBtn" style="margin-top:1.4rem;">Save Settings</button>
+        <span id="settingsSaved" style="color:var(--success);font-size:.9rem;display:none;margin-top:1.4rem;">Saved!</span>
+      </div>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:.5rem;">
+        <strong>Tip:</strong> Edit all values, then click "Save Settings" once to save everything together.
+      </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="card">
+      <h2>Analytics</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-top:1rem;">
+        <div>
+          <h3 style="font-size:.95rem;color:var(--primary);margin-bottom:.5rem;text-align:center;">Funding by Country</h3>
+          <canvas id="fundingByCountryChart" style="max-height:250px;"></canvas>
+        </div>
+        <div>
+          <h3 style="font-size:.95rem;color:var(--primary);margin-bottom:.5rem;text-align:center;">Person-Months by Country</h3>
+          <canvas id="pmByCountryChart" style="max-height:250px;"></canvas>
+        </div>
+        <div>
+          <h3 style="font-size:.95rem;color:var(--primary);margin-bottom:.5rem;text-align:center;">Funding by Organization Type</h3>
+          <canvas id="fundingByTypeChart" style="max-height:250px;"></canvas>
+        </div>
+        <div>
+          <h3 style="font-size:.95rem;color:var(--primary);margin-bottom:.5rem;text-align:center;">Person-Months by Organization Type</h3>
+          <canvas id="pmByTypeChart" style="max-height:250px;"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Members -->
+    <div class="card">
+      <h2>Admin Members</h2>
+      <div id="adminList" style="font-size:.9rem;">
+        <p style="color:var(--muted)">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Database Management (Primary Admin Only) -->
+    <div class="card" id="dbManagerCard" style="display:none;">
+      <h2>Database Management</h2>
+      <div style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">
+        Direct database access for primary admin. Use with caution.
+      </div>
+      <div class="toolbar" style="margin-bottom:.8rem;">
+        <button class="btn btn-primary" onclick="showTable('partners')">Partners</button>
+        <button class="btn btn-primary" onclick="showTable('wps')">Work Packages</button>
+        <button class="btn btn-primary" onclick="showTable('tasks')">Tasks</button>
+        <button class="btn btn-primary" onclick="showTable('users')">Users</button>
+        <button class="btn btn-primary" onclick="showTable('tenants')">Projects</button>
+        <button class="btn btn-danger" onclick="showTable('scraped_content')">Scraped Data</button>
+        <button class="btn btn-danger" onclick="showTable('partner_ai_analysis')">AI Analysis</button>
+      </div>
+      <div id="dbTableContainer" style="max-height:400px;overflow:auto;font-size:.85rem;">
+        <p style="color:var(--muted)">Select a table to view and manage data.</p>
+      </div>
+    </div>
+
+    <!-- WPs / Tasks -->
+    <div class="card">
+      <h2>Work Packages & Tasks</h2>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="addWPBtn">+ Add WP</button>
+      </div>
+      <div id="wpList"></div>
+    </div>
+
+    <!-- Partners -->
+    <div class="card">
+      <h2>Partners</h2>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="addPartnerBtn">+ Add Partner</button>
+        <button class="btn btn-success" id="exportBtn">Export JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" />
+        <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Import JSON</button>
+        <button class="btn btn-success" id="reanalyzeBtn">Force Global Re-analysis</button>
+        <span id="reanalyzeStatus" style="font-size:.85rem;color:var(--muted)"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="partnersTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Logo</th><th>Name</th><th>Username</th><th>Type</th><th>Country</th><th>Rate (€)</th><th>PM</th><th>Budget (€)</th><th>Funding (€)</th><th>Contact Email</th><th>Links</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Grand totals -->
+    <div class="card">
+      <h2>Grand Totals</h2>
+      <div class="grand-totals" id="grandTotals"></div>
+    </div>
+
+    <!-- Summary tables -->
+    <div class="section-title">PM per Work Package</div>
+    <div class="card table-wrap">
+      <table id="pmTable">
+        <thead><tr><th>#</th><th>Partner</th><!-- dynamic WP cols --><th>Total PM</th><th>Persons/year</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Budget Summary</div>
+    <div class="card table-wrap">
+      <table id="budgetTable">
+        <thead>
+          <tr>
+            <th>#</th><th>Partner</th><th>PM Cost</th><th>Other Direct Cost</th><th>Subcontracting Cost</th>
+            <th>Total Direct</th><th id="indirectHeader">Indirect (25%)</th><th>Total Budget</th><th>Funding Rate</th><th>Total Funding</th><th>PM</th><th>Type</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Edit Partner Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h3>Edit Partner</h3>
+      <div id="eLogoArea"></div>
+      <div class="grid2">
+        <label>Name<input id="eName" /></label>
+        <label>Username<input id="eUsername" disabled title="Cannot change username" /></label>
+        <label>New Password (leave empty to keep current)<input id="ePassword" type="text" placeholder="Enter new password or leave empty" /></label>
+        <label>PIC<input id="ePic" /></label>
+        <label>Monthly Rate (€)<input id="eRate" type="number" step="0.01" /></label>
+        <label>Type
+          <select id="eType">
+            <option>university</option><option>Research Institution</option><option>Industry</option><option>SME</option><option>Non-profit</option>
+          </select>
+        </label>
+        <label>Country<input id="eCountry" /></label>
+        <label>Funding Rate<input id="eFundingRate" type="number" step="0.01" min="0" max="1" /></label>
+        <label>Other Cost (€) - Legacy<input id="eOtherCost" type="number" step="0.01" disabled title="Use partner portal to add Other Costs" /></label>
+        <label>Subcontracting (€) - Legacy<input id="eSubcontracting" type="number" step="0.01" disabled title="Use partner portal to add Subcontracting Costs" /></label>
+      </div>
+      <div style="margin:.6rem 0 .2rem; font-weight:600;">Primary Contact</div>
+      <div class="grid2">
+        <label>Contact Name<input id="eContactName" /></label>
+        <label>Contact Position<input id="eContactPosition" /></label>
+        <label>Contact Email<input id="eContactEmail" type="email" /></label>
+        <label>Contact Phone<input id="eContactPhone" type="tel" /></label>
+      </div>
+      <div style="margin:.8rem 0 .4rem; font-weight:600;">Company Links & Evidence</div>
+      <div style="font-size:.85rem;color:var(--muted);margin-bottom:.4rem">
+        Add URLs that showcase the organisation’s activities, skills, services and past work (LinkedIn, portfolios, GitHub, publications, etc.) so AI can analyse the skill pool.
+      </div>
+      <div id="eUrlsArea"></div>
+      <div class="toolbar" style="margin-bottom:.8rem">
+        <button class="btn btn-sm btn-primary" onclick="addEditUrl()">+ Add URL</button>
+      </div>
+      <div style="margin:.8rem 0 .4rem; font-weight:600;">Task Person-Months</div>
+      <div id="eTaskArea"></div>
+      <!-- Scraping & Analysis Section -->
+      <div style="margin:1rem 0;padding:1rem;background:#f6f8fa;border-radius:8px;">
+        <h4 style="margin:0 0 .5rem;color:var(--primary);font-size:.95rem;">AI Skill Analysis</h4>
+        <p style="margin:0 0 .8rem;font-size:.85rem;color:var(--muted);">
+          Scrape partner URLs and analyze their capabilities against assigned Work Packages and Tasks.
+        </p>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="scrapeAnalyzeBtn" style="font-size:.85rem;padding:.4rem .8rem;">
+            Scrape & Analyze
+          </button>
+          <button class="btn" id="viewAnalysisBtn" style="font-size:.85rem;padding:.4rem .8rem;background:#e8ecf1;" disabled>
+            View Results
+          </button>
+        </div>
+        <div id="scrapingStatus" style="margin-top:.5rem;font-size:.8rem;color:var(--muted);display:none;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" style="background:#e0e0e0;color:#333" id="closeModal">Cancel</button>
+        <button class="btn btn-primary" id="sendInvitationBtn" style="background:#1f4e79;">Send Invitation</button>
+        <button class="btn btn-success" id="saveModal">Save Partner</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Partner Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <h3>Add Partner</h3>
+      <div class="grid2">
+        <label>Name<input id="aName" /></label>
+        <label>Username (auto if empty)<input id="aUsername" placeholder="lowercase no spaces" /></label>
+        <label>Password (auto if empty)<input id="aPassword" placeholder="default = username" /></label>
+        <label>PIC<input id="aPic" /></label>
+        <label>Monthly Rate (€)<input id="aRate" type="number" step="0.01" value="0" /></label>
+        <label>Type
+          <select id="aType">
+            <option>university</option><option>Research Institution</option><option>Industry</option><option>SME</option><option>Non-profit</option>
+          </select>
+        </label>
+        <label>Country<input id="aCountry" /></label>
+        <label>Funding Rate<input id="aFundingRate" type="number" step="0.01" min="0" max="1" value="1" /></label>
+        <label>Other Cost (€) - Legacy<input id="aOtherCost" type="number" step="0.01" value="0" disabled title="Use partner portal to add Other Costs" /></label>
+        <label>Subcontracting (€) - Legacy<input id="aSubcontracting" type="number" step="0.01" value="0" disabled title="Use partner portal to add Subcontracting Costs" /></label>
+      </div>
+      <div style="margin:.6rem 0 .2rem; font-weight:600;">Primary Contact</div>
+      <div class="grid2">
+        <label>Contact Name<input id="aContactName" /></label>
+        <label>Contact Position<input id="aContactPosition" /></label>
+        <label>Contact Email<input id="aContactEmail" type="email" /></label>
+        <label>Contact Phone<input id="aContactPhone" type="tel" /></label>
+      </div>
+      <div style="margin:.8rem 0 .4rem; font-weight:600;">Company Links & Evidence</div>
+      <div style="font-size:.85rem;color:var(--muted);margin-bottom:.4rem">
+        Add URLs that showcase the organisation’s activities, skills, services and past work (LinkedIn, portfolios, GitHub, publications, etc.) so AI can analyse the skill pool.
+      </div>
+      <div id="aUrlsArea"></div>
+      <div class="toolbar" style="margin-bottom:.8rem">
+        <button class="btn btn-sm btn-primary" onclick="addAddUrl()">+ Add URL</button>
+      </div>
+      <div style="margin:.8rem 0 .4rem; font-weight:600;">Task Person-Months</div>
+      <div id="aTaskArea"></div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#e0e0e0;color:#333" id="closeAddModal">Cancel</button>
+        <button class="btn btn-success" id="saveAddModal">Create Partner</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Admin Modal -->
+  <div class="modal-overlay" id="addAdminModal">
+    <div class="modal" style="max-width: 500px;">
+      <h3>Add Admin Member</h3>
+      <div class="grid2">
+        <label>Username<input id="adUsername" placeholder="lowercase no spaces" /></label>
+        <label>Password<input id="adPassword" placeholder="enter secure password" /></label>
+      </div>
+      <div style="margin-top: 1rem; padding: .8rem; background: #f6f8fa; border-radius: 6px; font-size: .85rem; color: var(--muted);">
+        <strong>Note:</strong> The new admin will have full access to manage all partners, work packages, tasks, and global settings.
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#e0e0e0;color:#333" id="closeAddAdminModal">Cancel</button>
+        <button class="btn btn-success" id="saveAddAdminModal">Create Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Project Modal -->
+  <div class="modal-overlay" id="newProjectModal">
+    <div class="modal" style="max-width: 500px;">
+      <h3>Create New Project</h3>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Project Name</label>
+        <input id="newProjectName" placeholder="My New Project" style="width:100%;padding:.5rem;" />
+      </div>
+      <div style="margin-top: 1rem; padding: .8rem; background: #f6f8fa; border-radius: 6px; font-size: .85rem; color: var(--muted);">
+        <strong>Note:</strong> This will create a new separate workspace with its own work packages, partners, and settings.
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#e0e0e0;color:#333" id="closeNewProjectModal">Cancel</button>
+        <button class="btn btn-success" id="saveNewProjectModal">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    let partners = [];
+    let charts = {};
+    let wps = [];
+    let editingId = null;
+    let indirectCostPercentage = 25;
+    let projectDurationMonths = 48;
+    let lastSavedSettings = { indirect: 25, duration: 48, description: '' };
+    let lastSavedDescription = ''; // Track description separately for textarea
+    let currentTenantId = null;
+    let userTenants = [];
+
+    const fmtMoney = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+    const fmtNum = (n) => Number(n).toFixed(n % 1 === 0 ? 0 : 2);
+
+    function calcPartner(p) {
+      const totalPM = Object.values(p.wp_data || {}).reduce((a, b) => a + (isNaN(b)?0:Number(b)), 0);
+      const pmCost = totalPM * (isNaN(p.rate)?0:Number(p.rate));
+      // Calculate Other Direct Cost from arrays (new) or legacy fields (old)
+      const otherCosts = p.other_costs || [];
+      const travelMeetings = p.travel_meetings || [];
+      const travelDissem = p.travel_dissem || [];
+      const otherFromArrays = otherCosts.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0) +
+                    travelMeetings.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0) +
+                    travelDissem.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      // Fallback to legacy other_cost field if arrays are empty
+      const otherLegacy = isNaN(p.other_cost)?0:Number(p.other_cost);
+      const other = otherFromArrays > 0 ? otherFromArrays : otherLegacy;
+      // Calculate Subcontracting Cost from array (new) or legacy field (old)
+      const subCosts = p.subcontracting_costs || [];
+      const subFromArray = subCosts.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      // Fallback to legacy subcontracting field if array is empty
+      const subLegacy = isNaN(p.subcontracting)?0:Number(p.subcontracting);
+      const sub = subFromArray > 0 ? subFromArray : subLegacy;
+      const tdc = pmCost + other + sub;
+      const indirectRate = indirectCostPercentage / 100;
+      const indirect = (pmCost + other) * indirectRate;
+      const totalBudget = tdc + indirect;
+      const fundingRate = isNaN(p.funding_rate)?1:Number(p.funding_rate);
+      const totalFunding = totalBudget * fundingRate;
+      const personsYear = totalPM / projectDurationMonths;
+      return { totalPM, pmCost, other, sub, tdc, indirect, totalBudget, totalFunding, personsYear, fundingRate };
+    }
+
+    async function load() {
+      console.log('load() called');
+      const [partnersRes, settingsRes] = await Promise.all([
+        fetch('/api/admin/partners'),
+        fetch('/api/admin/settings')
+      ]);
+      if (!partnersRes.ok) return window.location.href = '/login.html';
+      const data = await partnersRes.json();
+      partners = data.partners;
+      wps = data.wps;
+      // Load settings
+      if (settingsRes.ok) {
+        const settings = await settingsRes.json();
+        console.log('Loaded settings from server:', settings);
+        indirectCostPercentage = settings.indirect_cost_percentage || 25;
+        projectDurationMonths = settings.project_duration_months || 48;
+        const projectDescription = settings.project_description || '';
+        const indirectInput = document.getElementById('indirectCostPercent');
+        const durationInput = document.getElementById('projectDurationMonths');
+        const descInput = document.getElementById('projectDescription');
+        console.log('Current state:', { indirectCostPercentage, projectDurationMonths, lastSaved: lastSavedSettings, currentIndirect: indirectInput?.value, currentDuration: durationInput?.value });
+        
+        // Load project description with same protection as other inputs
+        if (descInput && document.activeElement !== descInput) {
+          const serverChanged = projectDescription !== lastSavedSettings.description;
+          const userEdited = descInput.value !== lastSavedSettings.description && descInput.value !== '';
+          console.log('Description check:', { currentVal: descInput.value.substring(0, 50), serverValue: projectDescription.substring(0, 50), serverChanged, userEdited, lastSaved: lastSavedSettings.description.substring(0, 50) });
+          if (!userEdited || serverChanged) {
+            descInput.value = projectDescription;
+          }
+        }
+        
+        // Only update inputs if:
+        // 1. Input doesn't have focus (user not actively editing)
+        // 2. Either the server value changed from last saved, OR the input matches last saved (user hasn't edited it)
+        // Check if we should update inputs (before updating lastSavedSettings)
+        if (indirectInput && document.activeElement !== indirectInput) {
+          const currentVal = parseInt(indirectInput.value, 10);
+          const serverChanged = indirectCostPercentage !== lastSavedSettings.indirect;
+          const userEdited = !isNaN(currentVal) && currentVal !== lastSavedSettings.indirect;
+          console.log('Indirect check:', { currentVal, serverValue: indirectCostPercentage, serverChanged, userEdited, lastSaved: lastSavedSettings.indirect });
+          if (!userEdited || serverChanged) {
+            indirectInput.value = indirectCostPercentage;
+          }
+        }
+        if (durationInput && document.activeElement !== durationInput) {
+          const currentVal = parseInt(durationInput.value, 10);
+          const serverChanged = projectDurationMonths !== lastSavedSettings.duration;
+          const userEdited = !isNaN(currentVal) && currentVal !== lastSavedSettings.duration;
+          console.log('Duration check:', { currentVal, serverValue: projectDurationMonths, serverChanged, userEdited, lastSaved: lastSavedSettings.duration });
+          if (!userEdited || serverChanged) {
+            durationInput.value = projectDurationMonths;
+          }
+        }
+        // Update lastSavedSettings to match what we loaded from server
+        lastSavedSettings = { indirect: indirectCostPercentage, duration: projectDurationMonths, description: projectDescription };
+        console.log('Updated lastSavedSettings from load:', lastSavedSettings);
+        document.getElementById('indirectHeader').textContent = `Indirect (${indirectCostPercentage}%)`;
+      } else {
+        console.error('Failed to load settings:', settingsRes.status);
+      }
+      renderWPs();
+      renderPartnersTable();
+      renderGrandTotals();
+      renderSummaryTables();
+      renderCharts();
+      loadAdmins();
+      loadTenantInfo();
+      initDbManager(); // Initialize database management for primary admin
+    }
+
+    // Tenant management
+    async function loadTenantInfo() {
+      const res = await fetch('/api/me');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.loggedIn) return;
+      
+      currentTenantId = data.tenantId;
+      userTenants = data.tenants || [];
+      
+      const selectorDiv = document.getElementById('tenantSelector');
+      const currentProjectSpan = document.getElementById('currentProject');
+      const dropdown = document.getElementById('tenantDropdown');
+      
+      if (userTenants.length > 1) {
+        // Multiple tenants - show selector
+        selectorDiv.style.display = 'flex';
+        currentProjectSpan.style.display = 'none';
+        dropdown.innerHTML = userTenants.map(t => 
+          `<option value="${t.id}" ${t.id === currentTenantId ? 'selected' : ''}>${t.name}</option>`
+        ).join('');
+      } else if (userTenants.length === 1) {
+        // Single tenant - just show name
+        selectorDiv.style.display = 'none';
+        currentProjectSpan.style.display = 'inline';
+        currentProjectSpan.textContent = `— ${userTenants[0].name}`;
+      }
+    }
+
+    // Switch tenant
+    document.getElementById('tenantDropdown')?.addEventListener('change', async (e) => {
+      const newTenantId = parseInt(e.target.value);
+      if (newTenantId === currentTenantId) return;
+      
+      const res = await fetch('/api/switch-tenant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: newTenantId })
+      });
+      
+      if (res.ok) {
+        currentTenantId = newTenantId;
+        load();
+      } else {
+        alert('Failed to switch project');
+      }
+    });
+
+    // New project modal
+    document.getElementById('newProjectBtn')?.addEventListener('click', () => {
+      document.getElementById('newProjectName').value = '';
+      document.getElementById('newProjectModal').style.display = 'flex';
+    });
+    document.getElementById('closeNewProjectModal')?.addEventListener('click', () => {
+      document.getElementById('newProjectModal').style.display = 'none';
+    });
+    document.getElementById('saveNewProjectModal')?.addEventListener('click', async () => {
+      const name = document.getElementById('newProjectName').value.trim();
+      if (!name) {
+        alert('Please enter a project name');
+        return;
+      }
+      const res = await fetch('/api/tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      if (res.ok) {
+        const result = await res.json();
+        document.getElementById('newProjectModal').style.display = 'none';
+        currentTenantId = result.tenantId;
+        load(); // Reload to get new tenant in list
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert('Failed to create project: ' + (err.error || 'Unknown error'));
+      }
+    });
+
+    function partnerCheckboxList(kind, entityId, selectedIds) {
+      const s = new Set(Array.isArray(selectedIds) ? selectedIds.map(String) : []);
+      const items = partners.map(p => `
+        <label class="chk-dropdown-item" onclick="event.stopPropagation()">
+          <span>${p.name}</span>
+          <input type="checkbox" value="${p.id}" ${s.has(String(p.id)) ? 'checked' : ''}
+            onchange="toggle${kind}Assignment(${entityId}, this)" />
+        </label>
+      `).join('');
+      const count = s.size;
+      const btnText = count ? `${count} selected` : 'Select partners';
+      return `
+        <div class="chk-dropdown" id="dd-${kind}-${entityId}">
+          <button type="button" class="chk-dropdown-btn" onclick="toggleDropdown('dd-${kind}-${entityId}')">${btnText}</button>
+          <div class="chk-dropdown-menu" onclick="event.stopPropagation()">${items}</div>
+        </div>
+      `;
+    }
+
+    window.toggleDropdown = function(id) {
+      const el = document.getElementById(id);
+      const isOpen = el.classList.toggle('open');
+      if (isOpen) {
+        const close = (e) => {
+          if (!el.contains(e.target)) { el.classList.remove('open'); document.removeEventListener('click', close); }
+        };
+        setTimeout(() => document.addEventListener('click', close), 0);
+      }
+    };
+
+    async function toggleWpAssignment(wpId, checkbox) {
+      const dd = document.getElementById(`dd-Wp-${wpId}`);
+      const checked = Array.from(dd.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+      await fetch(`/api/admin/wps/${wpId}/assignments`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assigned_partner_ids: checked })
+      });
+      load();
+    }
+    async function toggleTaskAssignment(taskId, checkbox) {
+      const dd = document.getElementById(`dd-Task-${taskId}`);
+      const checked = Array.from(dd.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.value));
+      await fetch(`/api/admin/tasks/${taskId}/assignments`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assigned_partner_ids: checked })
+      });
+      load();
+    }
+
+    function renderWPs() {
+      const list = document.getElementById('wpList');
+      list.innerHTML = wps.map((wp, i) => `
+        <div class="wp-block">
+          <div class="wp-header">
+            <input value="${wp.name}" onchange="renameWP(${wp.id}, this.value)" />
+            <label>Assign WP Leader
+              ${partnerCheckboxList('Wp', wp.id, wp.assigned_partner_ids)}
+            </label>
+            <button class="btn btn-sm btn-primary" onclick="addTask(${wp.id})">+ Task</button>
+            <button class="btn btn-sm" style="background:#e0e0e0" onclick="moveWP(${wp.id}, -1)" ${i===0?'disabled':''}>▲</button>
+            <button class="btn btn-sm" style="background:#e0e0e0" onclick="moveWP(${wp.id}, 1)" ${i===wps.length-1?'disabled':''}>▼</button>
+            <button class="btn btn-sm btn-danger" onclick="removeWP(${wp.id})">Remove WP</button>
+          </div>
+          <div class="task-list">
+            ${(wp.tasks || []).map((t, ti) => `
+              <div class="task-chip">
+                <input value="${t.name}" onchange="renameTask(${t.id}, this.value)" />
+                <label style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Assign Task
+                  ${partnerCheckboxList('Task', t.id, t.assigned_partner_ids)}
+                </label>
+                <button class="btn btn-sm btn-danger" style="margin-top:.2rem;align-self:flex-start" onclick="removeTask(${t.id})">Remove Task</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function renameWP(id, name) { await fetch(`/api/admin/wps/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) }); load(); }
+    async function moveWP(id, dir) {
+      const idx = wps.findIndex(w => w.id == id);
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= wps.length) return;
+      const order = wps.slice();
+      const temp = order[idx]; order[idx] = order[newIdx]; order[newIdx] = temp;
+      await fetch('/api/admin/wps/reorder', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({order: order.map(w=>w.id)}) });
+      load();
+    }
+    async function removeWP(id) {
+      if (!confirm('Delete this WP and all its tasks?')) return;
+      await fetch(`/api/admin/wps/${id}`, { method: 'DELETE' });
+      load();
+    }
+    async function addTask(wpId) {
+      const name = prompt('Task name:');
+      if (!name) return;
+      await fetch(`/api/admin/wps/${wpId}/tasks`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) });
+      load();
+    }
+    async function renameTask(id, name) { await fetch(`/api/admin/tasks/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) }); load(); }
+    async function removeTask(id) {
+      if (!confirm('Delete this task?')) return;
+      await fetch(`/api/admin/tasks/${id}`, { method: 'DELETE' });
+      load();
+    }
+    document.getElementById('addWPBtn').addEventListener('click', async () => {
+      const name = prompt('WP name:', `WP${wps.length+1}`);
+      if (!name) return;
+      await fetch('/api/admin/wps', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) });
+      load();
+    });
+
+    function renderPartnersTable() {
+      const tbody = document.querySelector('#partnersTable tbody');
+      tbody.innerHTML = '';
+      partners.forEach((p, i) => {
+        const c = calcPartner(p);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i+1}</td>
+          <td>${p.logo_path ? `<img class="logo-thumb" src="${p.logo_path}?t=${Date.now()}" alt="logo" />` : '<span style="color:var(--muted)">—</span>'}</td>
+          <td>${p.name}</td>
+          <td>${p.username}</td>
+          <td>${p.type}</td>
+          <td>${p.country || ''}</td>
+          <td>${fmtMoney(p.rate)}</td>
+          <td>${fmtNum(c.totalPM)}</td>
+          <td>€${fmtMoney(c.totalBudget)}</td>
+          <td>€${fmtMoney(c.totalFunding)}</td>
+          <td>${p.contact_email ? `<span style="font-size:.8rem">${p.contact_email}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+          <td>${p.urls && p.urls.length ? `<span style="font-size:.8rem">${p.urls.length} link(s)</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-primary" onclick="openEdit(${p.id})">Edit</button>
+            <button class="btn btn-sm" style="background:#e0e0e0" onclick="resetPW(${p.id})">Reset PW</button>
+            <button class="btn btn-sm btn-danger" onclick="removePartner(${p.id})">Remove</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function removePartner(id) {
+      if (!confirm('Remove this partner and their login account?')) return;
+      await fetch(`/api/admin/partners/${id}`, { method: 'DELETE' });
+      load();
+    }
+    async function resetPW(id) {
+      const pw = prompt('New password:');
+      if (!pw) return;
+      await fetch(`/api/admin/partners/${id}/reset-password`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password: pw}) });
+      alert('Password updated.');
+    }
+
+    function buildTaskInputs(containerId, wpData, prefixClass) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = wps.map(wp => `
+        <div style="margin-bottom:.6rem"><strong>${wp.name}</strong></div>
+        <div class="task-col" style="margin-bottom:1rem">
+          ${(wp.tasks || []).map(t => `
+            <div class="task-row">
+              <div style="font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t.name}">${t.name}</div>
+              <input type="number" step="0.1" class="${prefixClass}" data-taskid="${t.id}" value="${wpData[t.id] ?? 0}" />
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+    }
+
+    function readTaskInputs(prefixClass) {
+      const obj = {};
+      document.querySelectorAll('.' + prefixClass).forEach(inp => {
+        obj[inp.dataset.taskid] = parseFloat(inp.value) || 0;
+      });
+      return obj;
+    }
+
+    // URL helpers for modals
+    let editUrls = [];
+    let addUrls = [];
+    function renderEditUrls(list) { editUrls = list.slice(); _renderUrls('eUrlsArea', editUrls, 'e-url'); }
+    function addEditUrl() { editUrls.push({url:'',description:''}); renderEditUrls(editUrls); }
+    function removeEditUrl(i) { editUrls.splice(i,1); renderEditUrls(editUrls); }
+    function readEditUrls() { return editUrls.filter(u => u.url.trim()); }
+    function renderAddUrls(list) { addUrls = list.slice(); _renderUrls('aUrlsArea', addUrls, 'a-url'); }
+    function addAddUrl() { addUrls.push({url:'',description:''}); renderAddUrls(addUrls); }
+    function removeAddUrl(i) { addUrls.splice(i,1); renderAddUrls(addUrls); }
+    function readAddUrls() { return addUrls.filter(u => u.url.trim()); }
+    function _renderUrls(containerId, list, prefix) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = list.map((u, i) => `
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:end;margin-bottom:.4rem">
+          <label style="font-size:.78rem;color:var(--muted)">URL
+            <input type="url" class="${prefix}-url" data-idx="${i}" value="${u.url}" placeholder="https://..." />
+          </label>
+          <label style="font-size:.78rem;color:var(--muted)">Description
+            <input type="text" class="${prefix}-desc" data-idx="${i}" value="${u.description || ''}" placeholder="e.g. LinkedIn" />
+          </label>
+          <button class="btn btn-sm btn-danger" onclick="${prefix==='e-url'?`removeEditUrl(${i})`:`removeAddUrl(${i})`}">Remove</button>
+        </div>
+      `).join('');
+      container.querySelectorAll('.' + prefix + '-url').forEach(inp => {
+        inp.addEventListener('input', e => { list[+e.target.dataset.idx].url = e.target.value; });
+      });
+      container.querySelectorAll('.' + prefix + '-desc').forEach(inp => {
+        inp.addEventListener('input', e => { list[+e.target.dataset.idx].description = e.target.value; });
+      });
+    }
+
+    // Store partner data being edited to preserve arrays
+    let editingPartnerData = null;
+
+    // Edit modal
+    async function openEdit(id) {
+      editingId = id;
+      const p = partners.find(x => x.id == id);
+      editingPartnerData = p; // Store full partner data to preserve cost arrays
+      const logoHtml = p.logo_path
+        ? `<img class="logo-preview" src="${p.logo_path}?t=${Date.now()}" alt="logo" />`
+        : `<div class="logo-empty">No logo</div>`;
+      document.getElementById('eLogoArea').innerHTML = logoHtml;
+      document.getElementById('eName').value = p.name;
+      document.getElementById('eUsername').value = p.username;
+      document.getElementById('ePic').value = p.pic || '';
+      document.getElementById('eRate').value = p.rate;
+      document.getElementById('eType').value = p.type;
+      document.getElementById('eCountry').value = p.country || '';
+      document.getElementById('eFundingRate').value = p.funding_rate;
+      document.getElementById('eOtherCost').value = p.other_cost;
+      document.getElementById('eSubcontracting').value = p.subcontracting;
+      document.getElementById('eContactName').value = p.contact_name || '';
+      document.getElementById('eContactPosition').value = p.contact_position || '';
+      document.getElementById('eContactEmail').value = p.contact_email || '';
+      document.getElementById('eContactPhone').value = p.contact_phone || '';
+      document.getElementById('ePassword').value = ''; // Clear password field
+      renderEditUrls(p.urls || []);
+      buildTaskInputs('eTaskArea', p.wp_data, 'e-task');
+      
+      // Reset and check scraping/analysis status
+      document.getElementById('scrapingStatus').style.display = 'none';
+      document.getElementById('scrapingStatus').textContent = '';
+      document.getElementById('viewAnalysisBtn').disabled = true;
+      
+      // Check if partner has URLs
+      const hasUrls = p.urls && p.urls.length > 0;
+      document.getElementById('scrapeAnalyzeBtn').disabled = !hasUrls;
+      if (!hasUrls) {
+        document.getElementById('scrapingStatus').style.display = 'block';
+        document.getElementById('scrapingStatus').innerHTML = '<span style="color:var(--muted)">Add URLs first to enable scraping</span>';
+      }
+      
+      // Check for existing scraped content and analysis
+      try {
+        const [scrapedRes, analysisRes] = await Promise.all([
+          fetch(`/api/admin/partners/${id}/scraped`),
+          fetch(`/api/admin/partners/${id}/analysis`)
+        ]);
+        
+        if (scrapedRes.ok) {
+          const scraped = await scrapedRes.json();
+          const completed = scraped.filter(s => s.status === 'completed');
+          if (completed.length > 0) {
+            document.getElementById('scrapingStatus').style.display = 'block';
+            document.getElementById('scrapingStatus').innerHTML = `<span style="color:var(--success)">${completed.length} URL(s) scraped</span>`;
+          }
+        }
+        
+        if (analysisRes.ok) {
+          const analyses = await analysisRes.json();
+          if (analyses.length > 0) {
+            document.getElementById('viewAnalysisBtn').disabled = false;
+          }
+        }
+      } catch (e) {
+        console.log('Could not fetch scraping status:', e);
+      }
+      
+      document.getElementById('editModal').style.display = 'flex';
+    }
+    document.getElementById('closeModal').addEventListener('click', () => {
+      document.getElementById('editModal').style.display = 'none';
+      editingId = null;
+      editingPartnerData = null;
+    });
+    document.getElementById('saveModal').addEventListener('click', async () => {
+      const password = document.getElementById('ePassword').value.trim();
+      const payload = {
+        name: document.getElementById('eName').value,
+        pic: document.getElementById('ePic').value,
+        rate: parseFloat(document.getElementById('eRate').value) || 0,
+        type: document.getElementById('eType').value,
+        country: document.getElementById('eCountry').value,
+        funding_rate: parseFloat(document.getElementById('eFundingRate').value) || 0,
+        other_cost: parseFloat(document.getElementById('eOtherCost').value) || 0,
+        subcontracting: parseFloat(document.getElementById('eSubcontracting').value) || 0,
+        contact_name: document.getElementById('eContactName').value,
+        contact_position: document.getElementById('eContactPosition').value,
+        contact_email: document.getElementById('eContactEmail').value,
+        contact_phone: document.getElementById('eContactPhone').value,
+        urls: readEditUrls(),
+        wp_data: readTaskInputs('e-task'),
+        // Preserve cost arrays - admin portal doesn't edit these, only partner portal does
+        other_costs: editingPartnerData?.other_costs || [],
+        subcontracting_costs: editingPartnerData?.subcontracting_costs || [],
+        travel_meetings: editingPartnerData?.travel_meetings || [],
+        travel_dissem: editingPartnerData?.travel_dissem || [],
+      };
+      
+      // Save partner details
+      await fetch(`/api/admin/partners/${editingId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      
+      // Update password if provided
+      if (password) {
+        const passRes = await fetch(`/api/admin/partners/${editingId}/reset-password`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ password })
+        });
+        if (!passRes.ok) {
+          alert('Partner saved but failed to update password');
+        }
+      }
+      
+      document.getElementById('editModal').style.display = 'none';
+      editingPartnerData = null;
+      load();
+    });
+
+    // Loading Overlay Functions
+    function showLoading(text = 'Processing...', subtext = null) {
+      document.getElementById('loadingText').textContent = text;
+      if (subtext) {
+        document.getElementById('loadingSubtext').innerHTML = subtext;
+      }
+      document.getElementById('loadingOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function updateLoadingProgress(message) {
+      document.getElementById('loadingProgress').textContent = message;
+    }
+
+    // Scraping & Analysis handlers
+    document.getElementById('scrapeAnalyzeBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('scrapeAnalyzeBtn');
+      const status = document.getElementById('scrapingStatus');
+      
+      btn.disabled = true;
+      status.style.display = 'block';
+      
+      // Show loading screen
+      showLoading(
+        'Scraping & Analyzing...',
+        'Scraping partner URLs and analyzing capabilities against Work Packages and Tasks.<br>This may take 2-5 minutes. Please do not close the browser.'
+      );
+      
+      let dots = 0;
+      const progressInterval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        updateLoadingProgress('Processing' + '.'.repeat(dots));
+      }, 500);
+      
+      try {
+        // Step 1: Scrape
+        updateLoadingProgress('Scraping URLs...');
+        const scrapeRes = await fetch(`/api/admin/partners/${editingId}/scrape`, { method: 'POST' });
+        const scrapeResult = await scrapeRes.json();
+        
+        if (!scrapeRes.ok) {
+          throw new Error(scrapeResult.error || 'Scraping failed');
+        }
+        
+        // Step 2: Analyze
+        updateLoadingProgress('Analyzing with AI...');
+        const analyzeRes = await fetch(`/api/admin/partners/${editingId}/analyze`, { method: 'POST' });
+        const analyzeResult = await analyzeRes.json();
+        
+        if (!analyzeRes.ok) {
+          throw new Error(analyzeResult.error || 'Analysis failed');
+        }
+        
+        // Success
+        status.innerHTML = `<span style="color:var(--success)">Scraped ${scrapeResult.scraped || 0} URLs. Analysis queued.</span>`;
+        document.getElementById('viewAnalysisBtn').disabled = false;
+        
+        // Poll for completion
+        let checkInterval = setInterval(async () => {
+          try {
+            const checkRes = await fetch(`/api/admin/partners/${editingId}/analysis`);
+            const analyses = await checkRes.json();
+            if (analyses.length > 0) {
+              clearInterval(checkInterval);
+              clearInterval(progressInterval);
+              hideLoading();
+              status.innerHTML = `<span style="color:var(--success)">Analysis complete! ${analyses.length} result(s) available.</span>`;
+            }
+          } catch (e) {
+            // Keep polling
+          }
+        }, 5000); // Check every 5 seconds
+        
+        // Stop polling after 10 minutes (120 checks)
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          clearInterval(progressInterval);
+          hideLoading();
+        }, 600000);
+        
+      } catch (err) {
+        clearInterval(progressInterval);
+        hideLoading();
+        status.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    
+    document.getElementById('viewAnalysisBtn').addEventListener('click', async () => {
+      // Open analysis results in a modal or new window
+      const res = await fetch(`/api/admin/partners/${editingId}/analysis`);
+      const analyses = await res.json();
+      
+      console.log('Fetched analyses:', analyses.length, 'records');
+      
+      if (analyses.length === 0) {
+        alert('No analysis results yet. Please run scraping and analysis first.');
+        return;
+      }
+      
+      // Build results HTML
+      let html = '<div style="max-height:60vh;overflow-y:auto;padding:1rem;">';
+      analyses.forEach((a, i) => {
+        try {
+          // Handle skills - could be object or JSON string
+          let skills = a.skills;
+          if (typeof skills === 'string') {
+            try {
+              skills = JSON.parse(skills);
+            } catch (e) {
+              skills = { raw: skills };
+            }
+          } else if (typeof skills !== 'object' || skills === null) {
+            skills = {};
+          }
+          
+          html += `
+            <div style="margin-bottom:1.5rem;padding:1rem;background:#f6f8fa;border-radius:8px;">
+              <h4 style="margin:0 0 .5rem;color:var(--primary);">${(a.analysis_type || 'UNKNOWN').toUpperCase()} Analysis #${i+1}</h4>
+              <p style="margin:0 0 .5rem;font-size:.85rem;color:var(--muted);">
+                Analyzed: ${a.analyzed_at ? new Date(a.analyzed_at).toLocaleString() : 'Unknown'} | Model: ${a.model_used || 'N/A'}
+              </p>
+              ${a.confidence_score ? `<p style="margin:0 0 .5rem;">Confidence: ${a.confidence_score <= 1 ? (a.confidence_score * 100).toFixed(0) : a.confidence_score.toFixed(1)}%</p>` : ''}
+              <div style="background:white;padding:1rem;border-radius:4px;max-height:300px;overflow:auto;">
+                <pre style="margin:0;white-space:pre-wrap;font-size:.85rem;">${JSON.stringify(skills, null, 2)}</pre>
+              </div>
+            </div>
+          `;
+        } catch (e) {
+          console.error('Error displaying analysis:', e, a);
+          html += `<div style="color:red;padding:1rem;">Error displaying analysis #${i+1}: ${e.message}</div>`;
+        }
+      });
+      html += '</div>';
+      
+      // Show in a simple modal
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.style.display = 'flex';
+      modal.innerHTML = `
+        <div class="modal" style="max-width:800px;width:90%;max-height:80vh;">
+          <h3>AI Analysis Results</h3>
+          ${html}
+          <div class="modal-footer">
+            <button class="btn" onclick="this.closest('.modal-overlay').remove()">Close</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    });
+
+    // Send Invitation button handler
+    document.getElementById('sendInvitationBtn').addEventListener('click', async () => {
+      const username = document.getElementById('eUsername').value;
+      const password = document.getElementById('ePassword').value.trim();
+      const contactEmail = document.getElementById('eContactEmail').value.trim();
+      
+      if (!contactEmail) {
+        alert('Please enter a Contact Email first');
+        return;
+      }
+      if (!username) {
+        alert('Partner has no username');
+        return;
+      }
+      
+      // Use provided password or ask for confirmation if empty
+      let finalPassword = password;
+      if (!finalPassword) {
+        const confirmSend = confirm('No new password entered. The partner will receive their current/existing password in the email.\n\nDo you want to proceed?');
+        if (!confirmSend) return;
+        // Use a placeholder - the server will need the actual password
+        finalPassword = '[Current Password - Contact Admin]';
+      }
+      
+      const btn = document.getElementById('sendInvitationBtn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      
+      try {
+        // First, update password if provided
+        if (password) {
+          const passRes = await fetch(`/api/admin/partners/${editingId}/reset-password`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ password })
+          });
+          if (!passRes.ok) {
+            alert('Failed to update password. Invitation not sent.');
+            btn.disabled = false;
+            btn.textContent = 'Send Invitation';
+            return;
+          }
+        }
+        
+        // Then send invitation email
+        const res = await fetch(`/api/admin/partners/${editingId}/send-invitation`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ username, password: finalPassword })
+        });
+        const result = await res.json();
+        if (res.ok) {
+          alert('Invitation sent successfully!\n\n' + result.message);
+          // Clear password field after successful send
+          document.getElementById('ePassword').value = '';
+        } else {
+          alert('Failed to send invitation: ' + (result.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Error sending invitation: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Invitation';
+      }
+    });
+
+    // Add modal
+    document.getElementById('addPartnerBtn').addEventListener('click', () => {
+      document.getElementById('aName').value = '';
+      document.getElementById('aUsername').value = '';
+      document.getElementById('aPassword').value = '';
+      document.getElementById('aPic').value = '';
+      document.getElementById('aRate').value = '0';
+      document.getElementById('aType').value = 'university';
+      document.getElementById('aCountry').value = '';
+      document.getElementById('aFundingRate').value = '1';
+      document.getElementById('aOtherCost').value = '0';
+      document.getElementById('aSubcontracting').value = '0';
+      document.getElementById('aContactName').value = '';
+      document.getElementById('aContactPosition').value = '';
+      document.getElementById('aContactEmail').value = '';
+      document.getElementById('aContactPhone').value = '';
+      renderAddUrls([]);
+      buildTaskInputs('aTaskArea', {}, 'a-task');
+      document.getElementById('addModal').style.display = 'flex';
+    });
+    document.getElementById('closeAddModal').addEventListener('click', () => {
+      document.getElementById('addModal').style.display = 'none';
+    });
+    document.getElementById('saveAddModal').addEventListener('click', async () => {
+      const payload = {
+        name: document.getElementById('aName').value,
+        username: document.getElementById('aUsername').value,
+        password: document.getElementById('aPassword').value,
+        pic: document.getElementById('aPic').value,
+        rate: parseFloat(document.getElementById('aRate').value) || 0,
+        type: document.getElementById('aType').value,
+        country: document.getElementById('aCountry').value,
+        funding_rate: parseFloat(document.getElementById('aFundingRate').value) || 0,
+        other_cost: parseFloat(document.getElementById('aOtherCost').value) || 0,
+        subcontracting: parseFloat(document.getElementById('aSubcontracting').value) || 0,
+        contact_name: document.getElementById('aContactName').value,
+        contact_position: document.getElementById('aContactPosition').value,
+        contact_email: document.getElementById('aContactEmail').value,
+        contact_phone: document.getElementById('aContactPhone').value,
+        urls: readAddUrls(),
+        wp_data: readTaskInputs('a-task'),
+      };
+      const res = await fetch('/api/admin/partners', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (!res.ok) { alert('Failed to create partner.'); return; }
+      document.getElementById('addModal').style.display = 'none';
+      load();
+    });
+
+    // Admin Members functionality
+    async function loadAdmins() {
+      // Get my user ID first
+      const meRes = await fetch('/api/me');
+      const meData = meRes.ok ? await meRes.json() : {};
+      const myUserId = meData.userId;
+      
+      const res = await fetch('/api/admin/users');
+      if (!res.ok) return;
+      const admins = await res.json();
+      const container = document.getElementById('adminList');
+      if (admins.length === 0) {
+        container.innerHTML = '<p style="color:var(--muted)">No admin members found.</p>';
+        return;
+      }
+      
+      // Deduplicate admins by user id (in case user has multiple tenant memberships)
+      const uniqueAdmins = [];
+      const seenIds = new Set();
+      for (const a of admins) {
+        if (!seenIds.has(a.id)) {
+          seenIds.add(a.id);
+          uniqueAdmins.push(a);
+        }
+      }
+      
+      container.innerHTML = `
+        <table style="width:100%;font-size:.9rem;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:.4rem;">Username</th>
+              <th style="text-align:left;padding:.4rem;">Project Role</th>
+              <th style="text-align:right;padding:.4rem;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${uniqueAdmins.map(a => `
+              <tr>
+                <td style="padding:.4rem;">${a.username}</td>
+                <td style="padding:.4rem;"><span style="background:#e8ecf1;padding:.2rem .4rem;border-radius:4px;font-size:.8rem;">${a.tenant_role || 'admin'}</span></td>
+                <td style="text-align:right;padding:.4rem;">
+                  ${a.username === 'admin' ? '<span style="color:var(--muted);font-size:.8rem;">Primary</span>' : 
+                    (a.id === myUserId ? '<span style="color:var(--muted);font-size:.8rem;">You</span>' : 
+                    `<button class="btn btn-sm btn-danger" onclick="removeAdmin(${a.id}, '${a.username}')">Remove</button>`)}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    window.removeAdmin = async function(id, username) {
+      if (!confirm(`Remove admin user "${username}"?`)) return;
+      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadAdmins();
+      } else {
+        alert('Failed to remove admin');
+      }
+    };
+
+    // Database Management functions
+    let currentTable = '';
+    let currentData = [];
+
+    async function initDbManager() {
+      // Check if primary admin
+      const meRes = await fetch('/api/me');
+      const meData = meRes.ok ? await meRes.json() : {};
+      if (meData.username === 'admin') {
+        document.getElementById('dbManagerCard').style.display = 'block';
+      }
+    }
+
+    window.showTable = async function(tableName) {
+      currentTable = tableName;
+      const container = document.getElementById('dbTableContainer');
+      container.innerHTML = '<p style="color:var(--muted)">Loading...</p>';
+      
+      try {
+        const res = await fetch(`/api/admin/db/${tableName}`);
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        currentData = data;
+        
+        if (data.length === 0) {
+          container.innerHTML = '<p style="color:var(--muted)">No data in this table.</p>';
+          return;
+        }
+        
+        // Get columns from first row
+        const columns = Object.keys(data[0]);
+        
+        container.innerHTML = `
+          <div style="margin-bottom:.5rem;">
+            <strong>${tableName}</strong> — ${data.length} row(s)
+            <button class="btn btn-sm btn-danger" onclick="deleteAllRows('${tableName}')" style="margin-left:1rem;">Delete All</button>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:.8rem;">
+            <thead>
+              <tr style="background:#f6f8fa;">
+                <th style="padding:.3rem;border:1px solid var(--border);">Actions</th>
+                ${columns.map(col => `<th style="padding:.3rem;border:1px solid var(--border);">${col}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map((row, idx) => `
+                <tr>
+                  <td style="padding:.3rem;border:1px solid var(--border);text-align:center;">
+                    <button class="btn btn-sm btn-danger" onclick="deleteRow('${tableName}', ${row.id || idx})">Delete</button>
+                  </td>
+                  ${columns.map(col => {
+                    let val = row[col];
+                    if (val === null) val = '<em>null</em>';
+                    else if (typeof val === 'object') val = JSON.stringify(val).substring(0, 50);
+                    else val = String(val).substring(0, 100);
+                    return `<td style="padding:.3rem;border:1px solid var(--border);">${val}</td>`;
+                  }).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        container.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`;
+      }
+    };
+
+    window.deleteRow = async function(tableName, id) {
+      if (!confirm(`Delete row ${id} from ${tableName}?`)) return;
+      try {
+        const res = await fetch(`/api/admin/db/${tableName}/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showTable(tableName);
+        } else {
+          alert('Failed to delete row');
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    };
+
+    window.deleteAllRows = async function(tableName) {
+      if (!confirm(`DELETE ALL ROWS from ${tableName}? This cannot be undone!`)) return;
+      try {
+        const res = await fetch(`/api/admin/db/${tableName}`, { method: 'DELETE' });
+        if (res.ok) {
+          showTable(tableName);
+        } else {
+          alert('Failed to delete rows');
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    };
+
+    // Add Admin modal
+    document.getElementById('addAdminBtn').addEventListener('click', () => {
+      document.getElementById('adUsername').value = '';
+      document.getElementById('adPassword').value = '';
+      document.getElementById('addAdminModal').style.display = 'flex';
+    });
+    document.getElementById('closeAddAdminModal').addEventListener('click', () => {
+      document.getElementById('addAdminModal').style.display = 'none';
+    });
+    document.getElementById('saveAddAdminModal').addEventListener('click', async () => {
+      const username = document.getElementById('adUsername').value.trim();
+      const password = document.getElementById('adPassword').value;
+      if (!username || !password) {
+        alert('Please enter both username and password');
+        return;
+      }
+      if (!/^[a-z0-9_]+$/.test(username)) {
+        alert('Username must be lowercase letters, numbers, or underscores only');
+        return;
+      }
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password, role: 'admin' })
+      });
+      if (res.ok) {
+        document.getElementById('addAdminModal').style.display = 'none';
+        loadAdmins();
+        alert('Admin created successfully!');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert('Failed to create admin: ' + (err.error || 'Unknown error'));
+      }
+    });
+
+    function renderGrandTotals() {
+      let gPmCost=0, gOther=0, gSub=0, gTdc=0, gInd=0, gBudget=0, gFund=0, gPM=0;
+      partners.forEach(p => {
+        const c = calcPartner(p);
+        gPmCost += c.pmCost; gOther += c.other; gSub += c.sub; gTdc += c.tdc;
+        gInd += c.indirect; gBudget += c.totalBudget; gFund += c.totalFunding; gPM += c.totalPM;
+      });
+      const map = [
+        {l:'Total PM', v: fmtNum(gPM)},
+        {l:'PM Cost', v: '€'+fmtMoney(gPmCost)},
+        {l:'Other Direct Cost', v: '€'+fmtMoney(gOther)},
+        {l:'Subcontracting Cost', v: '€'+fmtMoney(gSub)},
+        {l:'Total Direct', v: '€'+fmtMoney(gTdc)},
+        {l:`Indirect (${indirectCostPercentage}%)`, v: '€'+fmtMoney(gInd)},
+        {l:'Total Budget', v: '€'+fmtMoney(gBudget)},
+        {l:'Total Funding', v: '€'+fmtMoney(gFund)},
+      ];
+      document.getElementById('grandTotals').innerHTML = map.map(x => `
+        <div class="gt-box"><div class="label">${x.l}</div><div class="value">${x.v}</div></div>
+      `).join('');
+    }
+
+    function renderSummaryTables() {
+      function wpTotals(p) {
+        return wps.map(wp => {
+          let s = 0;
+          (wp.tasks || []).forEach(t => s += (p.wp_data[t.id] || 0));
+          return s;
+        });
+      }
+
+      const pmHead = document.querySelector('#pmTable thead tr');
+      pmHead.innerHTML = `<th>#</th><th>Partner</th>${wps.map(w=>`<th>${w.name.split('–')[0].trim()}</th>`).join('')}<th>Total PM</th><th>Persons/year</th>`;
+      const pmBody = document.querySelector('#pmTable tbody'); pmBody.innerHTML = '';
+      let grandWP = new Array(wps.length).fill(0), grandTotalPM = 0, grandPersons = 0;
+      partners.forEach((p, i) => {
+        const c = calcPartner(p);
+        const totals = wpTotals(p);
+        totals.forEach((v, j) => grandWP[j] += v);
+        grandTotalPM += c.totalPM; grandPersons += c.personsYear;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${p.name}</td>${totals.map(v=>`<td>${fmtNum(v)}</td>`).join('')}<td><strong>${fmtNum(c.totalPM)}</strong></td><td>${fmtNum(c.personsYear)}</td>`;
+        pmBody.appendChild(tr);
+      });
+      const pmTot = document.createElement('tr'); pmTot.className = 'totals-row';
+      pmTot.innerHTML = `<td></td><td>TOTAL</td>${grandWP.map(v=>`<td>${fmtNum(v)}</td>`).join('')}<td>${fmtNum(grandTotalPM)}</td><td>${fmtNum(grandPersons)}</td>`;
+      pmBody.appendChild(pmTot);
+
+      const budBody = document.querySelector('#budgetTable tbody'); budBody.innerHTML = '';
+      let gPmCost=0, gOther=0, gSub=0, gTdc=0, gInd=0, gBudget=0, gFund=0, gPM=0;
+      partners.forEach((p, i) => {
+        const c = calcPartner(p);
+        gPmCost += c.pmCost; gOther += c.other; gSub += c.sub; gTdc += c.tdc;
+        gInd += c.indirect; gBudget += c.totalBudget; gFund += c.totalFunding; gPM += c.totalPM;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i+1}</td><td>${p.name}</td>
+          <td>€${fmtMoney(c.pmCost)}</td><td>€${fmtMoney(c.other)}</td><td>€${fmtMoney(c.sub)}</td>
+          <td>€${fmtMoney(c.tdc)}</td><td>€${fmtMoney(c.indirect)}</td><td>€${fmtMoney(c.totalBudget)}</td>
+          <td>${c.fundingRate}</td><td>€${fmtMoney(c.totalFunding)}</td><td>${fmtNum(c.totalPM)}</td><td>${p.type}</td>
+        `;
+        budBody.appendChild(tr);
+      });
+      const budTot = document.createElement('tr'); budTot.className = 'totals-row';
+      budTot.innerHTML = `
+        <td></td><td>TOTAL</td>
+        <td>€${fmtMoney(gPmCost)}</td><td>€${fmtMoney(gOther)}</td><td>€${fmtMoney(gSub)}</td>
+        <td>€${fmtMoney(gTdc)}</td><td>€${fmtMoney(gInd)}</td><td>€${fmtMoney(gBudget)}</td>
+        <td></td><td>€${fmtMoney(gFund)}</td><td>${fmtNum(gPM)}</td><td></td>
+      `;
+      budBody.appendChild(budTot);
+    }
+
+    // Settings save
+    document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+      const percent = parseInt(document.getElementById('indirectCostPercent').value, 10);
+      const months = parseInt(document.getElementById('projectDurationMonths').value, 10);
+      const description = document.getElementById('projectDescription').value;
+      if (isNaN(percent) || percent < 0 || percent > 100) {
+        alert('Please enter a valid percentage between 0 and 100');
+        return;
+      }
+      if (isNaN(months) || months < 1 || months > 120) {
+        alert('Please enter valid project duration between 1 and 120 months');
+        return;
+      }
+      console.log('Sending settings:', { indirect_cost_percentage: percent, project_duration_months: months, project_description: description });
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ indirect_cost_percentage: percent, project_duration_months: months, project_description: description })
+      });
+      console.log('Response:', res.status, res.ok);
+      if (res.ok) {
+        document.getElementById('settingsSaved').style.display = 'inline';
+        setTimeout(() => document.getElementById('settingsSaved').style.display = 'none', 2000);
+        // Update last saved settings so load() won't overwrite
+        lastSavedSettings = { indirect: percent, duration: months, description: description };
+        console.log('Updated lastSavedSettings:', lastSavedSettings);
+        // Reload to apply new settings
+        indirectCostPercentage = percent;
+        projectDurationMonths = months;
+        renderGrandTotals();
+        renderSummaryTables();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert('Failed to save settings: ' + (errorData.error || res.statusText));
+      }
+    });
+
+    // Chart rendering functions
+    let chartsInitialized = false;
+    
+    function renderCharts() {
+      // Calculate data for charts
+      const countryData = {};
+      const typeData = {};
+      
+      partners.forEach(p => {
+        const c = calcPartner(p);
+        const country = p.country || 'Unknown';
+        const type = p.type || 'Unknown';
+        
+        // By Country
+        if (!countryData[country]) {
+          countryData[country] = { funding: 0, pm: 0 };
+        }
+        countryData[country].funding += c.totalFunding;
+        countryData[country].pm += c.totalPM;
+        
+        // By Type
+        if (!typeData[type]) {
+          typeData[type] = { funding: 0, pm: 0 };
+        }
+        typeData[type].funding += c.totalFunding;
+        typeData[type].pm += c.totalPM;
+      });
+      
+      // If charts already exist, just update the data
+      if (chartsInitialized) {
+        updateChartData(charts.fundingCountry, countryData, 'funding');
+        updateChartData(charts.pmCountry, countryData, 'pm');
+        updateChartData(charts.fundingType, typeData, 'funding');
+        updateChartData(charts.pmType, typeData, 'pm');
+        return;
+      }
+      
+      // Color palette
+      const colors = [
+        '#1f4e79', '#2e75b6', '#5b9bd5', '#9dc3e6', '#bdd7ee',
+        '#70ad47', '#a9d08e', '#c5e0b4', '#e2efd9',
+        '#ffc000', '#ffd966', '#ffe699',
+        '#ed7d31', '#f4b084', '#f8cbad',
+        '#c55a11', '#d6604d', '#e99e8f'
+      ];
+      
+      // Render Funding by Country
+      const fundingCountryCtx = document.getElementById('fundingByCountryChart');
+      if (fundingCountryCtx && Object.keys(countryData).length > 0) {
+        charts.fundingCountry = new Chart(fundingCountryCtx, {
+          type: 'pie',
+          data: {
+            labels: Object.keys(countryData),
+            datasets: [{
+              data: Object.values(countryData).map(d => d.funding),
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = '€' + context.parsed.toLocaleString();
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return `${label}: ${value} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Render PM by Country
+      const pmCountryCtx = document.getElementById('pmByCountryChart');
+      if (pmCountryCtx && Object.keys(countryData).length > 0) {
+        charts.pmCountry = new Chart(pmCountryCtx, {
+          type: 'pie',
+          data: {
+            labels: Object.keys(countryData),
+            datasets: [{
+              data: Object.values(countryData).map(d => d.pm),
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed.toFixed(2) + ' PM';
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return `${label}: ${value} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Render Funding by Type
+      const fundingTypeCtx = document.getElementById('fundingByTypeChart');
+      if (fundingTypeCtx && Object.keys(typeData).length > 0) {
+        charts.fundingType = new Chart(fundingTypeCtx, {
+          type: 'pie',
+          data: {
+            labels: Object.keys(typeData),
+            datasets: [{
+              data: Object.values(typeData).map(d => d.funding),
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = '€' + context.parsed.toLocaleString();
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return `${label}: ${value} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Render PM by Type
+      const pmTypeCtx = document.getElementById('pmByTypeChart');
+      if (pmTypeCtx && Object.keys(typeData).length > 0) {
+        charts.pmType = new Chart(pmTypeCtx, {
+          type: 'pie',
+          data: {
+            labels: Object.keys(typeData),
+            datasets: [{
+              data: Object.values(typeData).map(d => d.pm),
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed.toFixed(2) + ' PM';
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return `${label}: ${value} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      chartsInitialized = true;
+    }
+    
+    function updateChartData(chart, data, metric) {
+      if (!chart) return;
+      const labels = Object.keys(data);
+      const values = Object.values(data).map(d => metric === 'funding' ? d.funding : d.pm);
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      chart.update('none'); // Update without animation
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+      const blob = new Blob([JSON.stringify({ wps, partners }, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'Alloc8_Budget.json'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('reanalyzeBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('reanalyzeBtn');
+      const status = document.getElementById('reanalyzeStatus');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/reanalyze-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.error) {
+          status.textContent = data.error;
+          btn.disabled = false;
+        } else {
+          status.textContent = `Started re-analyzing ${data.total} partner(s)...`;
+          pollReanalyzeStatus();
+        }
+      } catch (e) {
+        status.textContent = 'Failed to start: ' + e.message;
+        btn.disabled = false;
+      }
+    });
+
+    async function pollReanalyzeStatus() {
+      const btn = document.getElementById('reanalyzeBtn');
+      const status = document.getElementById('reanalyzeStatus');
+      const res = await fetch('/api/admin/reanalyze-status');
+      const data = await res.json();
+      if (data.running) {
+        status.textContent = `Re-analyzing... ${data.completed}/${data.total} completed`;
+        setTimeout(pollReanalyzeStatus, 2000);
+      } else {
+        const errCount = data.errors ? data.errors.length : 0;
+        status.textContent = `Done. ${data.completed}/${data.total} completed${errCount ? `, ${errCount} error(s)` : ''}.`;
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('importFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const text = await file.text();
+      try {
+        const data = JSON.parse(text);
+        if (!Array.isArray(data.wps) || !Array.isArray(data.partners)) { alert('Invalid JSON format'); return; }
+        if (!confirm('Import will REPLACE all current WPs and partners. Continue?')) return;
+        for (const p of [...partners]) await fetch(`/api/admin/partners/${p.id}`, {method:'DELETE'});
+        for (const w of [...wps]) await fetch(`/api/admin/wps/${w.id}`, {method:'DELETE'});
+        for (const w of data.wps) {
+          const wr = await fetch('/api/admin/wps', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:w.name || w})});
+          const wpRes = await wr.json();
+          const wpId = wpRes.id;
+          if (w.tasks) {
+            for (const t of w.tasks) {
+              await fetch(`/api/admin/wps/${wpId}/tasks`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:t.name || t})});
+            }
+          }
+        }
+        const freshWps = await (await fetch('/api/admin/wps')).json();
+        const taskMap = {};
+        freshWps.forEach(wp => {
+          (wp.tasks || []).forEach(t => {
+            taskMap[t.name] = t.id;
+          });
+        });
+        for (const p of data.partners) {
+          const wpObj = {};
+          if (p.wp_data && typeof p.wp_data === 'object' && !Array.isArray(p.wp_data)) {
+            Object.entries(p.wp_data).forEach(([k, v]) => {
+              const tid = taskMap[k];
+              if (tid) wpObj[tid] = v;
+            });
+          }
+          await fetch('/api/admin/partners', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+              name: p.name, username: p.username || '', password: p.password || '',
+              pic: p.pic || '', rate: p.rate || 0, type: p.type || 'university',
+              country: p.country || '', funding_rate: p.funding_rate || p.fundingRate || 1,
+              other_cost: p.other_cost || p.otherCost || 0,
+              subcontracting: p.subcontracting || 0,
+              contact_name: p.contact_name || '', contact_position: p.contact_position || '',
+              contact_email: p.contact_email || '', contact_phone: p.contact_phone || '',
+              wp_data: wpObj
+            })
+          });
+        }
+        load();
+      } catch (err) { alert('Failed to import: ' + err.message); }
+      e.target.value = '';
+    });
+
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && document.getElementById('editModal').style.display !== 'flex' && document.getElementById('addModal').style.display !== 'flex') {
+        load();
+      }
+    }, 5000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) load();
+    });
+
+    load();
+  </script>
+</body>
+</html>

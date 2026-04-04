@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - Alloc8</title>
+  <style>
+    :root {
+      --primary: #1f4e79;
+      --accent: #2e75b6;
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --border: #d0d7de;
+      --text: #24292f;
+      --muted: #57606a;
+      --danger: #cf222e;
+      --success: #1a7f37;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .signup-container {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .logo h1 {
+      margin: 0;
+      color: var(--primary);
+      font-size: 1.8rem;
+    }
+    .logo p {
+      margin: .3rem 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-size: .85rem;
+      color: var(--muted);
+      margin-bottom: .3rem;
+    }
+    input {
+      width: 100%;
+      padding: .65rem .8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: .95rem;
+      transition: border-color .2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    input:invalid {
+      border-color: var(--danger);
+    }
+    .email-hint {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-top: .3rem;
+    }
+    .btn {
+      width: 100%;
+      padding: .75rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn:hover { opacity: .9; }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      margin-top: 1rem;
+    }
+    .btn-primary:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+    .divider {
+      text-align: center;
+      margin: 1.5rem 0;
+      position: relative;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider span {
+      background: var(--panel);
+      padding: 0 1rem;
+      position: relative;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    .login-link {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: .9rem;
+    }
+    .login-link a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+    .error {
+      background: #ffeaea;
+      color: var(--danger);
+      padding: .75rem;
+      border-radius: 6px;
+      font-size: .9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .success {
+      background: #e8f5e9;
+      color: var(--success);
+      padding: .75rem;
+      border-radius: 6px;
+      font-size: .9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+    }
+    .step {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .step.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .step.completed {
+      background: var(--success);
+      color: #fff;
+    }
+    .step-content {
+      display: none;
+    }
+    .step-content.active {
+      display: block;
+    }
+    .project-info {
+      background: #f6f8fa;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+    .project-info h3 {
+      margin: 0 0 .5rem;
+      font-size: 1rem;
+      color: var(--primary);
+    }
+    .project-info p {
+      margin: 0;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <div class="logo">
+      <h1>Alloc8</h1>
+      <p>Create your project budget</p>
+    </div>
+
+    <div class="step-indicator">
+      <div class="step active" id="step1-indicator">1</div>
+      <div class="step" id="step2-indicator">2</div>
+      <div class="step" id="step3-indicator">3</div>
+    </div>
+
+    <div class="error" id="errorMsg"></div>
+    <div class="success" id="successMsg"></div>
+
+    <!-- Step 1: Email -->
+    <div class="step-content active" id="step1">
+      <div class="project-info">
+        <h3>Create Your Project</h3>
+        <p>Sign up to create your own project workspace where you can manage work packages, partners, and budgets.</p>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="your.email@gmail.com" required>
+        <div class="email-hint">We accept Gmail, Google Workspace, iCloud, and other email providers</div>
+      </div>
+      <button class="btn btn-primary" id="nextBtn1">Continue</button>
+    </div>
+
+    <!-- Step 2: Account Details -->
+    <div class="step-content" id="step2">
+      <div class="form-group">
+        <label for="projectName">Project Name</label>
+        <input type="text" id="projectName" placeholder="My Research Project" required>
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="lowercase_no_spaces" pattern="[a-z0-9_]+" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Create a secure password" minlength="6" required>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+      </div>
+      <button class="btn btn-primary" id="nextBtn2">Create Account</button>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div class="step-content" id="step3">
+      <div style="text-align: center; padding: 2rem 0;">
+        <div style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--success);">Success!</div>
+        <h2 style="color: var(--success); margin: 0 0 1rem;">Account Created!</h2>
+        <p style="color: var(--muted); margin: 0 0 1.5rem;">Your project workspace is ready. You can now log in and start managing your budget.</p>
+        <a href="/login.html" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Go to Login</a>
+      </div>
+    </div>
+
+    <div class="divider">
+      <span>or</span>
+    </div>
+
+    <div class="login-link">
+      Already have an account? <a href="/login.html">Log in</a>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    const formData = {
+      email: '',
+      projectName: '',
+      username: '',
+      password: ''
+    };
+
+    function showStep(step) {
+      document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(`step${step}`).classList.add('active');
+      
+      // Update indicators
+      for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step${i}-indicator`);
+        indicator.classList.remove('active', 'completed');
+        if (i < step) indicator.classList.add('completed');
+        else if (i === step) indicator.classList.add('active');
+      }
+      
+      currentStep = step;
+    }
+
+    function showError(msg) {
+      const errorEl = document.getElementById('errorMsg');
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+      setTimeout(() => errorEl.style.display = 'none', 5000);
+    }
+
+    function showSuccess(msg) {
+      const successEl = document.getElementById('successMsg');
+      successEl.textContent = msg;
+      successEl.style.display = 'block';
+    }
+
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    // Step 1: Email validation
+    document.getElementById('nextBtn1').addEventListener('click', () => {
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        showError('Please enter your email address');
+        return;
+      }
+      if (!validateEmail(email)) {
+        showError('Please enter a valid email address');
+        return;
+      }
+      formData.email = email;
+      showStep(2);
+    });
+
+    // Step 2: Create account
+    document.getElementById('nextBtn2').addEventListener('click', async () => {
+      const projectName = document.getElementById('projectName').value.trim();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (!projectName) {
+        showError('Please enter a project name');
+        return;
+      }
+      if (!username) {
+        showError('Please enter a username');
+        return;
+      }
+      if (!/^[a-z0-9_]+$/.test(username)) {
+        showError('Username must be lowercase letters, numbers, or underscores only');
+        return;
+      }
+      if (password.length < 6) {
+        showError('Password must be at least 6 characters');
+        return;
+      }
+      if (password !== confirmPassword) {
+        showError('Passwords do not match');
+        return;
+      }
+
+      formData.projectName = projectName;
+      formData.username = username;
+      formData.password = password;
+
+      const btn = document.getElementById('nextBtn2');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      try {
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        const result = await res.json();
+        
+        if (res.ok) {
+          showStep(3);
+        } else {
+          showError(result.error || 'Failed to create account');
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+        }
+      } catch (err) {
+        showError('Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+
+    // Allow Enter key to proceed
+    document.getElementById('email').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('nextBtn1').click();
+    });
+    document.getElementById('confirmPassword').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('nextBtn2').click();
+    });
+  </script>
+</body>
+</html>

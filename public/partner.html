@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Budget - Alloc8</title>
+  <style>
+    :root {
+      --primary: #1f4e79;
+      --accent: #2e75b6;
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --border: #d0d7de;
+      --text: #24292f;
+      --muted: #57606a;
+      --danger: #cf222e;
+      --success: #1a7f37;
+      --wp-bg: #eef4fa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      background: linear-gradient(90deg, var(--primary), var(--accent)); color: #fff;
+      padding: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+    }
+    header h1 { margin: 0; font-size: 1.2rem; }
+    .btn {
+      border: none; padding: .5rem .8rem; border-radius: 6px; cursor: pointer; font-size: .9rem; font-weight: 600;
+    }
+    .btn-danger { background: #fff; color: var(--danger); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.2rem; margin-bottom: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+    .card h2 { margin: 0 0 .8rem; font-size: 1.1rem; color: var(--primary); }
+    .hint { font-size: .85rem; color: var(--muted); margin-bottom: .8rem; line-height: 1.4; }
+    .meta-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .7rem;
+    }
+    label { font-size: .8rem; color: var(--muted); display: flex; flex-direction: column; gap: .2rem; }
+    input, select, textarea {
+      padding: .5rem .6rem; border: 1px solid var(--border); border-radius: 6px; font-size: .95rem; font-family: inherit;
+    }
+
+    /* WP & Tasks */
+    .wp-block {
+      background: var(--wp-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .9rem 1rem;
+      margin-bottom: .8rem;
+    }
+    .wp-header {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: .95rem;
+      margin-bottom: .6rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid #d0e0ed;
+    }
+
+    /* Flowchart */
+    .flowchart {
+      display: flex; flex-direction: column; align-items: center; gap: .4rem; margin-bottom: .8rem;
+    }
+    .fc-wp-box {
+      background: var(--primary); color: #fff; padding: .5rem 1rem; border-radius: 8px;
+      font-weight: 600; font-size: .85rem; text-align: center;
+    }
+    .fc-line { width: 2px; height: 18px; background: #b0c4de; }
+    .fc-tasks {
+      display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; width: 100%;
+    }
+    .fc-task {
+      background: #fff; border: 1px solid var(--border); border-radius: 6px;
+      padding: .4rem .7rem; text-align: center; min-width: 120px; max-width: 220px;
+    }
+    .fc-task.self { border-color: var(--success); background: #f0f9f4; }
+    .fc-task .t-name { font-size: .78rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .fc-task .t-lead { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
+
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+      margin-top: .4rem;
+    }
+    .task-table td {
+      padding: .35rem .4rem;
+      vertical-align: middle;
+    }
+    .task-table td:first-child { width: 70%; color: var(--text); padding-left: 0; }
+    .task-table td:last-child { width: 30%; padding-right: 0; }
+    .task-table input { width: 100%; padding: .4rem .5rem; }
+
+    .lbl { color: var(--muted); font-size: .8rem; display: block; margin-bottom: .2rem; }
+    .val { font-weight: 700; font-family: SFMono-Regular, Consolas, monospace; font-size: 1rem; }
+    .toolbar { display: flex; gap: .6rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
+    .saved { color: var(--success); font-weight: 600; display: none; }
+    .error { color: var(--danger); font-weight: 600; display: none; }
+    .logo-required {
+      color: var(--danger); font-size: .9rem; font-weight: 600; display: none;
+    }
+
+    .logo-wrap { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: .8rem; }
+    .logo-wrap img {
+      width: 120px; height: 120px; object-fit: contain; border: 1px solid var(--border);
+      border-radius: 8px; background: #fff; padding: .3rem;
+    }
+    .logo-placeholder {
+      width: 120px; height: 120px; border: 2px dashed var(--border); border-radius: 8px;
+      display: grid; place-items: center; color: var(--muted); font-size: .85rem;
+    }
+    .logo-controls { display: flex; flex-direction: column; gap: .4rem; }
+    .logo-controls input[type="file"] { font-size: .85rem; }
+    .input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(207, 34, 46, 0.2) !important; }
+    .logo-msg { font-size: .8rem; color: var(--success); display: none; }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(31, 78, 121, 0.9);
+      backdrop-filter: blur(4px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+    }
+    .loading-overlay.active {
+      display: flex;
+    }
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .loading-subtext {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      max-width: 400px;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .loading-progress {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .url-row {
+      display: grid; grid-template-columns: 1fr 1fr auto;
+      gap: .5rem; align-items: end; margin-bottom: .5rem;
+    }
+
+    /* Consortium */
+    .consortium-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+    .consortium-item {
+      text-align: center;
+      background: #fafbfc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .8rem .6rem;
+    }
+    .consortium-item img {
+      width: 80px; height: 80px; object-fit: contain;
+      border-radius: 6px; background: #fff; margin-bottom: .5rem;
+    }
+    .consortium-item .placeholder {
+      width: 80px; height: 80px; border: 1px dashed var(--border); border-radius: 6px;
+      display: grid; place-items: center; color: var(--muted); font-size: .7rem; margin: 0 auto .5rem;
+      background: #fff;
+    }
+    .consortium-item .name {
+      font-size: .85rem; font-weight: 600; color: var(--text);
+      word-break: break-word;
+    }
+    .consortium-item .self-badge {
+      display: inline-block; background: var(--success); color: #fff; font-size: .65rem;
+      padding: .15rem .4rem; border-radius: 4px; margin-top: .3rem;
+    }
+
+    @media (max-width: 600px) {
+      .url-row { grid-template-columns: 1fr auto; }
+      .task-table td:first-child { font-size: .8rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Processing...</div>
+    <div class="loading-subtext" id="loadingSubtext">
+      Please wait while we save your data and analyze your URLs.<br>
+      This may take a few minutes.
+    </div>
+    <div class="loading-progress" id="loadingProgress"></div>
+  </div>
+
+  <header>
+    <h1>Alloc8 — Partner</h1>
+    <div style="display:flex;gap:.5rem;">
+      <button class="btn btn-primary" onclick="location.href='partner-main.html'">Dashboard</button>
+      <button class="btn btn-danger" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2 id="partnerTitle">Loading…</h2>
+      <div class="logo-wrap">
+        <div id="logoBox">
+          <div class="logo-placeholder">No logo</div>
+        </div>
+        <div class="logo-controls">
+          <label>Upload / Change Logo (PNG)
+            <input type="file" id="logoInput" accept="image/png" />
+          </label>
+          <span class="logo-msg" id="logoMsg">Logo uploaded!</span>
+        </div>
+      </div>
+      <div class="meta-grid">
+        <label>PIC<input id="pic" type="text" /></label>
+        <label>Personnel Monthly Rate (€)<input id="rate" type="number" step="0.01" /></label>
+        <label>Type
+          <select id="type">
+            <option>university</option>
+            <option>Research Institution</option>
+            <option>Industry</option>
+            <option>SME</option>
+            <option>Non-profit</option>
+          </select>
+        </label>
+        <label>Country<input id="country" type="text" /></label>
+        <label>Funding Rate (%)
+          <div style="display:flex;align-items:center;gap:.3rem;">
+            <input id="fundingRate" type="number" step="1" min="0" max="100" style="flex:1;" />
+            <span style="color:var(--muted);">%</span>
+          </div>
+        </label>
+      </div>
+      <div style="margin-top:.8rem"><strong>Primary Contact</strong></div>
+      <div class="meta-grid" style="margin-top:.4rem">
+        <label>Contact Name<input id="contactName" type="text" /></label>
+        <label>Contact Position<input id="contactPosition" type="text" /></label>
+        <label>Contact Email<input id="contactEmail" type="email" /></label>
+        <label>Contact Phone<input id="contactPhone" type="tel" /></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Company Links & Evidence</h2>
+      <div class="hint">
+        Add URLs that showcase your organisation’s activities, skills, services and past work.
+        Include LinkedIn profiles, project portfolios, publications, GitHub repositories, or any evidence
+        that helps AI analyse your expertise and skill pool for consortium matching.
+      </div>
+      <div id="urlsContainer"></div>
+      <div class="toolbar" style="margin-top:.6rem">
+        <button class="btn btn-primary" id="addUrlBtn">+ Add URL</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your Assigned Work Packages & Tasks</h2>
+      <div id="wpContainer"></div>
+      <div class="hint" id="noAssignments" style="display:none; text-align:center; padding:1rem;">
+        You currently have no assigned Work Packages or tasks. Please contact the project administrator.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Other Costs</h2>
+      <div id="otherCostsContainer"></div>
+      <div class="toolbar" style="margin-top:.6rem">
+        <button class="btn btn-primary" id="addOtherCostBtn">+ Add Item</button>
+        <span style="margin-left:auto;font-weight:600;">Subtotal: €<span id="otherCostsTotal">0</span></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Subcontracting Cost</h2>
+      <div id="subcontractingContainer"></div>
+      <div class="toolbar" style="margin-top:.6rem">
+        <button class="btn btn-primary" id="addSubcontractingBtn">+ Add Item</button>
+        <span style="margin-left:auto;font-weight:600;">Subtotal: €<span id="subcontractingTotal">0</span></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Travel Cost</h2>
+      
+      <div class="travel-subsection" style="margin-bottom:1.5rem;">
+        <h3 style="margin:0 0 .6rem;font-size:1rem;color:var(--primary);">Project Meetings & Reviews</h3>
+        <div id="travelMeetingsContainer"></div>
+        <div class="toolbar" style="margin-top:.6rem">
+          <button class="btn btn-primary" id="addMeetingBtn">+ Add Item</button>
+          <span style="margin-left:auto;font-weight:600;">Subtotal: €<span id="meetingsTotal">0</span></span>
+        </div>
+      </div>
+
+      <div class="travel-subsection">
+        <h3 style="margin:0 0 .6rem;font-size:1rem;color:var(--primary);">Dissemination & Standardization</h3>
+        <div id="travelDissemContainer"></div>
+        <div class="toolbar" style="margin-top:.6rem">
+          <button class="btn btn-primary" id="addDissemBtn">+ Add Item</button>
+          <span style="margin-left:auto;font-weight:600;">Subtotal: €<span id="dissemTotal">0</span></span>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;padding-top:1rem;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <strong>Total Travel Cost:</strong>
+        <span style="font-size:1.2rem;font-weight:700;color:var(--primary);">€<span id="travelGrandTotal">0</span></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Computed Summary</h2>
+      
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;">
+        
+        <!-- Column 1: Components -->
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);padding-bottom:.3rem;margin-bottom:.3rem;">Cost Components</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.2rem 0;">
+            <span style="font-size:.85rem;color:var(--text);">Total PM</span>
+            <span class="val" style="font-size:.9rem;"><span id="cTotalPM">0</span> PM</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.2rem 0;">
+            <span style="font-size:.85rem;color:var(--text);">Persons/year</span>
+            <span class="val" id="cPersons" style="font-size:.9rem;">0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;margin-top:.3rem;border-top:1px dashed var(--border);">
+            <span style="font-size:.9rem;font-weight:600;color:var(--primary);">PM Cost</span>
+            <span class="val" id="cPmCost" style="font-size:1rem;font-weight:700;color:var(--primary);">€0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.2rem 0;">
+            <span style="font-size:.85rem;color:var(--text);">Other Costs</span>
+            <span class="val" id="cOtherCosts" style="font-size:.9rem;">€0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.2rem 0;">
+            <span style="font-size:.85rem;color:var(--text);">Travel Cost</span>
+            <span class="val" id="cTravelCost" style="font-size:.9rem;">€0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;margin-top:.3rem;border-top:1px dashed var(--border);">
+            <span style="font-size:.9rem;font-weight:600;color:var(--primary);">Other Direct Cost</span>
+            <span class="val" id="cOtherDirectCost" style="font-size:1rem;font-weight:700;color:var(--primary);">€0</span>
+          </div>
+        </div>
+
+        <!-- Column 2: Calculation -->
+        <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1rem;background:#f8fafc;border-radius:8px;">
+          <div style="text-align:center;font-size:.8rem;color:var(--muted);margin-bottom:1rem;">Budget Calculation</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:.4rem;width:100%;">
+            <div style="display:flex;justify-content:space-between;width:100%;padding:.25rem .5rem;">
+              <span style="font-size:.85rem;">PM Cost</span>
+              <span style="font-size:.9rem;font-weight:600;" id="calcPmCost">€0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;width:100%;padding:.25rem .5rem;">
+              <span style="font-size:.85rem;">Other Direct Cost</span>
+              <span style="font-size:.9rem;font-weight:600;" id="calcOtherDirectCost">€0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;width:100%;padding:.25rem .5rem;">
+              <span style="font-size:.85rem;">Subcontracting</span>
+              <span style="font-size:.9rem;font-weight:600;" id="calcSubcontracting">€0</span>
+            </div>
+            <div style="width:100%;height:1px;background:var(--border);margin:.3rem 0;"></div>
+            <div style="display:flex;justify-content:space-between;width:100%;padding:.3rem .5rem;background:var(--primary);color:#fff;border-radius:4px;">
+              <span style="font-size:.85rem;">Total Direct</span>
+              <span style="font-size:1rem;font-weight:700;" id="calcTotalDirect">€0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Totals -->
+        <div style="display:flex;flex-direction:column;gap:.5rem;background:#f8fafc;padding:.8rem;border-radius:8px;">
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);padding-bottom:.3rem;margin-bottom:.3rem;">Totals</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;">
+            <span style="font-size:.85rem;color:var(--text);">Total Direct</span>
+            <span class="val" id="cTdc" style="font-size:1rem;font-weight:700;">€0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;">
+            <span style="font-size:.85rem;color:var(--text);">Indirect <span id="indirectPercentDisplay" style="color:var(--muted);">(25%)</span></span>
+            <span class="val" id="cIndirect" style="font-size:.9rem;">€0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;padding:.5rem;background:var(--primary);border-radius:6px;">
+            <span style="font-size:.9rem;color:#fff;opacity:.9;">Total Budget</span>
+            <span class="val" id="cBudget" style="font-size:1.2rem;color:#fff;font-weight:700;">€0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem;background:var(--success);border-radius:6px;">
+            <span style="font-size:.9rem;color:#fff;opacity:.9;">Total Funding</span>
+            <span class="val" id="cFunding" style="font-size:1.2rem;color:#fff;font-weight:700;">€0</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-success" id="saveBtn">Save Changes</button>
+        <span class="saved" id="savedMsg">Saved successfully!</span>
+        <span class="error" id="errorMsg">Save failed.</span>
+        <span class="logo-required" id="logoRequiredMsg">⚠ Please upload your organisation logo before saving.</span>
+      </div>
+    </div>
+
+
+  </div>
+
+  <script>
+    let partner = null;
+    let wps = [];
+    let urls = [];
+    let travelMeetings = [];
+    let analysisCheckInterval = null;
+
+    // Loading Overlay Functions
+    function showLoading(text = 'Processing...', subtext = null) {
+      document.getElementById('loadingText').textContent = text;
+      if (subtext) {
+        document.getElementById('loadingSubtext').innerHTML = subtext;
+      }
+      document.getElementById('loadingOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function updateLoadingProgress(message) {
+      document.getElementById('loadingProgress').textContent = message;
+    }
+
+    // Check if analysis is in progress
+    async function isAnalysisInProgress() {
+      try {
+        const res = await fetch('/api/partner/analysis-status');
+        if (!res.ok) return false;
+        const data = await res.json();
+        return data.analyzing === true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Poll for analysis completion
+    function startAnalysisPolling() {
+      showLoading(
+        'Analyzing Skills...',
+        'AI is analyzing your organization\'s capabilities against Work Packages and Tasks.<br>This may take 2-5 minutes. Please do not close the browser.'
+      );
+      
+      let dots = 0;
+      const progressInterval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        updateLoadingProgress('Processing' + '.'.repeat(dots));
+      }, 500);
+
+      analysisCheckInterval = setInterval(async () => {
+        const stillAnalyzing = await isAnalysisInProgress();
+        if (!stillAnalyzing) {
+          clearInterval(analysisCheckInterval);
+          clearInterval(progressInterval);
+          hideLoading();
+          // Redirect to dashboard to see updated skills
+          window.location.href = 'partner-main.html';
+        }
+      }, 3000);
+    }
+    let travelDissem = [];
+    let otherCosts = [];
+    let subcontractingCosts = [];
+    let indirectCostPercentage = 25; // Default value, will be loaded from settings
+    let projectDurationMonths = 48; // Default value, will be loaded from settings
+
+    const fmtMoney = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+    const fmtNum = (n) => Number(n).toFixed(n % 1 === 0 ? 0 : 2);
+
+    async function load() {
+      const [dataRes, settingsRes] = await Promise.all([
+        fetch('/api/partner/data'),
+        fetch('/api/settings')
+      ]);
+      if (!dataRes.ok) return window.location.href = '/login.html';
+      
+      // Load settings
+      if (settingsRes.ok) {
+        const settings = await settingsRes.json();
+        indirectCostPercentage = settings.indirect_cost_percentage || 25;
+        projectDurationMonths = settings.project_duration_months || 48;
+      }
+      
+      const data = await dataRes.json();
+      partner = data.partner;
+      wps = data.wps;
+      urls = partner.urls || [];
+      document.getElementById('partnerTitle').textContent = partner.name;
+      document.getElementById('pic').value = partner.pic || '';
+      document.getElementById('rate').value = partner.rate;
+      document.getElementById('type').value = partner.type;
+      document.getElementById('country').value = partner.country || '';
+      document.getElementById('fundingRate').value = Math.round((partner.funding_rate || 0) * 100);
+      document.getElementById('contactName').value = partner.contact_name || '';
+      document.getElementById('contactPosition').value = partner.contact_position || '';
+      document.getElementById('contactEmail').value = partner.contact_email || '';
+      document.getElementById('contactPhone').value = partner.contact_phone || '';
+      otherCosts = partner.other_costs || [];
+      subcontractingCosts = partner.subcontracting_costs || [];
+      travelMeetings = partner.travel_meetings || [];
+      travelDissem = partner.travel_dissem || [];
+      renderLogo();
+      renderUrls();
+      renderWPs();
+      renderOtherCosts();
+      renderSubcontracting();
+      renderTravelMeetings();
+      renderTravelDissem();
+      attachListeners();
+      compute();
+    }
+
+    function renderLogo() {
+      const box = document.getElementById('logoBox');
+      if (partner.logo_path) {
+        box.innerHTML = `<img src="${partner.logo_path}?t=${Date.now()}" alt="Logo" />`;
+      } else {
+        box.innerHTML = `<div class="logo-placeholder">No logo</div>`;
+      }
+    }
+
+    function renderUrls() {
+      const container = document.getElementById('urlsContainer');
+      container.innerHTML = urls.map((u, i) => `
+        <div class="url-row" data-idx="${i}">
+          <label>URL
+            <input class="url-input" data-idx="${i}" data-field="url" type="url" value="${u.url}" placeholder="https://..." />
+          </label>
+          <label>Description
+            <input class="url-input" data-idx="${i}" data-field="description" type="text" value="${u.description || ''}" placeholder="e.g. LinkedIn, project portfolio" />
+          </label>
+          <button class="btn btn-danger" onclick="removeUrl(${i})">Remove</button>
+        </div>
+      `).join('');
+      document.querySelectorAll('.url-input').forEach(inp => {
+        inp.addEventListener('input', e => {
+          const idx = +e.target.dataset.idx;
+          const field = e.target.dataset.field;
+          urls[idx][field] = e.target.value;
+        });
+      });
+    }
+
+    window.removeUrl = (i) => {
+      urls.splice(i, 1);
+      renderUrls();
+    };
+
+    document.getElementById('addUrlBtn').addEventListener('click', () => {
+      urls.push({ url: '', description: '' });
+      renderUrls();
+    });
+
+    // Travel Cost - Project Meetings & Reviews
+    function renderTravelMeetings() {
+      const container = document.getElementById('travelMeetingsContainer');
+      container.innerHTML = travelMeetings.map((item, i) => `
+        <div class="travel-meeting-row" style="display:grid;grid-template-columns:1fr 120px auto;gap:.5rem;align-items:end;margin-bottom:.5rem;" data-idx="${i}">
+          <label style="font-size:.8rem;color:var(--muted);">Description *
+            <input class="travel-meeting-input ${!item.description.trim() ? 'input-error' : ''}" data-idx="${i}" data-field="description" type="text" value="${item.description || ''}" placeholder="Required: e.g. Kick-off meeting" />
+          </label>
+          <label style="font-size:.8rem;color:var(--muted);">Cost (€) *
+            <input class="travel-meeting-input ${item.cost <= 0 ? 'input-error' : ''}" data-idx="${i}" data-field="cost" type="number" step="0.01" value="${item.cost || 0}" />
+          </label>
+          <button class="btn btn-danger" onclick="removeTravelMeeting(${i})" style="height:fit-content;">Remove</button>
+        </div>
+      `).join('');
+      attachTravelListeners();
+      computeTravelTotals();
+    }
+
+    window.removeTravelMeeting = (i) => {
+      travelMeetings.splice(i, 1);
+      renderTravelMeetings();
+      compute();
+    };
+
+    document.getElementById('addMeetingBtn').addEventListener('click', () => {
+      travelMeetings.push({ description: '', cost: 0 });
+      renderTravelMeetings();
+      compute();
+    });
+
+    // Travel Cost - Dissemination & Standardization
+    function renderTravelDissem() {
+      const container = document.getElementById('travelDissemContainer');
+      container.innerHTML = travelDissem.map((item, i) => `
+        <div class="travel-dissem-row" style="display:grid;grid-template-columns:1fr 120px auto;gap:.5rem;align-items:end;margin-bottom:.5rem;" data-idx="${i}">
+          <label style="font-size:.8rem;color:var(--muted);">Description *
+            <input class="travel-dissem-input ${!item.description.trim() ? 'input-error' : ''}" data-idx="${i}" data-field="description" type="text" value="${item.description || ''}" placeholder="Required: e.g. Conference presentation" />
+          </label>
+          <label style="font-size:.8rem;color:var(--muted);">Cost (€) *
+            <input class="travel-dissem-input ${item.cost <= 0 ? 'input-error' : ''}" data-idx="${i}" data-field="cost" type="number" step="0.01" value="${item.cost || 0}" />
+          </label>
+          <button class="btn btn-danger" onclick="removeTravelDissem(${i})" style="height:fit-content;">Remove</button>
+        </div>
+      `).join('');
+      attachTravelListeners();
+      computeTravelTotals();
+    }
+
+    window.removeTravelDissem = (i) => {
+      travelDissem.splice(i, 1);
+      renderTravelDissem();
+      compute();
+    };
+
+    document.getElementById('addDissemBtn').addEventListener('click', () => {
+      travelDissem.push({ description: '', cost: 0 });
+      renderTravelDissem();
+      compute();
+    });
+
+    function attachTravelListeners() {
+      document.querySelectorAll('.travel-meeting-input').forEach(inp => {
+        inp.addEventListener('input', e => {
+          const idx = +e.target.dataset.idx;
+          const field = e.target.dataset.field;
+          travelMeetings[idx][field] = field === 'cost' ? (parseFloat(e.target.value) || 0) : e.target.value;
+          if (field === 'cost') {
+            computeTravelTotals();
+            compute();
+          }
+        });
+      });
+      document.querySelectorAll('.travel-dissem-input').forEach(inp => {
+        inp.addEventListener('input', e => {
+          const idx = +e.target.dataset.idx;
+          const field = e.target.dataset.field;
+          travelDissem[idx][field] = field === 'cost' ? (parseFloat(e.target.value) || 0) : e.target.value;
+          if (field === 'cost') {
+            computeTravelTotals();
+            compute();
+          }
+        });
+      });
+    }
+
+    function computeTravelTotals() {
+      const meetingsTotal = travelMeetings.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      const dissemTotal = travelDissem.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      const grandTotal = meetingsTotal + dissemTotal;
+      document.getElementById('meetingsTotal').textContent = fmtMoney(meetingsTotal);
+      document.getElementById('dissemTotal').textContent = fmtMoney(dissemTotal);
+      document.getElementById('travelGrandTotal').textContent = fmtMoney(grandTotal);
+    }
+
+    // Other Costs - dynamic list with justification
+    function renderOtherCosts() {
+      const container = document.getElementById('otherCostsContainer');
+      container.innerHTML = otherCosts.map((item, i) => `
+        <div class="other-cost-row" style="display:grid;grid-template-columns:1fr 120px 1fr auto;gap:.5rem;align-items:end;margin-bottom:.5rem;" data-idx="${i}">
+          <label style="font-size:.8rem;color:var(--muted);">Description *
+            <input class="other-cost-input ${!item.description.trim() ? 'input-error' : ''}" data-idx="${i}" data-field="description" type="text" value="${item.description || ''}" placeholder="Required: e.g. Equipment" />
+          </label>
+          <label style="font-size:.8rem;color:var(--muted);">Cost (€) *
+            <input class="other-cost-input ${item.cost <= 0 ? 'input-error' : ''}" data-idx="${i}" data-field="cost" type="number" step="0.01" value="${item.cost || 0}" />
+          </label>
+          <label style="font-size:.8rem;color:var(--muted);">Justification
+            <input class="other-cost-input" data-idx="${i}" data-field="justification" type="text" value="${item.justification || ''}" placeholder="Why is this cost necessary?" />
+          </label>
+          <button class="btn btn-danger" onclick="removeOtherCost(${i})" style="height:fit-content;">Remove</button>
+        </div>
+      `).join('');
+      attachOtherCostListeners();
+      computeOtherCostsTotal();
+    }
+
+    window.removeOtherCost = (i) => {
+      otherCosts.splice(i, 1);
+      renderOtherCosts();
+      compute();
+    };
+
+    document.getElementById('addOtherCostBtn').addEventListener('click', () => {
+      otherCosts.push({ description: '', cost: 0, justification: '' });
+      renderOtherCosts();
+      compute();
+    });
+
+    function attachOtherCostListeners() {
+      document.querySelectorAll('.other-cost-input').forEach(inp => {
+        inp.addEventListener('input', e => {
+          const idx = +e.target.dataset.idx;
+          const field = e.target.dataset.field;
+          otherCosts[idx][field] = field === 'cost' ? (parseFloat(e.target.value) || 0) : e.target.value;
+          if (field === 'cost') {
+            computeOtherCostsTotal();
+            compute();
+          }
+        });
+      });
+    }
+
+    function computeOtherCostsTotal() {
+      const total = otherCosts.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      document.getElementById('otherCostsTotal').textContent = fmtMoney(total);
+      return total;
+    }
+
+    // Subcontracting Cost - dynamic list with justification
+    function renderSubcontracting() {
+      const container = document.getElementById('subcontractingContainer');
+      container.innerHTML = subcontractingCosts.map((item, i) => `
+        <div class="subcontracting-row" style="display:grid;grid-template-columns:1fr 120px 1fr auto;gap:.5rem;align-items:end;margin-bottom:.5rem;" data-idx="${i}">
+          <label style="font-size:.8rem;color:var(--muted);">Description *
+            <input class="subcontracting-input ${!item.description.trim() ? 'input-error' : ''}" data-idx="${i}" data-field="description" type="text" value="${item.description || ''}" placeholder="Required: e.g. Lab analysis" />
+          </label>
+          <label style="font-size:.8rem;color:var(--muted);">Cost (€) *
+            <input class="subcontracting-input ${item.cost <= 0 ? 'input-error' : ''}" data-idx="${i}" data-field="cost" type="number" step="0.01" value="${item.cost || 0}" />
+          </label>
+          <label style="font-size:.8rem;color:var(--muted);">Justification
+            <input class="subcontracting-input" data-idx="${i}" data-field="justification" type="text" value="${item.justification || ''}" placeholder="Why is subcontracting necessary?" />
+          </label>
+          <button class="btn btn-danger" onclick="removeSubcontracting(${i})" style="height:fit-content;">Remove</button>
+        </div>
+      `).join('');
+      attachSubcontractingListeners();
+      computeSubcontractingTotal();
+    }
+
+    window.removeSubcontracting = (i) => {
+      subcontractingCosts.splice(i, 1);
+      renderSubcontracting();
+      compute();
+    };
+
+    document.getElementById('addSubcontractingBtn').addEventListener('click', () => {
+      subcontractingCosts.push({ description: '', cost: 0, justification: '' });
+      renderSubcontracting();
+      compute();
+    });
+
+    function attachSubcontractingListeners() {
+      document.querySelectorAll('.subcontracting-input').forEach(inp => {
+        inp.addEventListener('input', e => {
+          const idx = +e.target.dataset.idx;
+          const field = e.target.dataset.field;
+          subcontractingCosts[idx][field] = field === 'cost' ? (parseFloat(e.target.value) || 0) : e.target.value;
+          if (field === 'cost') {
+            computeSubcontractingTotal();
+            compute();
+          }
+        });
+      });
+    }
+
+    function computeSubcontractingTotal() {
+      const total = subcontractingCosts.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      document.getElementById('subcontractingTotal').textContent = fmtMoney(total);
+      return total;
+    }
+
+    function renderWPs() {
+      const container = document.getElementById('wpContainer');
+      if (!wps.length) {
+        container.innerHTML = '';
+        document.getElementById('noAssignments').style.display = 'block';
+        return;
+      }
+      document.getElementById('noAssignments').style.display = 'none';
+
+      container.innerHTML = wps.map(wp => {
+        const isWpAssigned = wp.assigned_partner_ids.includes(partner.id);
+        const myTasks = wp.tasks.filter(t => t.assigned_partner_ids.includes(partner.id));
+        return `
+          <div class="wp-block">
+            <div class="wp-header">${wp.name}</div>
+            <div class="flowchart">
+              <div class="fc-wp-box">${wp.assigned_names.join(', ') || '—'}</div>
+              <div class="fc-line"></div>
+              <div class="fc-tasks">
+                ${wp.tasks.map(t => `
+                  <div class="fc-task ${t.assigned_partner_ids.includes(partner.id) ? 'self' : ''}">
+                    <div class="t-name">${t.name}</div>
+                    <div class="t-lead">${t.assigned_names.join(', ') || '—'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            ${myTasks.length ? `
+              <table class="task-table">
+                <tbody>
+                  ${myTasks.map(t => `
+                    <tr>
+                      <td>${t.name}</td>
+                      <td><input class="task-input" data-taskid="${t.id}" type="number" step="0.1" value="${partner.wp_data[t.id] ?? 0}" /></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : `<div class="hint" style="margin-top:.4rem">You are assigned to this WP but have no direct task assignments with input fields.</div>`}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getWpDataObject() {
+      const obj = {};
+      document.querySelectorAll('.task-input').forEach(inp => {
+        obj[inp.dataset.taskid] = parseFloat(inp.value) || 0;
+      });
+      return obj;
+    }
+
+    function compute() {
+      const rate = parseFloat(document.getElementById('rate').value) || 0;
+      const other = computeOtherCostsTotal();
+      const travel = computeTotalTravelCost();
+      const sub = computeSubcontractingTotal();
+      const fundingRate = (parseFloat(document.getElementById('fundingRate').value) || 0) / 100;
+      const wpData = getWpDataObject();
+      const totalPM = Object.values(wpData).reduce((a, b) => a + b, 0);
+      const pmCost = totalPM * rate;
+      const otherDirectCost = other + travel;  // Other Direct = Other Costs + Travel (no subcontracting)
+      const tdc = pmCost + otherDirectCost + sub;  // Total Direct = PM Cost + Other Direct + Subcontracting
+      const indirectRate = indirectCostPercentage / 100;
+      const indirect = (pmCost + otherDirectCost) * indirectRate;  // Indirect on PM Cost + Other Direct Cost
+      const totalBudget = tdc + indirect;
+      const totalFunding = totalBudget * fundingRate;
+      
+      // Update indirect percentage display
+      document.getElementById('indirectPercentDisplay').textContent = '(' + indirectCostPercentage + '%)';
+      
+      document.getElementById('cTotalPM').textContent = fmtNum(totalPM);
+      document.getElementById('cPersons').textContent = fmtNum(totalPM / projectDurationMonths);
+      document.getElementById('cPmCost').textContent = '€' + fmtMoney(pmCost);
+      document.getElementById('cOtherCosts').textContent = '€' + fmtMoney(other);
+      document.getElementById('cTravelCost').textContent = '€' + fmtMoney(travel);
+      document.getElementById('cOtherDirectCost').textContent = '€' + fmtMoney(otherDirectCost);
+      document.getElementById('cTdc').textContent = '€' + fmtMoney(tdc);
+      document.getElementById('cIndirect').textContent = '€' + fmtMoney(indirect);
+      document.getElementById('cBudget').textContent = '€' + fmtMoney(totalBudget);
+      document.getElementById('cFunding').textContent = '€' + fmtMoney(totalFunding);
+      // Calculation column
+      document.getElementById('calcPmCost').textContent = '€' + fmtMoney(pmCost);
+      document.getElementById('calcOtherDirectCost').textContent = '€' + fmtMoney(otherDirectCost);
+      document.getElementById('calcSubcontracting').textContent = '€' + fmtMoney(sub);
+      document.getElementById('calcTotalDirect').textContent = '€' + fmtMoney(tdc);
+    }
+
+    function computeTotalTravelCost() {
+      const meetingsTotal = travelMeetings.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      const dissemTotal = travelDissem.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+      return meetingsTotal + dissemTotal;
+    }
+
+    function attachListeners() {
+      document.querySelectorAll('#pic, #rate, #type, #country, #fundingRate, #contactName, #contactPosition, #contactEmail, #contactPhone').forEach(el => {
+        el.removeEventListener('input', compute);
+        el.addEventListener('input', compute);
+      });
+      document.querySelectorAll('.task-input').forEach(el => {
+        el.removeEventListener('input', compute);
+        el.addEventListener('input', () => {
+          compute();
+        });
+      });
+    }
+
+    document.getElementById('logoInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append('logo', file);
+      const res = await fetch('/api/partner/logo', { method: 'POST', body: fd });
+      if (res.ok) {
+        const data = await res.json();
+        partner.logo_path = data.logo_path;
+        renderLogo();
+        document.getElementById('logoMsg').style.display = 'inline';
+        document.getElementById('logoRequiredMsg').style.display = 'none';
+        loadConsortium();
+        setTimeout(() => document.getElementById('logoMsg').style.display = 'none', 2000);
+      } else {
+        alert('Logo upload failed. Make sure it is a PNG file under 500MB.');
+      }
+      e.target.value = '';
+    });
+
+    function validateInputs() {
+      let hasError = false;
+      
+      // Check Other Costs
+      otherCosts.forEach((item, i) => {
+        const row = document.querySelector(`.other-cost-row[data-idx="${i}"]`);
+        if (row) {
+          const descInput = row.querySelector('[data-field="description"]');
+          const costInput = row.querySelector('[data-field="cost"]');
+          descInput?.classList.remove('input-error');
+          costInput?.classList.remove('input-error');
+          
+          if (!item.description.trim() || item.cost <= 0) {
+            hasError = true;
+            if (!item.description.trim()) descInput?.classList.add('input-error');
+            if (item.cost <= 0) costInput?.classList.add('input-error');
+          }
+        }
+      });
+      
+      // Check Subcontracting
+      subcontractingCosts.forEach((item, i) => {
+        const row = document.querySelector(`.subcontracting-row[data-idx="${i}"]`);
+        if (row) {
+          const descInput = row.querySelector('[data-field="description"]');
+          const costInput = row.querySelector('[data-field="cost"]');
+          descInput?.classList.remove('input-error');
+          costInput?.classList.remove('input-error');
+          
+          if (!item.description.trim() || item.cost <= 0) {
+            hasError = true;
+            if (!item.description.trim()) descInput?.classList.add('input-error');
+            if (item.cost <= 0) costInput?.classList.add('input-error');
+          }
+        }
+      });
+      
+      // Check Travel Meetings
+      travelMeetings.forEach((item, i) => {
+        const row = document.querySelector(`.travel-meeting-row[data-idx="${i}"]`);
+        if (row) {
+          const descInput = row.querySelector('[data-field="description"]');
+          const costInput = row.querySelector('[data-field="cost"]');
+          descInput?.classList.remove('input-error');
+          costInput?.classList.remove('input-error');
+          
+          if (!item.description.trim() || item.cost <= 0) {
+            hasError = true;
+            if (!item.description.trim()) descInput?.classList.add('input-error');
+            if (item.cost <= 0) costInput?.classList.add('input-error');
+          }
+        }
+      });
+      
+      // Check Travel Dissemination
+      travelDissem.forEach((item, i) => {
+        const row = document.querySelector(`.travel-dissem-row[data-idx="${i}"]`);
+        if (row) {
+          const descInput = row.querySelector('[data-field="description"]');
+          const costInput = row.querySelector('[data-field="cost"]');
+          descInput?.classList.remove('input-error');
+          costInput?.classList.remove('input-error');
+          
+          if (!item.description.trim() || item.cost <= 0) {
+            hasError = true;
+            if (!item.description.trim()) descInput?.classList.add('input-error');
+            if (item.cost <= 0) costInput?.classList.add('input-error');
+          }
+        }
+      });
+      
+      return !hasError;
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      document.getElementById('savedMsg').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('logoRequiredMsg').style.display = 'none';
+
+      if (!partner.logo_path) {
+        document.getElementById('logoRequiredMsg').style.display = 'inline';
+        return;
+      }
+
+      // Validate inputs
+      if (!validateInputs()) {
+        alert('Please fill in all required fields (marked in red)');
+        return;
+      }
+
+      const payload = {
+        name: partner.name,
+        pic: document.getElementById('pic').value,
+        rate: parseFloat(document.getElementById('rate').value) || 0,
+        type: document.getElementById('type').value,
+        country: document.getElementById('country').value,
+        funding_rate: (parseFloat(document.getElementById('fundingRate').value) || 0) / 100,
+        contact_name: document.getElementById('contactName').value,
+        contact_position: document.getElementById('contactPosition').value,
+        contact_email: document.getElementById('contactEmail').value,
+        contact_phone: document.getElementById('contactPhone').value,
+        wp_data: getWpDataObject(),
+        other_costs: otherCosts.filter(item => item.description.trim() && item.cost > 0),
+        subcontracting_costs: subcontractingCosts.filter(item => item.description.trim() && item.cost > 0),
+        travel_meetings: travelMeetings.filter(item => item.description.trim() && item.cost > 0),
+        travel_dissem: travelDissem.filter(item => item.description.trim() && item.cost > 0),
+      };
+      // Show processing state
+      const saveBtn = document.getElementById('saveBtn');
+      const originalBtnText = saveBtn.textContent;
+      let analysisStarted = false;
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+      
+      try {
+        // 1. Save partner data
+        const res1 = await fetch('/api/partner/data', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!res1.ok) {
+          throw new Error('Failed to save partner data');
+        }
+        
+        // 2. Save URLs + trigger scrape + analysis in one call
+        saveBtn.textContent = 'Scraping & Analyzing...';
+        const validUrls = urls.filter(u => u.url.trim());
+        const urlRes = await fetch('/api/partner/urls/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls: validUrls })
+        });
+        
+        const urlResult = await urlRes.json();
+        
+        if (!urlRes.ok) {
+          throw new Error(urlResult.error || 'Failed to save URLs');
+        }
+        
+        // Success - show loading screen if analysis started
+        urls = validUrls;
+        renderUrls();
+        
+        if (urlResult.analysis) {
+          // Analysis started - show loading screen and poll for completion
+          analysisStarted = true;
+          startAnalysisPolling();
+        } else {
+          // No analysis needed
+          const savedMsg = document.getElementById('savedMsg');
+          savedMsg.textContent = `Saved! Scraped ${urlResult.scrape?.scraped || 0} URLs.`;
+          savedMsg.style.display = 'inline';
+          setTimeout(() => {
+            savedMsg.style.display = 'none';
+            savedMsg.textContent = 'Saved successfully!';
+          }, 4000);
+        }
+        
+      } catch (error) {
+        console.error('Save error:', error);
+        document.getElementById('errorMsg').textContent = 'Save failed: ' + error.message;
+        document.getElementById('errorMsg').style.display = 'inline';
+        setTimeout(() => {
+          document.getElementById('errorMsg').style.display = 'none';
+          document.getElementById('errorMsg').textContent = 'Save failed.';
+        }, 4000);
+      } finally {
+        if (!analysisStarted) {
+          saveBtn.textContent = originalBtnText;
+          saveBtn.disabled = false;
+        }
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
+    load();
+  </script>
+</body>
+</html>
