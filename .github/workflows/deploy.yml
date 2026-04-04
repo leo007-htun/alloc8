@@ -1,0 +1,57 @@
+name: Deploy to IONOS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to IONOS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.IONOS_HOST }}
+          username: ${{ secrets.IONOS_USER }}
+          password: ${{ secrets.IONOS_PASSWORD }}
+          script: |
+            # Install Docker if not present
+            if ! command -v docker &> /dev/null; then
+              curl -fsSL https://get.docker.com | sh
+            fi
+
+            # Install Docker Compose plugin if not present
+            if ! docker compose version &> /dev/null; then
+              apt-get install -y docker-compose-plugin
+            fi
+
+            # Install git if not present
+            if ! command -v git &> /dev/null; then
+              apt-get update && apt-get install -y git
+            fi
+
+            # Set up deployment directory
+            APP_DIR="/opt/alloc8"
+            mkdir -p "$APP_DIR"
+            cd "$APP_DIR"
+
+            # Clone or pull latest code
+            if [ -d ".git" ]; then
+              git pull origin main
+            else
+              git clone https://leo007-htun:${{ secrets.GH_TOKEN }}@github.com/leo007-htun/alloc8.git .
+            fi
+
+            # Create data/uploads directories for persistence
+            mkdir -p data uploads
+
+            # Stop and rebuild containers
+            docker compose down --remove-orphans
+            docker compose up --build -d
+
+            echo "Deployment complete. App running on port 3000."
