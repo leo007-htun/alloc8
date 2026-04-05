@@ -9,31 +9,8 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: sithuyehtun/alloc8-budget-calculator:latest
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
     steps:
       - name: Deploy to IONOS via SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -44,36 +21,46 @@ jobs:
           script: |
             set -e
 
-            # 1. Install Docker
+            # Install Docker if needed
             if ! command -v docker &> /dev/null; then
               curl -fsSL https://get.docker.com | sh
               systemctl enable docker && systemctl start docker
             fi
 
-            # 2. Install dependencies
+            # Install dependencies
             apt-get update -qq
-            apt-get install -y -qq nginx ufw curl certbot python3-certbot-nginx
+            apt-get install -y -qq nginx ufw curl certbot python3-certbot-nginx git
 
-            # 3. Firewall
+            # Firewall
             ufw allow OpenSSH
             ufw allow 80/tcp
             ufw allow 443/tcp
             ufw --force enable
 
-            # 4. Pull latest image
-            docker pull sithuyehtun/alloc8-budget-calculator:latest
+            # Clone or pull latest source
+            APP_DIR="/opt/alloc8"
+            mkdir -p "$APP_DIR"
+            cd "$APP_DIR"
+            if [ -d ".git" ]; then
+              git fetch origin
+              git reset --hard origin/main
+            else
+              git clone https://leo007-htun:${{ secrets.GH_TOKEN }}@github.com/leo007-htun/alloc8.git .
+            fi
 
-            # 5. Stop old container
+            mkdir -p data uploads
+
+            # Stop old container
             docker stop alloc8-app 2>/dev/null || true
             docker rm   alloc8-app 2>/dev/null || true
 
-            # 6. Persistence directories
-            mkdir -p /opt/alloc8/data /opt/alloc8/uploads
+            # Build image from source on VPS (correct arch, no buildx)
+            docker build --no-cache --platform linux/amd64 -t alloc8-app:latest .
 
-            # 7. Run container
-            docker run -d               --name alloc8-app               --restart unless-stopped               -p 3000:3000               -v /opt/alloc8/data:/app/data               -v /opt/alloc8/uploads:/app/public/uploads               -e NODE_ENV=production               -e PORT=3000               -e DB_PATH=/app/data/data.sqlite               -e SESSION_SECRET="${{ secrets.SESSION_SECRET }}"               -e RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}"               -e FROM_EMAIL="${{ secrets.FROM_EMAIL }}"               -e BYTEZ_API_KEY="${{ secrets.BYTEZ_API_KEY }}"               sithuyehtun/alloc8-budget-calculator:latest
+            # Run container
+            docker run -d               --name alloc8-app               --restart unless-stopped               -p 3000:3000               -v /opt/alloc8/data:/app/data               -v /opt/alloc8/uploads:/app/public/uploads               -e NODE_ENV=production               -e PORT=3000               -e DB_PATH=/app/data/data.sqlite               -e SESSION_SECRET="${{ secrets.SESSION_SECRET }}"               -e RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}"               -e FROM_EMAIL="${{ secrets.FROM_EMAIL }}"               -e BYTEZ_API_KEY="${{ secrets.BYTEZ_API_KEY }}"               alloc8-app:latest
 
-            # 8. SSL cert (first time only)
+            # SSL cert (first time only)
             if [ ! -f /etc/letsencrypt/live/alloc8.org/fullchain.pem ]; then
               cat > /etc/nginx/sites-available/alloc8 <<'NGINX'
             server {
@@ -90,7 +77,7 @@ jobs:
               certbot renew --quiet
             fi
 
-            # 9. Nginx SSL config
+            # Nginx SSL config
             cat > /etc/nginx/sites-available/alloc8 <<'NGINX'
             server {
                 listen 80;
