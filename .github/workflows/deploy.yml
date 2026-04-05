@@ -28,7 +28,7 @@ jobs:
 
             # ── 2. Install dependencies ────────────────────────────────────
             apt-get update -qq
-            apt-get install -y -qq nginx ufw curl
+            apt-get install -y -qq nginx ufw curl certbot python3-certbot-nginx
 
             # ── 3. Open firewall ports ─────────────────────────────────────
             ufw allow OpenSSH
@@ -63,7 +63,7 @@ jobs:
               -e BYTEZ_API_KEY="${{ secrets.BYTEZ_API_KEY }}" \
               sithuyehtun/alloc8-budget-calculator:latest
 
-            # ── 8. Configure Nginx reverse proxy for alloc8.org ────────────
+            # ── 8. Configure Nginx reverse proxy ──────────────────────────
             cat > /etc/nginx/sites-available/alloc8 <<'NGINX'
             server {
                 listen 80;
@@ -84,9 +84,21 @@ jobs:
             }
             NGINX
 
-            # Enable site and reload nginx
             ln -sf /etc/nginx/sites-available/alloc8 /etc/nginx/sites-enabled/alloc8
             rm -f /etc/nginx/sites-enabled/default
             nginx -t && systemctl reload nginx
 
-            echo "✓ Deployment complete — alloc8.org → localhost:3000"
+            # ── 9. SSL via Certbot (first time only, then auto-renews) ─────
+            if [ ! -f /etc/letsencrypt/live/alloc8.org/fullchain.pem ]; then
+              certbot --nginx \
+                -d alloc8.org \
+                -d www.alloc8.org \
+                --non-interactive \
+                --agree-tos \
+                --email admin@alloc8.org \
+                --redirect
+            else
+              certbot renew --quiet --nginx
+            fi
+
+            echo "Deployment complete — https://alloc8.org"
