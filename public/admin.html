@@ -1789,29 +1789,24 @@
 
       // Sheet 1: Partners Overview
       const partnerRows = partners.map((p, i) => ({
-        '#': i + 1,
-        'Name': p.name,
-        'Type': p.type || '',
-        'Country': p.country || '',
-        'PIC': p.pic || '',
-        'Day Rate': Number(p.rate) || 0,
-        'Funding Rate': Number(p.funding_rate) || 1,
-        'Contact Name': p.contact_name || '',
-        'Contact Email': p.contact_email || '',
-        'Contact Phone': p.contact_phone || '',
-        'Contact Position': p.contact_position || '',
-        'Username': p.username || '',
+        '#': i+1, 'Name': p.name, 'Type': p.type||'', 'Country': p.country||'',
+        'PIC': p.pic||'', 'Day Rate (EUR)': Number(p.rate)||0,
+        'Funding Rate': Number(p.funding_rate)||1,
+        'Contact Name': p.contact_name||'', 'Contact Email': p.contact_email||'',
+        'Contact Phone': p.contact_phone||'', 'Contact Position': p.contact_position||'',
+        'Username': p.username||'',
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(partnerRows), 'Partners');
 
       // Sheet 2: Budget Summary
       let gPmCost=0,gOther=0,gSub=0,gTdc=0,gInd=0,gBudget=0,gFund=0,gPM=0;
-      const budgetRows = partners.map((p, i) => {
+      const budgetRows = partners.map((p,i) => {
         const c = calcPartner(p);
         gPmCost+=c.pmCost; gOther+=c.other; gSub+=c.sub; gTdc+=c.tdc;
         gInd+=c.indirect; gBudget+=c.totalBudget; gFund+=c.totalFunding; gPM+=c.totalPM;
         return {
           '#': i+1, 'Partner': p.name, 'Type': p.type||'',
+          'Total PM': Number(c.totalPM.toFixed(2)),
           'PM Cost (EUR)': Math.round(c.pmCost),
           'Other Direct Cost (EUR)': Math.round(c.other),
           'Subcontracting (EUR)': Math.round(c.sub),
@@ -1820,33 +1815,32 @@
           'Total Budget (EUR)': Math.round(c.totalBudget),
           'Funding Rate': c.fundingRate,
           'Total Funding (EUR)': Math.round(c.totalFunding),
-          'Total PM': Number(c.totalPM.toFixed(2)),
           'Persons/Year': Number(c.personsYear.toFixed(2)),
         };
       });
       budgetRows.push({
         '#':'', 'Partner':'TOTAL', 'Type':'',
+        'Total PM': Number(gPM.toFixed(2)),
         'PM Cost (EUR)': Math.round(gPmCost),
         'Other Direct Cost (EUR)': Math.round(gOther),
         'Subcontracting (EUR)': Math.round(gSub),
         'TDC (EUR)': Math.round(gTdc),
         'Indirect Cost (EUR)': Math.round(gInd),
         'Total Budget (EUR)': Math.round(gBudget),
-        'Funding Rate':'',
+        'Funding Rate': '',
         'Total Funding (EUR)': Math.round(gFund),
-        'Total PM': Number(gPM.toFixed(2)),
-        'Persons/Year':'',
+        'Persons/Year': '',
       });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(budgetRows), 'Budget Summary');
 
       // Sheet 3: Person Months per WP
-      let grandWP = new Array(wps.length).fill(0), grandTotalPM2 = 0;
-      const pmRows = partners.map((p, i) => {
+      let grandWP = new Array(wps.length).fill(0), grandTotalPM2=0;
+      const pmRows = partners.map((p,i) => {
         const c = calcPartner(p);
-        const row = { '#': i+1, 'Partner': p.name };
-        wps.forEach((wp, j) => {
-          let s = 0;
-          (wp.tasks||[]).forEach(t => s += (Number(p.wp_data&&p.wp_data[t.id])||0));
+        const row = {'#':i+1, 'Partner':p.name};
+        wps.forEach((wp,j) => {
+          let s=0;
+          (wp.tasks||[]).forEach(t => s += (Number((p.wp_data||{})[t.id])||0));
           row[wp.name] = Number(s.toFixed(2));
           grandWP[j] += s;
         });
@@ -1862,29 +1856,51 @@
       pmRows.push(pmTotRow);
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pmRows), 'Person Months');
 
-      // Sheet 4: WPs and Tasks
+      // Sheet 4: Task-level Person Months
+      const taskPMRows = [];
+      wps.forEach(wp => {
+        (wp.tasks||[]).forEach(t => {
+          const row = {'WP': wp.name, 'Task': t.name};
+          partners.forEach(p => { row[p.name] = Number((p.wp_data||{})[t.id])||0; });
+          taskPMRows.push(row);
+        });
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(taskPMRows), 'Task PM');
+
+      // Sheet 5: Itemised Costs
+      const costRows = [];
+      partners.forEach(p => {
+        const addCosts = (arr, cat) => (arr||[]).forEach(item => costRows.push({
+          'Partner': p.name, 'Category': cat,
+          'Description': item.description||'',
+          'Cost (EUR)': Number(item.cost)||0,
+          'Justification': item.justification||'',
+        }));
+        addCosts(p.travel_meetings, 'Travel - Meetings');
+        addCosts(p.travel_dissem, 'Travel - Dissemination');
+        addCosts(p.other_costs, 'Other Direct Cost');
+        addCosts(p.subcontracting_costs, 'Subcontracting');
+      });
+      if (costRows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(costRows), 'Itemised Costs');
+
+      // Sheet 6: WPs and Tasks
       const wpTaskRows = [];
       wps.forEach(wp => {
-        wpTaskRows.push({
-          'WP': wp.name, 'Task': '',
-          'Lead': wp.lead_name||'', 'Assigned Partners': (wp.assigned_names||[]).join(', '),
-        });
+        wpTaskRows.push({'WP':wp.name, 'Task':'', 'Lead':wp.lead_name||'', 'Assigned Partners':(wp.assigned_names||[]).join(', ')});
         (wp.tasks||[]).forEach(t => wpTaskRows.push({
-          'WP': wp.name, 'Task': t.name,
-          'Lead': t.lead_name||'', 'Assigned Partners': (t.assigned_names||[]).join(', '),
+          'WP':wp.name, 'Task':t.name,
+          'Lead':t.lead_name||'', 'Assigned Partners':(t.assigned_names||[]).join(', '),
         }));
       });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wpTaskRows), 'WPs and Tasks');
 
-      // Sheet 5: Skill Scores
+      // Sheet 7: Skill Scores
       const skillRows = partners.map(p => {
-        const row = { 'Partner': p.name, 'Type': p.type||'' };
+        const row = {'Partner': p.name, 'Type': p.type||''};
         (p.skills||[]).forEach(s => { row[s.wp_name||('WP '+s.wp_id)] = s.score; });
         return row;
       });
-      if (skillRows.length) {
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(skillRows), 'Skill Scores');
-      }
+      if (skillRows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(skillRows), 'Skill Scores');
 
       XLSX.writeFile(wb, 'Alloc8_Budget.xlsx');
     });
