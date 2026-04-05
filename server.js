@@ -1362,6 +1362,21 @@ app.delete('/api/admin/db/:table', requireAuth('admin'), (req, res) => {
   }
 });
 
+// Admin: Export budget as Excel
+app.get('/api/admin/export-excel', requireAuth('admin'), (req, res) => {
+  try {
+    const { generateBudgetExcel } = require('./excel-export');
+    const tenantId = req.session.tenantId;
+    const buffer = generateBudgetExcel(db, tenantId);
+    res.setHeader('Content-Disposition', 'attachment; filename="Alloc8_Budget.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Excel export error:', err);
+    res.status(500).json({ error: 'Failed to generate Excel: ' + err.message });
+  }
+});
+
 // Redirect root
 app.get('/', (req, res) => {
   res.redirect('/login.html');
