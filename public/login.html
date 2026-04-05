@@ -90,7 +90,11 @@
       });
       if (res.ok) {
         const data = await res.json();
-        window.location.href = data.role === 'admin' ? '/admin.html' : '/partner-main.html';
+        if (data.role === 'admin') {
+          window.location.href = data.username === 'admin' ? '/primary-admin.html' : '/admin.html';
+        } else {
+          window.location.href = '/partner-main.html';
+        }
       } else {
         document.getElementById('errorMsg').style.display = 'block';
       }

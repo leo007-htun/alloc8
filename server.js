@@ -347,8 +347,9 @@ app.post('/api/login', (req, res) => {
     }
   }
   
-  res.json({ 
-    role: user.role, 
+  res.json({
+    role: user.role,
+    username: user.username,
     partnerId: user.partner_id,
     tenantId: req.session.tenantId,
     tenants: memberships
