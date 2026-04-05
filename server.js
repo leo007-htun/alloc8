@@ -598,6 +598,48 @@ app.get('/api/partner/analysis-status', requireAuth('partner'), (req, res) => {
   res.json({ analyzing: isAnalyzing, partnerId });
 });
 
+// Partner: Get month statuses for all tasks in tenant (for Gantt)
+app.get('/api/partner/gantt-months', requireAuth('partner'), (req, res) => {
+  const partnerId = req.session.partnerId;
+  const partner = db.prepare('SELECT tenant_id FROM partners WHERE id = ?').get(partnerId);
+  const tenantId = partner?.tenant_id;
+  // Get all task IDs in this tenant
+  const taskIds = db.prepare(`
+    SELECT t.id FROM tasks t JOIN wps w ON t.wp_id = w.id WHERE w.tenant_id = ?
+  `).all(tenantId).map(r => r.id);
+  if (!taskIds.length) return res.json({});
+  const rows = db.prepare(`
+    SELECT task_id, partner_id, month, status FROM task_month_status
+    WHERE task_id IN (${taskIds.join(',')})
+  `).all();
+  // Build map: taskId -> partnerId -> month -> status
+  const map = {};
+  rows.forEach(r => {
+    if (!map[r.task_id]) map[r.task_id] = {};
+    if (!map[r.task_id][r.partner_id]) map[r.task_id][r.partner_id] = {};
+    map[r.task_id][r.partner_id][r.month] = r.status;
+  });
+  res.json(map);
+});
+
+// Partner: Set status for a specific month on a task
+app.patch('/api/partner/tasks/:id/month/:month/status', requireAuth('partner'), (req, res) => {
+  const taskId   = Number(req.params.id);
+  const month    = Number(req.params.month);
+  const partnerId = req.session.partnerId;
+  const { status } = req.body;
+  const allowed = ['not_started', 'in_progress', 'completed'];
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  const assigned = db.prepare('SELECT 1 FROM task_assignments WHERE task_id = ? AND partner_id = ?').get(taskId, partnerId);
+  if (!assigned) return res.status(403).json({ error: 'Not assigned to this task' });
+  db.prepare(`
+    INSERT INTO task_month_status (task_id, partner_id, month, status)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(task_id, partner_id, month) DO UPDATE SET status = excluded.status
+  `).run(taskId, partnerId, month, status);
+  res.json({ ok: true });
+});
+
 // Partner: Update task status (only if assigned to this partner)
 app.patch('/api/partner/tasks/:id/status', requireAuth('partner'), (req, res) => {
   const taskId = Number(req.params.id);

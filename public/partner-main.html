@@ -96,52 +96,41 @@
     /* ── Gantt Chart ─────────────────────────────────────────── */
     .gantt-outer { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
     /* Left name panel */
-    .gantt-names { width: 210px; min-width: 210px; flex-shrink: 0; border-right: 2px solid var(--border); background: #fff; z-index: 3; }
-    .gantt-names-hdr { height: 52px; background: #f6f8fa; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 .8rem; font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-    .gn-row { display: flex; align-items: center; gap: .4rem; padding: 0 .5rem 0 .8rem; overflow: hidden; white-space: nowrap; border-bottom: 1px solid #f0f2f4; font-size: .82rem; }
-    .gn-row.gn-wp { height: 48px; background: #f0f4f8; font-weight: 700; color: var(--primary); font-size: .84rem; border-bottom: 1px solid #dde3ea; }
-    .gn-row.gn-task { height: 40px; padding-left: 1.4rem; color: var(--text); }
-    .gn-row.gn-task.mine { color: var(--primary); }
-    .gn-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .gn-name { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .gantt-names { width: 230px; min-width: 230px; flex-shrink: 0; border-right: 2px solid var(--border); background: #fff; }
+    .gantt-names-hdr { height: 52px; background: #f6f8fa; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 .8rem; font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .gn-row { display: flex; align-items: center; gap: .35rem; padding: 0 .5rem 0 .8rem; border-bottom: 1px solid #f0f2f4; font-size: .82rem; }
+    .gn-row.gn-wp   { height: 48px; background: #f0f4f8; font-weight: 700; color: var(--primary); border-bottom: 1px solid #dde3ea; }
+    .gn-row.gn-task { height: 40px; padding-left: 1.3rem; color: var(--text); }
+    .gn-row.gn-task.mine { color: var(--primary); font-weight: 600; }
+    .gn-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .gn-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
     /* Right scrollable timeline */
     .gantt-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; }
-    .gantt-inner { position: relative; }
+    .gantt-inner  { position: relative; }
     /* Month header */
-    .gantt-mhdr { display: flex; height: 52px; background: #f6f8fa; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; }
-    .gantt-mcell { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; color: var(--muted); border-right: 1px solid #eaecef; line-height: 1.2; gap: 2px; }
-    .gantt-mcell.quarter-start { border-left: 2px solid #c9d1da; }
-    .gantt-mcell .qlabel { font-size: .6rem; color: #94a3b8; font-weight: 600; }
-    /* Bar rows */
-    .gantt-brow { position: relative; border-bottom: 1px solid #f0f2f4; }
+    .gantt-mhdr { display: flex; height: 52px; background: #f6f8fa; border-bottom: 1px solid var(--border); }
+    .gantt-mcell { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; color: var(--muted); border-right: 1px solid #eaecef; line-height: 1.2; gap: 1px; }
+    .gantt-mcell.quarter-start { border-left: 2px solid #bac4ce; }
+    .gantt-mcell .qlabel { font-size: .58rem; color: #94a3b8; font-weight: 600; }
+    /* Rows */
+    .gantt-brow        { display: flex; border-bottom: 1px solid #f0f2f4; }
     .gantt-brow.brow-wp   { height: 48px; background: #f8fafc; border-bottom: 1px solid #dde3ea; }
     .gantt-brow.brow-task { height: 40px; }
-    /* Bars */
-    .gbar { position: absolute; top: 50%; transform: translateY(-50%); border-radius: 6px; display: flex; align-items: center; gap: 5px; padding: 0 8px; overflow: hidden; white-space: nowrap; transition: filter .15s, box-shadow .15s; box-sizing: border-box; }
-    .gbar.wp-bar  { height: 18px; opacity: .65; border-radius: 4px; }
-    .gbar.task-bar { height: 26px; }
-    .gbar.interactive { cursor: pointer; }
-    .gbar.interactive:hover { filter: brightness(1.1); box-shadow: 0 3px 12px rgba(0,0,0,.2); transform: translateY(-51%) scaleY(1.04); }
-    .gbar.s-not-started { background: #cbd5e1; }
-    .gbar.s-in-progress { background: linear-gradient(90deg,#3b82f6,#60a5fa); }
-    .gbar.s-completed   { background: linear-gradient(90deg,#059669,#34d399); }
-    .gbar.wp-not-started { background: #94a3b8; }
-    .gbar.wp-in-progress { background: linear-gradient(90deg,#1d4ed8,#3b82f6); }
-    .gbar.wp-completed   { background: linear-gradient(90deg,#065f46,#10b981); }
-    .gbar .bar-label { font-size: .7rem; font-weight: 600; color: rgba(255,255,255,.95); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-    .gbar.s-not-started .bar-label { color: #475569; }
+    /* Individual month cells */
+    .gmcell { flex-shrink: 0; height: 100%; display: flex; align-items: center; justify-content: center; border-right: 1px solid #eaecef; position: relative; }
+    .gantt-brow.brow-wp   .gmcell { border-right-color: #e0e5eb; }
+    .gmcell-active { cursor: pointer; }
+    .gmcell-active:hover .mcell-fill { filter: brightness(1.12); }
+    .gmcell-active:active { transform: scale(.94); }
+    .mcell-fill  { position: absolute; inset: 4px 2px; border-radius: 4px; transition: background .18s; }
+    .mcell-label { position: relative; z-index: 1; font-size: .65rem; font-weight: 700; color: #fff; pointer-events: none; line-height: 1; }
+    .gmcell-active[data-status="not_started"] .mcell-label { color: #94a3b8; }
+    /* WP range strip */
+    .wp-strip { position: absolute; inset: 18px 0; background: #cbd5e1; opacity: .5; }
+    .wp-strip.ws-first { left: 3px; border-radius: 4px 0 0 4px; }
+    .wp-strip.ws-last  { right: 3px; border-radius: 0 4px 4px 0; }
     /* Partner chips */
-    .pchip { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: .58rem; font-weight: 800; color: #fff; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,.7); }
-    .pchip-more { font-size: .62rem; color: rgba(255,255,255,.85); font-weight: 700; }
-    /* Status popover */
-    .gantt-pop { position: fixed; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.18); padding: .8rem; z-index: 9999; width: 210px; animation: popIn .12s ease; }
-    @keyframes popIn { from { opacity:0; transform: scale(.92) translateY(4px); } to { opacity:1; transform: scale(1) translateY(0); } }
-    .gantt-pop .pop-name { font-size: .82rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; line-height: 1.35; }
-    .gantt-pop .pop-hint { font-size: .72rem; color: var(--muted); margin-bottom: .5rem; }
-    .gpop-btn { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .45rem .6rem; border: 1.5px solid transparent; border-radius: 7px; background: #f8fafc; cursor: pointer; font-size: .82rem; margin-bottom: .25rem; transition: all .12s; }
-    .gpop-btn:hover { background: #eef4fa; border-color: var(--border); }
-    .gpop-btn.active { border-color: var(--primary); background: #eef4fa; font-weight: 700; }
-    .gpop-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .pchip { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: .55rem; font-weight: 800; color: #fff; flex-shrink: 0; }
     /* Legend */
     .gantt-legend { display: flex; gap: .8rem; flex-wrap: wrap; margin-bottom: .7rem; align-items: center; }
     .gantt-legend-item { display: flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--muted); }
@@ -280,13 +269,13 @@
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
         <h2 style="margin:0;">Project Timeline</h2>
-        <span style="font-size:.78rem;color:var(--muted)">Click highlighted bars to update your task status</span>
+        <span style="font-size:.78rem;color:var(--muted)">Click each month cell in your assigned tasks to cycle status</span>
       </div>
       <div class="gantt-legend">
-        <div class="gantt-legend-item"><div class="gl-dot" style="background:#cbd5e1"></div>Not Started</div>
-        <div class="gantt-legend-item"><div class="gl-dot" style="background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div>In Progress</div>
-        <div class="gantt-legend-item"><div class="gl-dot" style="background:linear-gradient(90deg,#059669,#34d399)"></div>Completed</div>
-        <div class="gantt-legend-item"><div class="gl-dot" style="background:#93c5fd;border-radius:50%"></div>Your assigned task</div>
+        <div class="gantt-legend-item"><div class="gl-dot" style="background:#e2e8f0;border:1px solid #cbd5e1"></div>Not Started</div>
+        <div class="gantt-legend-item"><div class="gl-dot" style="background:#3b82f6"></div>In Progress ▶</div>
+        <div class="gantt-legend-item"><div class="gl-dot" style="background:#059669"></div>Completed ✓</div>
+        <div class="gantt-legend-item" style="margin-left:auto;font-weight:600;color:var(--primary)">● Your assigned tasks are interactive</div>
       </div>
       <div class="gantt-outer">
         <div class="gantt-names" id="ganttNames"></div>
@@ -386,27 +375,27 @@
 
     // Partner colour palette
     const P_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#ef4444','#6366f1','#f97316','#84cc16'];
-    const pColor = id => P_COLORS[(id||0) % P_COLORS.length];
+    const pColor    = id  => P_COLORS[(id||0) % P_COLORS.length];
     const pInitials = name => (name||'?').split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+    const CYCLE = { not_started:'in_progress', in_progress:'completed', completed:'not_started' };
 
     let _ganttScrollLeft = 0;
-    let _ganttSettings = null;
+    let _ganttSettings  = null;
+    let _monthMap       = {}; // taskId -> partnerId -> month -> status
 
     async function renderGantt() {
-      const CELL = 46;
+      const CELL = 44;
       if (!_ganttSettings) {
         const sr = await fetch('/api/settings');
         _ganttSettings = sr.ok ? await sr.json() : {};
       }
       const totalMonths = _ganttSettings.project_duration_months || 48;
-      const totalWidth = totalMonths * CELL;
 
       const namesEl  = document.getElementById('ganttNames');
       const innerEl  = document.getElementById('ganttInner');
       const scrollEl = document.getElementById('ganttScroll');
       if (!namesEl || !innerEl) return;
 
-      // Save scroll position
       _ganttScrollLeft = scrollEl.scrollLeft;
 
       if (!wps || !wps.length) {
@@ -415,30 +404,31 @@
         return;
       }
 
-      const statusMeta = {
-        not_started: { label:'Not Started', dot:'#94a3b8', barCls:'s-not-started' },
-        in_progress:  { label:'In Progress', dot:'#3b82f6', barCls:'s-in-progress' },
-        completed:    { label:'Completed',   dot:'#059669', barCls:'s-completed'   },
-      };
+      // Fetch month statuses
+      const mr = await fetch('/api/partner/gantt-months');
+      _monthMap = mr.ok ? await mr.json() : {};
 
-      // ── Names panel ──────────────────────────────────────────
-      let namesHtml = '<div class="gantt-names-hdr">Work Package / Task</div>';
-      // ── Timeline panel ───────────────────────────────────────
-      // Month header
+      // Status colours
+      const S_BG  = { not_started:'transparent', in_progress:'#3b82f6', completed:'#059669' };
+      const S_TIP = { not_started:'Not Started',  in_progress:'In Progress', completed:'Completed' };
+
+      // ── Left name column ─────────────────────────────────────
+      let namesHtml = `<div class="gantt-names-hdr">Work Package / Task</div>`;
+
+      // ── Timeline: header + rows ───────────────────────────────
+      // Month header row
       let mhdrHtml = `<div class="gantt-mhdr">`;
       for (let m = 1; m <= totalMonths; m++) {
-        const qStart = (m - 1) % 3 === 0;
-        const qNum   = Math.ceil(m / 3);
+        const qStart = (m-1) % 3 === 0;
         mhdrHtml += `<div class="gantt-mcell${qStart?' quarter-start':''}" style="width:${CELL}px">
-          ${qStart ? `<span class="qlabel">Q${qNum}</span>` : ''}
+          ${qStart ? `<span class="qlabel">Q${Math.ceil(m/3)}</span>` : ''}
           <span>M${m}</span>
         </div>`;
       }
       mhdrHtml += '</div>';
-      let rowsHtml = '';
 
-      // Grid line background helper
-      const gridBg = `background-image:repeating-linear-gradient(90deg,transparent 0px,transparent ${CELL-1}px,#e8ecf0 ${CELL-1}px,#e8ecf0 ${CELL}px);background-size:${CELL}px 100%;`;
+      let rowsHtml = '';
+      const totalWidth = totalMonths * CELL;
 
       for (const wp of wps) {
         const wpStart = wp.start_month || 1;
@@ -446,66 +436,94 @@
         const wpLabel = (wp.name||'').match(/^(WP\d+)/i)?.[1] || wp.name;
         const wpSub   = (wp.name||'').replace(/^WP\d+\s*[-–—]?\s*/i,'').trim();
 
-        const taskStatuses = (wp.tasks||[]).map(t => t.status||'not_started');
-        const wpStatus = taskStatuses.every(s=>s==='completed') ? 'completed'
-          : taskStatuses.some(s=>s==='in_progress'||s==='completed') ? 'in_progress' : 'not_started';
-        const wpSm = statusMeta[wpStatus];
+        // WP derived status from all its tasks' month data
+        const allTaskMonthStatuses = (wp.tasks||[]).flatMap(t => {
+          const partnerData = _monthMap[t.id] || {};
+          return Object.values(partnerData).flatMap(mmap => Object.values(mmap));
+        });
+        const wpStatus = allTaskMonthStatuses.length === 0 ? 'not_started'
+          : allTaskMonthStatuses.every(s=>s==='completed') ? 'completed'
+          : allTaskMonthStatuses.some(s=>s==='in_progress'||s==='completed') ? 'in_progress' : 'not_started';
+        const wpDot = { not_started:'#94a3b8', in_progress:'#3b82f6', completed:'#059669' }[wpStatus];
 
         // WP name row
-        namesHtml += `<div class="gn-row gn-wp" title="${wp.name}">
-          <span class="gn-dot" style="background:${wpSm.dot}"></span>
-          <span class="gn-name"><strong>${wpLabel}</strong> <span style="font-weight:400;font-size:.75rem;opacity:.7">${wpSub}</span></span>
-        </div>`;
-
-        // WP bar row — chips for WP-level assignees
-        const wpChips = (wp.assigned_names||[]).slice(0,3).map((n,i) =>
+        const wpChips = (wp.assigned_names||[]).slice(0,4).map((n,i) =>
           `<span class="pchip" style="background:${pColor(wp.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`
-        ).join('') + (wp.assigned_names.length > 3 ? `<span class="pchip-more">+${wp.assigned_names.length-3}</span>` : '');
-
-        const wpBarLeft  = (wpStart - 1) * CELL;
-        const wpBarWidth = (wpEnd - wpStart + 1) * CELL;
-        rowsHtml += `<div class="gantt-brow brow-wp" style="width:${totalWidth}px;${gridBg}">
-          <div class="gbar wp-bar wp-${wpStatus}" style="left:${wpBarLeft}px;width:${wpBarWidth}px" title="${wp.name} (M${wpStart}–M${wpEnd})">
-            ${wpChips}
-          </div>
+        ).join('');
+        namesHtml += `<div class="gn-row gn-wp" title="${wp.name}">
+          <span class="gn-dot" style="background:${wpDot}"></span>
+          <span class="gn-name"><strong>${wpLabel}</strong> <span style="font-weight:400;font-size:.74rem;opacity:.65">${wpSub}</span></span>
+          <span style="display:flex;gap:1px;margin-left:auto;flex-shrink:0">${wpChips}</span>
         </div>`;
 
-        // ── Task rows ───────────────────────────────────────────
+        // WP bar row (spans wp range with solid background strip, no interaction)
+        let wpCells = '';
+        for (let m = 1; m <= totalMonths; m++) {
+          const inRange = m >= wpStart && m <= wpEnd;
+          const isFirst = m === wpStart, isLast = m === wpEnd;
+          const br = inRange
+            ? `border-radius:${isFirst?'4px':'0'} ${isLast?'4px':'0'} ${isLast?'4px':'0'} ${isFirst?'4px':'0'}`
+            : '';
+          wpCells += `<div class="gmcell" style="width:${CELL}px">
+            ${inRange ? `<div class="wp-strip${isFirst?' ws-first':''}${isLast?' ws-last':''}" style="${br}"></div>` : ''}
+          </div>`;
+        }
+        rowsHtml += `<div class="gantt-brow brow-wp" style="width:${totalWidth}px">${wpCells}</div>`;
+
+        // ── Task rows ─────────────────────────────────────────
         for (const task of wp.tasks) {
-          const tStart = task.start_month || wpStart;
-          const tEnd   = task.end_month   || wpEnd;
-          const tStatus = task.status || 'not_started';
-          const tsm = statusMeta[tStatus];
+          const tStart     = task.start_month || wpStart;
+          const tEnd       = task.end_month   || wpEnd;
           const isAssigned = (task.assigned_partner_ids||[]).includes(partner.id);
+          const myMonths   = (_monthMap[task.id]?.[partner.id]) || {};
 
           // Name row
+          const taskChips = (task.assigned_names||[]).slice(0,4).map((n,i) =>
+            `<span class="pchip" style="background:${pColor(task.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`
+          ).join('');
           namesHtml += `<div class="gn-row gn-task${isAssigned?' mine':''}" title="${task.name}">
             ${isAssigned ? `<span class="gn-dot" style="background:#3b82f6"></span>` : `<span style="width:7px;flex-shrink:0"></span>`}
             <span class="gn-name">${task.name}</span>
+            <span style="display:flex;gap:1px;margin-left:auto;flex-shrink:0">${taskChips}</span>
           </div>`;
 
-          // Bar
-          const tLeft  = (tStart - 1) * CELL;
-          const tWidth = (tEnd - tStart + 1) * CELL;
-          const chips  = (task.assigned_names||[]).slice(0,3).map((n,i) =>
-            `<span class="pchip" style="background:${pColor(task.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`
-          ).join('') + (task.assigned_names.length > 3 ? `<span class="pchip-more">+${task.assigned_names.length-3}</span>` : '');
+          // Timeline cells for this task
+          let taskCells = '';
+          for (let m = 1; m <= totalMonths; m++) {
+            const inRange = m >= tStart && m <= tEnd;
+            if (!inRange) {
+              taskCells += `<div class="gmcell" style="width:${CELL}px"></div>`;
+              continue;
+            }
 
-          // Show partner name label if bar is wide enough
-          const charsRoom = Math.floor((tWidth - 16 - (task.assigned_names||[]).length * 22) / 7);
-          const label = charsRoom > 6 && task.assigned_names.length
-            ? `<span class="bar-label">${task.assigned_names.join(', ').slice(0, charsRoom)}</span>` : '';
+            // Collect all partners' statuses for this cell (for non-assigned display)
+            const allForCell = Object.entries(_monthMap[task.id]||{}).map(([pid, mmap]) => ({
+              pid: Number(pid), status: mmap[m]||'not_started'
+            }));
 
-          const interactAttr = isAssigned
-            ? `data-taskid="${task.id}" data-tname="${task.name.replace(/"/g,'')}" data-status="${tStatus}"`
-            : '';
-
-          rowsHtml += `<div class="gantt-brow brow-task" style="width:${totalWidth}px;${gridBg}">
-            <div class="gbar task-bar ${tsm.barCls}${isAssigned?' interactive':''}" style="left:${tLeft}px;width:${tWidth}px" ${interactAttr}
-                 title="${task.name} (M${tStart}–M${tEnd}) — ${tsm.label}${isAssigned?' — click to update':''}" >
-              ${chips}${label}
-            </div>
-          </div>`;
+            if (isAssigned) {
+              const cellStatus = myMonths[m] || 'not_started';
+              const bg = S_BG[cellStatus];
+              const isFirst = m === tStart, isLast = m === tEnd;
+              const rd = `border-radius:${isFirst?'5px':'2px'} ${isLast?'5px':'2px'} ${isLast?'5px':'2px'} ${isFirst?'5px':'2px'}`;
+              taskCells += `<div class="gmcell gmcell-active" style="width:${CELL}px"
+                  data-taskid="${task.id}" data-month="${m}" data-status="${cellStatus}"
+                  title="M${m} — ${S_TIP[cellStatus]} (click to cycle)">
+                <div class="mcell-fill" style="background:${bg};${rd}"></div>
+                <span class="mcell-label">${cellStatus==='not_started'?m:cellStatus==='in_progress'?'▶':'✓'}</span>
+              </div>`;
+            } else {
+              // Show dots for each partner who has a status
+              const dots = allForCell.filter(x=>x.status!=='not_started').map(x =>
+                `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${S_BG[x.status]};margin:1px" title="${x.status}"></span>`
+              ).join('');
+              taskCells += `<div class="gmcell gmcell-readonly" style="width:${CELL}px" title="M${m}">
+                <div class="mcell-fill" style="background:${allForCell.every(x=>x.status==='completed')&&allForCell.length?'#059669':allForCell.some(x=>x.status==='in_progress')&&allForCell.length?'#93c5fd':allForCell.length?'#e2e8f0':'transparent'};border-radius:3px;opacity:.5"></div>
+                <span style="display:flex;justify-content:center;flex-wrap:wrap;gap:1px">${dots}</span>
+              </div>`;
+            }
+          }
+          rowsHtml += `<div class="gantt-brow brow-task" style="width:${totalWidth}px">${taskCells}</div>`;
         }
       }
 
@@ -514,71 +532,42 @@
       innerEl.innerHTML = mhdrHtml + rowsHtml;
       scrollEl.scrollLeft = _ganttScrollLeft;
 
-      // ── Click handlers on interactive bars ──────────────────
-      innerEl.querySelectorAll('.gbar.interactive').forEach(bar => {
-        bar.addEventListener('click', e => { e.stopPropagation(); showGanttPop(bar); });
-      });
-    }
-
-    // ── Popover ───────────────────────────────────────────────
-    function showGanttPop(bar) {
-      closeGanttPop();
-      const taskId  = bar.dataset.taskid;
-      const tname   = bar.dataset.tname;
-      const current = bar.dataset.status;
-
-      const pop = document.createElement('div');
-      pop.className = 'gantt-pop';
-      pop.id = 'ganttPop';
-
-      const opts = [
-        { val:'not_started', label:'Not Started', color:'#94a3b8' },
-        { val:'in_progress', label:'In Progress', color:'#3b82f6' },
-        { val:'completed',   label:'Completed',   color:'#059669' },
-      ];
-
-      pop.innerHTML = `
-        <div class="pop-name">${tname}</div>
-        <div class="pop-hint">Update your task status</div>
-        ${opts.map(o=>`
-          <button class="gpop-btn${current===o.val?' active':''}" data-val="${o.val}">
-            <span class="gpop-dot" style="background:${o.color}"></span>
-            ${o.label}
-            ${current===o.val ? '<span style="margin-left:auto;font-size:.8rem">✓</span>' : ''}
-          </button>`).join('')}`;
-
-      document.body.appendChild(pop);
-
-      // Position near bar
-      const rect = bar.getBoundingClientRect();
-      const pw = 214, ph = 170;
-      let left = Math.min(rect.left, window.innerWidth - pw - 8);
-      let top  = rect.bottom + 6;
-      if (top + ph > window.innerHeight - 8) top = rect.top - ph - 6;
-      pop.style.cssText += `left:${left}px;top:${top}px`;
-
-      pop.querySelectorAll('.gpop-btn').forEach(btn => {
-        btn.addEventListener('click', async e => {
+      // ── Month cell click handlers ─────────────────────────────
+      innerEl.querySelectorAll('.gmcell-active').forEach(cell => {
+        cell.addEventListener('click', async e => {
           e.stopPropagation();
-          const newStatus = btn.dataset.val;
-          closeGanttPop();
-          if (newStatus === current) return;
+          const taskId    = cell.dataset.taskid;
+          const month     = cell.dataset.month;
+          const curStatus = cell.dataset.status;
+          const newStatus = CYCLE[curStatus] || 'in_progress';
+
+          // Optimistic UI update
+          cell.dataset.status = newStatus;
+          const fill  = cell.querySelector('.mcell-fill');
+          const label = cell.querySelector('.mcell-label');
+          fill.style.background  = S_BG[newStatus];
+          label.textContent = newStatus==='not_started' ? month : newStatus==='in_progress' ? '▶' : '✓';
+          cell.title = `M${month} — ${S_TIP[newStatus]} (click to cycle)`;
+
           try {
-            const res = await fetch(`/api/partner/tasks/${taskId}/status`, {
+            const res = await fetch(`/api/partner/tasks/${taskId}/month/${month}/status`, {
               method: 'PATCH', headers: {'Content-Type':'application/json'},
               body: JSON.stringify({ status: newStatus })
             });
-            if (res.ok) await renderGantt();
-            else alert('Failed to update status');
-          } catch(err) { alert('Error: ' + err.message); }
+            if (!res.ok) {
+              // Revert on failure
+              cell.dataset.status = curStatus;
+              fill.style.background = S_BG[curStatus];
+              label.textContent = curStatus==='not_started' ? month : curStatus==='in_progress' ? '▶' : '✓';
+            } else {
+              // Update local map
+              if (!_monthMap[taskId]) _monthMap[taskId] = {};
+              if (!_monthMap[taskId][partner.id]) _monthMap[taskId][partner.id] = {};
+              _monthMap[taskId][partner.id][month] = newStatus;
+            }
+          } catch(err) { console.error(err); }
         });
       });
-
-      setTimeout(() => document.addEventListener('click', closeGanttPop, { once: true }), 0);
-    }
-
-    function closeGanttPop() {
-      document.getElementById('ganttPop')?.remove();
     }
 
     async function loadSkills() {

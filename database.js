@@ -172,6 +172,17 @@ try { db.exec("ALTER TABLE tasks ADD COLUMN start_month INTEGER DEFAULT 1"); } c
 try { db.exec("ALTER TABLE tasks ADD COLUMN end_month INTEGER DEFAULT 48"); } catch(e) {}
 try { db.exec("ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT 'not_started'"); } catch(e) {}
 
+// Per-month task progress per partner
+db.exec(`
+  CREATE TABLE IF NOT EXISTS task_month_status (
+    task_id    INTEGER NOT NULL,
+    partner_id INTEGER NOT NULL,
+    month      INTEGER NOT NULL,
+    status     TEXT    NOT NULL DEFAULT 'not_started',
+    PRIMARY KEY (task_id, partner_id, month)
+  )
+`);
+
 // Hash function for passwords
 function hash(password) {
   return bcrypt.hashSync(password, 10);
