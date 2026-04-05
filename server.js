@@ -598,6 +598,22 @@ app.get('/api/partner/analysis-status', requireAuth('partner'), (req, res) => {
   res.json({ analyzing: isAnalyzing, partnerId });
 });
 
+// Partner: Save URLs batch only — no scraping, no analysis
+app.post('/api/partner/urls/save-only', requireAuth('partner'), (req, res) => {
+  const partnerId = req.session.partnerId;
+  const { urls } = req.body;
+  if (!Array.isArray(urls)) return res.status(400).json({ error: 'urls must be an array' });
+  try {
+    db.prepare('DELETE FROM partner_urls WHERE partner_id = ?').run(partnerId);
+    const stmt = db.prepare('INSERT INTO partner_urls (partner_id, url, description, sort_order) VALUES (?, ?, ?, ?)');
+    const valid = urls.filter(u => u.url && u.url.trim());
+    valid.forEach((u, i) => stmt.run(partnerId, u.url.trim(), u.description || '', i));
+    res.json({ ok: true, urlsSaved: valid.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Partner: Save URLs batch + trigger scrape and analysis
 app.post('/api/partner/urls/save', requireAuth('partner'), async (req, res) => {
   const partnerId = req.session.partnerId;

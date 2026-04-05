@@ -417,7 +417,8 @@
 
       </div>
       <div class="toolbar">
-        <button class="btn btn-success" id="saveBtn">Save Changes</button>
+        <button class="btn btn-primary" id="quickSaveBtn">Save</button>
+        <button class="btn btn-success" id="saveBtn">AI Analysis</button>
         <span class="saved" id="savedMsg">Saved successfully!</span>
         <span class="error" id="errorMsg">Save failed.</span>
         <span class="logo-required" id="logoRequiredMsg">⚠ Please upload your organisation logo before saving.</span>
@@ -1018,10 +1019,10 @@
       };
       // Show processing state
       const saveBtn = document.getElementById('saveBtn');
-      const originalBtnText = saveBtn.textContent;
       let analysisStarted = false;
-      saveBtn.textContent = 'Saving...';
+      saveBtn.textContent = 'Scraping...';
       saveBtn.disabled = true;
+      document.getElementById('quickSaveBtn').disabled = true;
       
       try {
         // 1. Save partner data
@@ -1079,9 +1080,82 @@
         }, 4000);
       } finally {
         if (!analysisStarted) {
-          saveBtn.textContent = originalBtnText;
+          saveBtn.textContent = 'AI Analysis';
           saveBtn.disabled = false;
+          document.getElementById('quickSaveBtn').disabled = false;
         }
+      }
+    });
+
+    document.getElementById('quickSaveBtn').addEventListener('click', async () => {
+      document.getElementById('savedMsg').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('logoRequiredMsg').style.display = 'none';
+
+      if (!partner.logo_path) {
+        document.getElementById('logoRequiredMsg').style.display = 'inline';
+        return;
+      }
+      if (!validateInputs()) {
+        alert('Please fill in all required fields (marked in red)');
+        return;
+      }
+
+      const payload = {
+        name: partner.name,
+        pic: document.getElementById('pic').value,
+        rate: parseFloat(document.getElementById('rate').value) || 0,
+        type: document.getElementById('type').value,
+        country: document.getElementById('country').value,
+        funding_rate: (parseFloat(document.getElementById('fundingRate').value) || 0) / 100,
+        contact_name: document.getElementById('contactName').value,
+        contact_position: document.getElementById('contactPosition').value,
+        contact_email: document.getElementById('contactEmail').value,
+        contact_phone: document.getElementById('contactPhone').value,
+        wp_data: getWpDataObject(),
+        other_costs: otherCosts.filter(item => item.description.trim() && item.cost > 0),
+        subcontracting_costs: subcontractingCosts.filter(item => item.description.trim() && item.cost > 0),
+        travel_meetings: travelMeetings.filter(item => item.description.trim() && item.cost > 0),
+        travel_dissem: travelDissem.filter(item => item.description.trim() && item.cost > 0),
+      };
+
+      const btn = document.getElementById('quickSaveBtn');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
+      document.getElementById('saveBtn').disabled = true;
+
+      try {
+        // Save partner data
+        const res1 = await fetch('/api/partner/data', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res1.ok) throw new Error('Failed to save partner data');
+
+        // Save URLs to DB only (no scraping, no analysis)
+        const validUrls = urls.filter(u => u.url.trim());
+        const urlRes = await fetch('/api/partner/urls/save-only', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls: validUrls })
+        });
+        if (!urlRes.ok) throw new Error('Failed to save URLs');
+        urls = validUrls;
+        renderUrls();
+
+        const savedMsg = document.getElementById('savedMsg');
+        savedMsg.textContent = 'Saved!';
+        savedMsg.style.display = 'inline';
+        setTimeout(() => { savedMsg.style.display = 'none'; savedMsg.textContent = 'Saved successfully!'; }, 3000);
+      } catch (error) {
+        document.getElementById('errorMsg').textContent = 'Save failed: ' + error.message;
+        document.getElementById('errorMsg').style.display = 'inline';
+        setTimeout(() => { document.getElementById('errorMsg').style.display = 'none'; document.getElementById('errorMsg').textContent = 'Save failed.'; }, 4000);
+      } finally {
+        btn.textContent = 'Save';
+        btn.disabled = false;
+        document.getElementById('saveBtn').disabled = false;
       }
     });
 
