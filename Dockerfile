@@ -3,7 +3,8 @@ FROM node:20-slim
 WORKDIR /app
 
 # Build tools for native modules
-RUN apt-get update -qq && apt-get install -y -qq python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -qq && apt-get install -y -qq python3 python3-pip make g++ && rm -rf /var/lib/apt/lists/*
+RUN pip3 install --break-system-packages trafilatura
 
 COPY package*.json ./
 RUN npm install
