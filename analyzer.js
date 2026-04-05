@@ -482,35 +482,25 @@ function analyzePartner(partnerId, tenantId) {
   db.prepare('DELETE FROM partner_ai_analysis WHERE partner_id = ?').run(partnerId);
   console.log('Old analysis cleared');
   
-  // Get assigned WPs
-  console.log('Querying WPs...');
-  const assignedWPs = db.prepare(`
-    SELECT DISTINCT w.id, w.name 
-    FROM wps w
-    JOIN wp_assignments wa ON w.id = wa.wp_id
-    WHERE wa.partner_id = ? AND w.tenant_id = ?
-  `).all(partnerId, tenantId);
-  console.log('Found WPs:', assignedWPs.length);
-  
-  // Get assigned tasks
-  console.log('Querying tasks...');
-  const assignedTasks = db.prepare(`
-    SELECT DISTINCT t.id, t.name, t.wp_id
-    FROM tasks t
-    JOIN task_assignments ta ON t.id = ta.task_id
-    WHERE ta.partner_id = ?
-  `).all(partnerId);
-  console.log('Found tasks:', assignedTasks.length);
-  
+  // Get ALL WPs in the tenant (not just assigned ones)
+  console.log('Querying all WPs...');
+  const allWPs = db.prepare(`SELECT id, name FROM wps WHERE tenant_id = ? ORDER BY id`).all(tenantId);
+  console.log('Found WPs:', allWPs.length);
+
+  // Get ALL tasks in the tenant (not just assigned ones)
+  console.log('Querying all tasks...');
+  const allTasks = db.prepare(`SELECT t.id, t.name, t.wp_id FROM tasks t JOIN wps w ON t.wp_id = w.id WHERE w.tenant_id = ? ORDER BY t.id`).all(tenantId);
+  console.log('Found tasks:', allTasks.length);
+
   // Queue skill extraction first
   queueAnalysis({
     type: 'skills',
     partnerId,
     tenantId
   });
-  
-  // Queue WP analyses
-  for (const wp of assignedWPs) {
+
+  // Queue WP analyses for every WP in the project
+  for (const wp of allWPs) {
     queueAnalysis({
       type: 'wp',
       partnerId,
@@ -518,9 +508,9 @@ function analyzePartner(partnerId, tenantId) {
       tenantId
     });
   }
-  
-  // Queue task analyses
-  for (const task of assignedTasks) {
+
+  // Queue task analyses for every task in the project
+  for (const task of allTasks) {
     queueAnalysis({
       type: 'task',
       partnerId,
@@ -528,11 +518,11 @@ function analyzePartner(partnerId, tenantId) {
       tenantId
     });
   }
-  
+
   return {
-    queued: 1 + assignedWPs.length + assignedTasks.length,
-    workPackages: assignedWPs.length,
-    tasks: assignedTasks.length
+    queued: 1 + allWPs.length + allTasks.length,
+    workPackages: allWPs.length,
+    tasks: allTasks.length
   };
 }
 
