@@ -157,6 +157,7 @@
       opacity: 0.7;
     }
   </style>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <!-- Loading Overlay -->
@@ -289,6 +290,7 @@
       <div class="toolbar">
         <button class="btn btn-primary" id="addPartnerBtn">+ Add Partner</button>
         <button class="btn btn-success" id="exportBtn">Export JSON</button>
+        <button class="btn btn-success" id="exportExcelBtn">Export Excel</button>
         <input type="file" id="importFile" accept=".json" style="display:none" />
         <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Import JSON</button>
         <button class="btn btn-success" id="reanalyzeBtn">Force Global Re-analysis</button>
@@ -1779,6 +1781,62 @@
       const blob = new Blob([JSON.stringify({ wps, partners }, null, 2)], {type: 'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'Alloc8_Budget.json'; a.click(); URL.revokeObjectURL(url);
+    });
+
+
+    document.getElementById('exportExcelBtn').addEventListener('click', async () => {
+      // json-as-xlsx style: define sheets with columns and content
+      const sheets = [
+        {
+          sheet: 'Partners',
+          columns: [
+            { label: 'Name',         value: 'name' },
+            { label: 'Type',         value: 'type' },
+            { label: 'Country',      value: 'country' },
+            { label: 'Rate (day)',   value: 'rate' },
+            { label: 'Funding Rate', value: 'funding_rate' },
+            { label: 'Username',     value: 'username' },
+          ],
+          content: partners
+        },
+        {
+          sheet: 'Work Packages',
+          columns: [
+            { label: 'ID',   value: 'id' },
+            { label: 'Name', value: 'name' },
+          ],
+          content: wps
+        }
+      ];
+
+      // Build skill scores sheet: partners as rows, WPs as columns
+      const skillRows = partners.map(p => {
+        const row = { Partner: p.name };
+        (p.skills || []).forEach(s => { row[s.wp_name || ('WP ' + s.wp_id)] = s.score; });
+        return row;
+      });
+      if (skillRows.length) {
+        sheets.push({ sheet: 'Skill Scores', columns: null, content: skillRows });
+      }
+
+      // Convert to xlsx using SheetJS (same approach as json-as-xlsx internally)
+      const wb = XLSX.utils.book_new();
+      sheets.forEach(({ sheet, columns, content }) => {
+        let rows;
+        if (columns) {
+          rows = content.map(row => {
+            const out = {};
+            columns.forEach(col => { out[col.label] = row[col.value] ?? ''; });
+            return out;
+          });
+        } else {
+          rows = content;
+        }
+        const ws = XLSX.utils.json_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, sheet);
+      });
+
+      XLSX.writeFile(wb, 'Alloc8_Budget.xlsx');
     });
 
     document.getElementById('reanalyzeBtn').addEventListener('click', async () => {
