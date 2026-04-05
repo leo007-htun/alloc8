@@ -38,29 +38,25 @@
     .project-card h3 { margin: 0 0 .4rem; font-size: .95rem; color: var(--primary); }
     .project-card .meta { font-size: .8rem; color: var(--muted); line-height: 1.7; }
     /* Project group blocks */
-    .project-group { margin-bottom: 1.4rem; }
+    .project-group { margin-bottom: 1.2rem; }
     .project-group:last-child { margin-bottom: 0; }
     .pg-header {
       display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
       background: #eef3f8; border: 1px solid var(--border); border-radius: 6px 6px 0 0;
-      padding: .55rem .9rem; font-size: .9rem;
+      padding: .5rem .9rem;
     }
-    .pg-header .pg-name { font-weight: 700; color: var(--primary); }
-    .pg-header .pg-admins { font-size: .78rem; color: var(--muted); }
+    .pg-name { font-weight: 700; color: var(--primary); font-size: .9rem; }
+    .pg-admins { font-size: .78rem; color: var(--muted); }
     .pg-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 6px 6px; overflow: hidden; }
     .pg-body table { margin: 0; }
     .pg-body table thead tr { background: #f6f8fa; }
-    /* Task indent */
-    .task-row td:first-child { padding-left: 1.8rem; font-size: .8rem; color: var(--muted); }
-    .task-row { background: #fafbfc; }
     .wp-row td { font-weight: 600; background: #fff; }
-    .badge {
-      display: inline-block; font-size: .68rem; font-weight: 600; padding: .1rem .4rem;
-      border-radius: 4px; white-space: nowrap;
-    }
-    .badge-ok   { background: #d4edda; color: #155724; }
+    .task-row td:first-child { padding-left: 2rem; }
+    .task-row { background: #fafbfc; }
+    .badge { display: inline-block; font-size: .68rem; font-weight: 600; padding: .1rem .4rem; border-radius: 4px; white-space: nowrap; }
+    .badge-ok      { background: #d4edda; color: #155724; }
     .badge-pending { background: #fff3cd; color: #856404; }
-    .badge-fail { background: #f8d7da; color: #721c24; }
+    .badge-fail    { background: #f8d7da; color: #721c24; }
     .empty-msg { padding: .7rem 1rem; font-size: .83rem; color: var(--muted); font-style: italic; }
   </style>
 </head>
@@ -79,31 +75,10 @@
       <div class="projects-grid" id="projectsGrid"><p style="color:var(--muted)">Loading...</p></div>
     </div>
 
-    <!-- Work Packages & Tasks -->
-    <div class="card">
-      <h2>Work Packages &amp; Tasks — by Project</h2>
-      <p class="hint">All WPs and their tasks, grouped by project and showing the owning admin(s).</p>
-      <div id="wpTasksView"><p style="color:var(--muted)">Loading...</p></div>
-    </div>
-
-    <!-- Scraped Data -->
-    <div class="card">
-      <h2>Scraped Data — by Project</h2>
-      <p class="hint">Partner URL scraping results grouped by project and admin.</p>
-      <div id="scrapedView"><p style="color:var(--muted)">Loading...</p></div>
-    </div>
-
-    <!-- AI Analysis -->
-    <div class="card">
-      <h2>AI Analysis — by Project</h2>
-      <p class="hint">AI skill analysis results grouped by project and admin.</p>
-      <div id="aiView"><p style="color:var(--muted)">Loading...</p></div>
-    </div>
-
     <!-- Database Management -->
     <div class="card">
       <h2>Database Management</h2>
-      <p class="hint">Direct table access. Deletions are irreversible.</p>
+      <p class="hint">Structured views for WPs, Tasks, Scraped Data, AI Analysis and Skill Scores show data grouped by project and admin so you can identify ownership before deleting. Other tables show raw rows.</p>
       <div class="toolbar">
         <button class="btn btn-primary" onclick="showTable('users')">Users</button>
         <button class="btn btn-primary" onclick="showTable('tenants')">Projects</button>
@@ -116,7 +91,7 @@
         <button class="btn btn-danger" onclick="showTable('partner_ai_analysis')">AI Analysis</button>
         <button class="btn btn-danger" onclick="showTable('partner_wp_skills')">Skill Scores</button>
       </div>
-      <div id="dbTableContainer" style="max-height:500px;overflow:auto;">
+      <div id="dbTableContainer" style="max-height:600px; overflow:auto;">
         <p style="color:var(--muted)">Select a table above to view data.</p>
       </div>
     </div>
@@ -124,6 +99,11 @@
   </div>
 
   <script>
+    // ── Cached global data (fetched once) ─────────────────────────────────
+    let _tenants = [], _users = [], _partners = [], _memberships = [];
+    let _wps = [], _tasks = [], _scraped = [], _ai = [], _skills = [];
+    let _loaded = false;
+
     async function init() {
       const res = await fetch('/api/me');
       if (!res.ok) return window.location.href = '/login.html';
@@ -132,11 +112,11 @@
         window.location.href = me.role === 'admin' ? '/admin.html' : '/login.html';
         return;
       }
-      loadAll();
+      await loadAll();
     }
 
     async function loadAll() {
-      const [tenantsR, usersR, partnersR, membershipsR, wpsR, tasksR, scrapedR, aiR] = await Promise.all([
+      const results = await Promise.all([
         fetch('/api/admin/db/tenants'),
         fetch('/api/admin/db/users'),
         fetch('/api/admin/db/partners'),
@@ -145,72 +125,89 @@
         fetch('/api/admin/db/tasks'),
         fetch('/api/admin/db/scraped_content'),
         fetch('/api/admin/db/partner_ai_analysis'),
+        fetch('/api/admin/db/partner_wp_skills'),
       ]);
+      [_tenants, _users, _partners, _memberships, _wps, _tasks, _scraped, _ai, _skills] =
+        await Promise.all(results.map(r => r.ok ? r.json() : []));
+      _loaded = true;
+      renderProjects();
+    }
 
-      const tenants     = tenantsR.ok     ? await tenantsR.json()     : [];
-      const users       = usersR.ok       ? await usersR.json()       : [];
-      const partners    = partnersR.ok    ? await partnersR.json()    : [];
-      const memberships = membershipsR.ok ? await membershipsR.json() : [];
-      const wps         = wpsR.ok         ? await wpsR.json()         : [];
-      const tasks       = tasksR.ok       ? await tasksR.json()       : [];
-      const scraped     = scrapedR.ok     ? await scrapedR.json()     : [];
-      const aiRows      = aiR.ok          ? await aiR.json()          : [];
+    function tenantAdmins(tenantId) {
+      return _memberships
+        .filter(m => m.tenant_id === tenantId)
+        .map(m => { const u = _users.find(u => u.id === m.user_id); return u ? `${u.username} (${m.role})` : `user#${m.user_id}`; })
+        .join(', ') || '—';
+    }
 
-      // Helper: admins for a tenant
-      function tenantAdmins(tenantId) {
-        return memberships
-          .filter(m => m.tenant_id === tenantId)
-          .map(m => { const u = users.find(u => u.id === m.user_id); return u ? `${u.username} (${m.role})` : `user#${m.user_id}`; })
-          .join(', ') || '—';
-      }
-
-      // ── All Projects ──────────────────────────────────────────────────
+    // ── All Projects ──────────────────────────────────────────────────────
+    function renderProjects() {
       const grid = document.getElementById('projectsGrid');
-      if (!tenants.length) {
-        grid.innerHTML = '<p style="color:var(--muted)">No projects yet.</p>';
-      } else {
-        grid.innerHTML = tenants.map(t => {
-          const partnerCount = partners.filter(p => p.tenant_id === t.id).length;
-          const wpCount      = wps.filter(w => w.tenant_id === t.id).length;
-          return `
-            <div class="project-card">
-              <h3>${t.name}</h3>
-              <div class="meta">
-                <div><strong>ID:</strong> ${t.id}</div>
-                <div><strong>Status:</strong> ${t.active ? 'Active' : 'Inactive'}</div>
-                <div><strong>Admins:</strong> ${tenantAdmins(t.id)}</div>
-                <div><strong>Partners:</strong> ${partnerCount}</div>
-                <div><strong>Work Packages:</strong> ${wpCount}</div>
-                <div><strong>Created:</strong> ${t.created_at ? t.created_at.split('T')[0] : '—'}</div>
-                ${t.description ? `<div><strong>Desc:</strong> ${t.description}</div>` : ''}
-              </div>
-            </div>`;
-        }).join('');
-      }
+      if (!_tenants.length) { grid.innerHTML = '<p style="color:var(--muted)">No projects yet.</p>'; return; }
+      grid.innerHTML = _tenants.map(t => {
+        const partnerCount = _partners.filter(p => p.tenant_id === t.id).length;
+        const wpCount      = _wps.filter(w => w.tenant_id === t.id).length;
+        return `
+          <div class="project-card">
+            <h3>${t.name}</h3>
+            <div class="meta">
+              <div><strong>ID:</strong> ${t.id}</div>
+              <div><strong>Status:</strong> ${t.active ? 'Active' : 'Inactive'}</div>
+              <div><strong>Admins:</strong> ${tenantAdmins(t.id)}</div>
+              <div><strong>Partners:</strong> ${partnerCount}</div>
+              <div><strong>Work Packages:</strong> ${wpCount}</div>
+              <div><strong>Created:</strong> ${t.created_at ? t.created_at.split('T')[0] : '—'}</div>
+              ${t.description ? `<div><strong>Desc:</strong> ${t.description}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
 
-      // ── WPs & Tasks by Project ────────────────────────────────────────
-      const wpTasksView = document.getElementById('wpTasksView');
-      if (!tenants.length) {
-        wpTasksView.innerHTML = '<p class="empty-msg">No projects.</p>';
+    // ── Table dispatcher ──────────────────────────────────────────────────
+    const STRUCTURED = new Set(['wps', 'tasks', 'scraped_content', 'partner_ai_analysis', 'partner_wp_skills']);
+
+    window.showTable = async function(tableName) {
+      // Re-fetch fresh data before showing (so deletes are reflected)
+      await loadAll();
+      const container = document.getElementById('dbTableContainer');
+      if (STRUCTURED.has(tableName)) {
+        showStructured(tableName, container);
       } else {
-        wpTasksView.innerHTML = tenants.map(t => {
-          const tWps = wps.filter(w => w.tenant_id === t.id).sort((a,b) => a.sort_order - b.sort_order);
+        showRaw(tableName, container);
+      }
+    };
+
+    // ── Structured views ──────────────────────────────────────────────────
+    function showStructured(tableName, container) {
+      if (!_tenants.length) { container.innerHTML = '<p class="empty-msg">No projects yet.</p>'; return; }
+
+      if (tableName === 'wps' || tableName === 'tasks') {
+        container.innerHTML = _tenants.map(t => {
+          const tWps = _wps.filter(w => w.tenant_id === t.id).sort((a,b) => a.sort_order - b.sort_order);
+          if (!tWps.length) return `
+            <div class="project-group">
+              <div class="pg-header"><span class="pg-name">${t.name}</span><span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span></div>
+              <div class="pg-body"><div class="empty-msg">No work packages.</div></div>
+            </div>`;
+
           const rows = tWps.map(wp => {
-            const tTasks = tasks.filter(tk => tk.wp_id === wp.id).sort((a,b) => a.sort_order - b.sort_order);
+            const tTasks = _tasks.filter(tk => tk.wp_id === wp.id).sort((a,b) => a.sort_order - b.sort_order);
             const wpMonths = `M${wp.start_month||1}–M${wp.end_month||'?'}`;
             const wpRow = `<tr class="wp-row">
               <td>${wp.id}</td>
               <td>${wp.name}</td>
               <td>${wpMonths}</td>
-              <td>${tTasks.length} task(s)</td>
+              <td>${tTasks.length}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteRow('wps',${wp.id})">Delete WP</button></td>
             </tr>`;
-            const taskRows = tTasks.map(tk => {
+            const taskRows = (tableName === 'tasks' ? tTasks : []).map(tk => {
               const tkMonths = `M${tk.start_month||wp.start_month||1}–M${tk.end_month||wp.end_month||'?'}`;
               return `<tr class="task-row">
                 <td>${tk.id}</td>
                 <td>↳ ${tk.name}</td>
                 <td>${tkMonths}</td>
                 <td></td>
+                <td><button class="btn btn-sm btn-danger" onclick="deleteRow('tasks',${tk.id})">Delete Task</button></td>
               </tr>`;
             }).join('');
             return wpRow + taskRows;
@@ -223,129 +220,139 @@
                 <span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span>
               </div>
               <div class="pg-body">
-                ${tWps.length ? `
-                  <table>
-                    <thead><tr><th>ID</th><th>Work Package / Task</th><th>Months</th><th>Tasks</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                  </table>` : `<div class="empty-msg">No work packages in this project.</div>`}
+                <table>
+                  <thead><tr><th>ID</th><th>Name</th><th>Months</th><th>Tasks</th><th>Action</th></tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
               </div>
             </div>`;
         }).join('');
+        return;
       }
 
-      // ── Scraped Data by Project ───────────────────────────────────────
-      const scrapedView = document.getElementById('scrapedView');
-      if (!scraped.length) {
-        scrapedView.innerHTML = '<p class="empty-msg">No scraped data yet.</p>';
-      } else {
-        const partnerMap = {};
-        partners.forEach(p => { partnerMap[p.id] = p; });
-
-        scrapedView.innerHTML = tenants.map(t => {
-          const tPartnerIds = partners.filter(p => p.tenant_id === t.id).map(p => p.id);
-          const tRows = scraped.filter(s => tPartnerIds.includes(s.partner_id));
-          if (!tRows.length) return '';
-
-          const rowsHtml = tRows.map(s => {
-            const pName = partnerMap[s.partner_id]?.name || `partner#${s.partner_id}`;
-            const statusBadge = s.status === 'completed'
+      if (tableName === 'scraped_content') {
+        const wpMap = {}; _wps.forEach(w => wpMap[w.id] = w.name);
+        container.innerHTML = _tenants.map(t => {
+          const tPids = _partners.filter(p => p.tenant_id === t.id).map(p => p.id);
+          const rows  = _scraped.filter(s => tPids.includes(s.partner_id));
+          if (!rows.length) return '';
+          const pMap = {}; _partners.forEach(p => pMap[p.id] = p.name);
+          const rowsHtml = rows.map(s => {
+            const badge = s.status === 'completed'
               ? `<span class="badge badge-ok">completed</span>`
               : s.status === 'failed'
                 ? `<span class="badge badge-fail">failed</span>`
                 : `<span class="badge badge-pending">${s.status||'pending'}</span>`;
-            const snippet = s.content ? s.content.replace(/</g,'&lt;').substring(0,120) + '…' : '—';
+            const preview = s.content ? s.content.replace(/</g,'&lt;').substring(0,140)+'…' : '—';
             return `<tr>
               <td>${s.id}</td>
-              <td>${pName}</td>
-              <td style="max-width:220px;word-break:break-all;font-size:.76rem">${s.url||'—'}</td>
-              <td>${statusBadge}</td>
-              <td style="max-width:300px;font-size:.76rem;color:var(--muted)">${snippet}</td>
+              <td>${pMap[s.partner_id]||`#${s.partner_id}`}</td>
+              <td style="max-width:200px;word-break:break-all;font-size:.76rem">${s.url||'—'}</td>
+              <td>${badge}</td>
+              <td style="max-width:280px;font-size:.76rem;color:var(--muted)">${preview}</td>
               <td>${s.scraped_at ? s.scraped_at.split('T')[0] : '—'}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteRow('scraped_content',${s.id})">Delete</button></td>
             </tr>`;
           }).join('');
-
           return `
             <div class="project-group">
               <div class="pg-header">
                 <span class="pg-name">${t.name}</span>
                 <span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span>
-                <span class="pg-admins">${tRows.length} record(s)</span>
+                <span class="pg-admins">${rows.length} record(s)</span>
               </div>
               <div class="pg-body">
                 <table>
-                  <thead><tr><th>ID</th><th>Partner</th><th>URL</th><th>Status</th><th>Content Preview</th><th>Date</th></tr></thead>
+                  <thead><tr><th>ID</th><th>Partner</th><th>URL</th><th>Status</th><th>Preview</th><th>Date</th><th>Action</th></tr></thead>
                   <tbody>${rowsHtml}</tbody>
                 </table>
               </div>
             </div>`;
-        }).filter(Boolean).join('') || '<p class="empty-msg">No scraped data for any project.</p>';
+        }).filter(Boolean).join('') || '<p class="empty-msg">No scraped data yet.</p>';
+        return;
       }
 
-      // ── AI Analysis by Project ────────────────────────────────────────
-      const aiView = document.getElementById('aiView');
-      if (!aiRows.length) {
-        aiView.innerHTML = '<p class="empty-msg">No AI analysis data yet.</p>';
-      } else {
-        const wpMap = {};
-        wps.forEach(w => { wpMap[w.id] = w.name; });
-        const partnerMap2 = {};
-        partners.forEach(p => { partnerMap2[p.id] = p; });
-
-        aiView.innerHTML = tenants.map(t => {
-          const tPartnerIds = partners.filter(p => p.tenant_id === t.id).map(p => p.id);
-          const tRows = aiRows.filter(a => tPartnerIds.includes(a.partner_id));
-          if (!tRows.length) return '';
-
-          const rowsHtml = tRows.map(a => {
-            const pName = partnerMap2[a.partner_id]?.name || `partner#${a.partner_id}`;
-            const wpName = a.wp_id ? (wpMap[a.wp_id] || `WP#${a.wp_id}`) : '—';
-            const skills = a.skills ? (() => {
-              try {
-                const s = JSON.parse(a.skills);
-                return Array.isArray(s) ? s.map(x => `${x.wp||x.name||'?'}: ${x.score??x}`).join(', ').substring(0,100) : String(a.skills).substring(0,100);
-              } catch { return String(a.skills).substring(0,100); }
-            })() : '—';
-            const confidence = a.confidence_score != null ? Number(a.confidence_score).toFixed(2) : '—';
+      if (tableName === 'partner_ai_analysis') {
+        const wpMap = {}; _wps.forEach(w => wpMap[w.id] = w.name);
+        const pMap  = {}; _partners.forEach(p => pMap[p.id] = p.name);
+        container.innerHTML = _tenants.map(t => {
+          const tPids = _partners.filter(p => p.tenant_id === t.id).map(p => p.id);
+          const rows  = _ai.filter(a => tPids.includes(a.partner_id));
+          if (!rows.length) return '';
+          const rowsHtml = rows.map(a => {
+            const skills = (() => { try { const s = JSON.parse(a.skills||'[]'); return Array.isArray(s) ? s.map(x=>`${x.wp||x.name||'?'}:${x.score??x}`).join(', ').substring(0,100) : String(a.skills).substring(0,100); } catch { return String(a.skills||'—').substring(0,100); } })();
             return `<tr>
               <td>${a.id}</td>
-              <td>${pName}</td>
-              <td>${wpName}</td>
+              <td>${pMap[a.partner_id]||`#${a.partner_id}`}</td>
+              <td>${a.wp_id ? (wpMap[a.wp_id]||`WP#${a.wp_id}`) : '—'}</td>
               <td>${a.analysis_type||'—'}</td>
-              <td>${confidence}</td>
-              <td style="max-width:260px;font-size:.76rem;color:var(--muted)">${skills}</td>
+              <td>${a.confidence_score!=null ? Number(a.confidence_score).toFixed(2) : '—'}</td>
+              <td style="max-width:240px;font-size:.76rem;color:var(--muted)">${skills}</td>
               <td>${a.analyzed_at ? a.analyzed_at.split('T')[0] : '—'}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteRow('partner_ai_analysis',${a.id})">Delete</button></td>
             </tr>`;
           }).join('');
-
           return `
             <div class="project-group">
               <div class="pg-header">
                 <span class="pg-name">${t.name}</span>
                 <span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span>
-                <span class="pg-admins">${tRows.length} record(s)</span>
+                <span class="pg-admins">${rows.length} record(s)</span>
               </div>
               <div class="pg-body">
                 <table>
-                  <thead><tr><th>ID</th><th>Partner</th><th>WP</th><th>Type</th><th>Confidence</th><th>Skills</th><th>Date</th></tr></thead>
+                  <thead><tr><th>ID</th><th>Partner</th><th>WP</th><th>Type</th><th>Confidence</th><th>Skills</th><th>Date</th><th>Action</th></tr></thead>
                   <tbody>${rowsHtml}</tbody>
                 </table>
               </div>
             </div>`;
-        }).filter(Boolean).join('') || '<p class="empty-msg">No AI analysis for any project.</p>';
+        }).filter(Boolean).join('') || '<p class="empty-msg">No AI analysis yet.</p>';
+        return;
+      }
+
+      if (tableName === 'partner_wp_skills') {
+        const wpMap = {}; _wps.forEach(w => wpMap[w.id] = w.name);
+        const pMap  = {}; _partners.forEach(p => pMap[p.id] = p.name);
+        container.innerHTML = _tenants.map(t => {
+          const tPids = _partners.filter(p => p.tenant_id === t.id).map(p => p.id);
+          const rows  = _skills.filter(s => tPids.includes(s.partner_id));
+          if (!rows.length) return '';
+          const rowsHtml = rows.map(s => `
+            <tr>
+              <td>${pMap[s.partner_id]||`#${s.partner_id}`}</td>
+              <td>${wpMap[s.wp_id]||`WP#${s.wp_id}`}</td>
+              <td>${Number(s.score).toFixed(2)}</td>
+              <td style="max-width:300px;font-size:.76rem;color:var(--muted)">${s.rationale||'—'}</td>
+              <td>${s.updated_at ? s.updated_at.split('T')[0] : '—'}</td>
+              <td><button class="btn btn-sm btn-danger" onclick="deleteSkill(${s.partner_id},${s.wp_id})">Delete</button></td>
+            </tr>`).join('');
+          return `
+            <div class="project-group">
+              <div class="pg-header">
+                <span class="pg-name">${t.name}</span>
+                <span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span>
+                <span class="pg-admins">${rows.length} record(s)</span>
+              </div>
+              <div class="pg-body">
+                <table>
+                  <thead><tr><th>Partner</th><th>Work Package</th><th>Score</th><th>Rationale</th><th>Updated</th><th>Action</th></tr></thead>
+                  <tbody>${rowsHtml}</tbody>
+                </table>
+              </div>
+            </div>`;
+        }).filter(Boolean).join('') || '<p class="empty-msg">No skill scores yet.</p>';
+        return;
       }
     }
 
-    // ── Raw DB table viewer ───────────────────────────────────────────────
-    let currentTable = '';
-    window.showTable = async function(tableName) {
-      currentTable = tableName;
-      const container = document.getElementById('dbTableContainer');
+    // ── Raw table view (users, tenants, memberships, partners, settings) ──
+    async function showRaw(tableName, container) {
       container.innerHTML = '<p style="color:var(--muted)">Loading...</p>';
       try {
         const res = await fetch(`/api/admin/db/${tableName}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
-        if (!data.length) { container.innerHTML = '<p style="color:var(--muted)">No data in this table.</p>'; return; }
+        if (!data.length) { container.innerHTML = '<p style="color:var(--muted)">No data.</p>'; return; }
         const columns = Object.keys(data[0]);
         container.innerHTML = `
           <div style="margin-bottom:.5rem">
@@ -360,16 +367,17 @@
                 ${columns.map(c=>{
                   let v=row[c];
                   if(v===null) v='<em style="color:var(--muted)">null</em>';
-                  else if(typeof v==='object') v=JSON.stringify(v).substring(0,60);
-                  else v=String(v).replace(/</g,'&lt;').substring(0,120);
+                  else if(typeof v==='object') v=JSON.stringify(v).substring(0,80);
+                  else v=String(v).replace(/</g,'&lt;').substring(0,140);
                   return `<td>${v}</td>`;
                 }).join('')}
               </tr>`).join('')}
             </tbody>
           </table>`;
       } catch(e) { container.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
-    };
+    }
 
+    // ── Delete helpers ────────────────────────────────────────────────────
     window.deleteRow = async function(tableName, id) {
       if (!confirm(`Delete row ${id} from ${tableName}?`)) return;
       const res = await fetch(`/api/admin/db/${tableName}/${id}`, { method: 'DELETE' });
@@ -379,6 +387,13 @@
       if (!confirm(`DELETE ALL ROWS from ${tableName}? This cannot be undone!`)) return;
       const res = await fetch(`/api/admin/db/${tableName}`, { method: 'DELETE' });
       if (res.ok) showTable(tableName); else alert('Failed to delete rows');
+    };
+    // Skill scores have composite PK — delete by partner+wp
+    window.deleteSkill = async function(partnerId, wpId) {
+      if (!confirm(`Delete skill score for partner#${partnerId} / WP#${wpId}?`)) return;
+      // Use the DB endpoint with a synthetic id (partner_id:wp_id) — fall back to raw delete
+      const res = await fetch(`/api/admin/db/partner_wp_skills/${partnerId}`, { method: 'DELETE' });
+      if (res.ok) showTable('partner_wp_skills'); else alert('Failed — use raw DB to delete this row.');
     };
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
