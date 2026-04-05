@@ -796,14 +796,14 @@
         const myTasks = wp.tasks.filter(t => t.assigned_partner_ids.includes(partner.id));
         return `
           <div class="wp-block">
-            <div class="wp-header">${wp.name}</div>
+            <div class="wp-header">${wp.name} <span style="font-size:.8em;font-weight:normal;opacity:.7">(M${wp.start_month||1}–M${wp.end_month||'?'})</span></div>
             <div class="flowchart">
               <div class="fc-wp-box">${wp.assigned_names.join(', ') || '—'}</div>
               <div class="fc-line"></div>
               <div class="fc-tasks">
                 ${wp.tasks.map(t => `
                   <div class="fc-task ${t.assigned_partner_ids.includes(partner.id) ? 'self' : ''}">
-                    <div class="t-name">${t.name}</div>
+                    <div class="t-name">${t.name} <span style="font-size:.8em;opacity:.7">(M${t.start_month||wp.start_month||1}–M${t.end_month||wp.end_month||'?'})</span></div>
                     <div class="t-lead">${t.assigned_names.join(', ') || '—'}</div>
                   </div>
                 `).join('')}
@@ -814,7 +814,7 @@
                 <tbody>
                   ${myTasks.map(t => `
                     <tr>
-                      <td>${t.name}</td>
+                      <td>${t.name} <span style="font-size:.8em;opacity:.6">(M${t.start_month||wp.start_month||1}–M${t.end_month||wp.end_month||'?'})</span></td>
                       <td><input class="task-input" data-taskid="${t.id}" type="number" step="0.1" value="${partner.wp_data[t.id] ?? 0}" /></td>
                     </tr>
                   `).join('')}
