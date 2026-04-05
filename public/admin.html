@@ -963,17 +963,28 @@
 
     function buildTaskInputs(containerId, wpData, prefixClass) {
       const container = document.getElementById(containerId);
-      container.innerHTML = wps.map(wp => `
-        <div style="margin-bottom:.6rem"><strong>${wp.name}</strong></div>
-        <div class="task-col" style="margin-bottom:1rem">
-          ${(wp.tasks || []).map(t => `
-            <div class="task-row">
-              <div style="font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t.name}">${t.name}</div>
-              <input type="number" step="0.1" class="${prefixClass}" data-taskid="${t.id}" value="${wpData[t.id] ?? 0}" />
-            </div>
-          `).join('')}
+      container.innerHTML = wps.map(wp => {
+        const wpStart = wp.start_month || 1;
+        const wpEnd   = wp.end_month   || projectDurationMonths || 48;
+        return `
+        <div style="margin-bottom:.6rem">
+          <strong>${wp.name}</strong>
+          <span style="font-size:.78rem;font-weight:normal;color:var(--muted);margin-left:.4rem">(M${wpStart}–M${wpEnd})</span>
         </div>
-      `).join('');
+        <div class="task-col" style="margin-bottom:1rem">
+          ${(wp.tasks || []).map(t => {
+            const tStart = t.start_month || wpStart;
+            const tEnd   = t.end_month   || wpEnd;
+            return `
+            <div class="task-row">
+              <div style="font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t.name} (M${tStart}–M${tEnd})">
+                ${t.name} <span style="font-size:.78rem;color:var(--muted)">(M${tStart}–M${tEnd})</span>
+              </div>
+              <input type="number" step="0.1" class="${prefixClass}" data-taskid="${t.id}" value="${wpData[t.id] ?? 0}" />
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('');
     }
 
     function readTaskInputs(prefixClass) {
