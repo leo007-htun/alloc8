@@ -19,10 +19,8 @@
     body {
       margin: 0; font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg); color: var(--text);
-      display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
     }
-    .page-title { font-size: .8rem; color: var(--muted); text-align: center; margin-bottom: 1.2rem; letter-spacing: .03em; }
-    .page-title strong { color: var(--primary); font-size: 1rem; display: block; margin-bottom: .2rem; }
     footer { margin-top: 1.5rem; font-size: .75rem; color: var(--muted); text-align: center; }
     .card {
       background: var(--panel); border: 1px solid var(--border);
@@ -64,12 +62,9 @@
   </style>
 </head>
 <body>
-  <div class="page-title">
-    <strong>Alloc8</strong>
-    Smart EU Consortium Management
-  </div>
   <div class="card">
     <h1>Alloc8</h1>
+    <p style="text-align:center;color:var(--muted);font-size:.85rem;margin:-1rem 0 1.2rem;">Smart EU Consortium Management</p>
     <form id="loginForm">
       <label for="username">Username</label>
       <input id="username" name="username" type="text" required autocomplete="username" />
