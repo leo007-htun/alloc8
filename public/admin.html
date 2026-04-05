@@ -156,6 +156,24 @@
       font-size: 0.9rem;
       opacity: 0.7;
     }
+    /* Skill Score Explanations */
+    .sse-block { margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .sse-header { display: flex; align-items: center; gap: .6rem; padding: .6rem .8rem; background: #f0f4f8; cursor: pointer; user-select: none; }
+    .sse-header .sse-name { font-weight: 600; font-size: .95rem; color: var(--primary); flex: 1; }
+    .sse-header .sse-avg { font-size: .85rem; color: var(--muted); }
+    .sse-header .sse-toggle { font-size: .8rem; color: var(--muted); }
+    .sse-body { display: none; }
+    .sse-body.open { display: block; }
+    .sse-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .sse-table th { background: #f6f8fa; padding: .45rem .7rem; text-align: left; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .sse-table td { padding: .5rem .7rem; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    .sse-table tr:last-child td { border-bottom: none; }
+    .sse-table .td-wp { white-space: nowrap; font-weight: 700; color: var(--primary); width: 3.5rem; }
+    .sse-table .td-wpname { color: var(--muted); font-size: .8rem; width: 30%; }
+    .sse-score-bar { display: flex; align-items: center; gap: .5rem; white-space: nowrap; }
+    .sse-score-bar .bar { height: 8px; border-radius: 4px; background: var(--accent); min-width: 4px; }
+    .sse-score-bar .val { font-weight: 700; font-size: .88rem; }
+    .sse-rationale { color: var(--text); line-height: 1.5; font-size: .83rem; }
     /* Consortium / Skill Pool Cards */
     .consortium-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem; }
     .consortium-item { background:#fafbfc; border:1px solid var(--border); border-radius:8px; padding:.8rem .6rem; display:flex; flex-direction:column; gap:.4rem; }
@@ -353,6 +371,12 @@
         <button class="btn btn-primary" id="refreshConsortiumBtn" style="white-space:nowrap">Refresh</button>
       </div>
       <div class="consortium-grid" id="adminConsortiumGrid"></div>
+    </div>
+
+    <div class="section-title">Skill Score Explanations</div>
+    <div class="card">
+      <div class="hint" style="margin-bottom:.8rem">AI rationale for each partner's score per Work Package. Click a partner to expand.</div>
+      <div id="adminSkillExplanations"><p style="color:var(--muted);font-size:.9rem">Refresh Consortium section to load explanations.</p></div>
     </div>
   </div>
 
@@ -732,6 +756,48 @@
           }
         });
       });
+
+      // Skill Score Explanations table
+      const expContainer = document.getElementById('adminSkillExplanations');
+      const partnersWithSkills = list.filter(p => p.skills && p.skills.length > 0);
+      if (!partnersWithSkills.length) {
+        expContainer.innerHTML = '<p style="color:var(--muted);font-size:.9rem">No skill analysis data yet. Partners need to add URLs and run analysis.</p>';
+      } else {
+        expContainer.innerHTML = partnersWithSkills.map((p, idx) => {
+          const avg = (p.skills.reduce((a, s) => a + s.score, 0) / p.skills.length).toFixed(1);
+          const rows = p.skills.map(s => {
+            const wpLabel = (s.wp_name||'').match(/^(WP\d+)/i)?.[1] || `WP${s.wp_id}`;
+            const fullName = (s.wp_name||'').replace(/^WP\d+\s*[-–]?\s*/i, '').trim() || s.wp_name || '';
+            const barWidth = Math.round((s.score / 5) * 80);
+            const barColor = s.score >= 4 ? '#1a7f37' : s.score >= 2.5 ? '#2e75b6' : '#cf222e';
+            return `<tr>
+              <td class="td-wp">${wpLabel}</td>
+              <td class="td-wpname">${fullName}</td>
+              <td>
+                <div class="sse-score-bar">
+                  <div class="bar" style="width:${barWidth}px;background:${barColor}"></div>
+                  <span class="val" style="color:${barColor}">${Number(s.score).toFixed(1)}</span>
+                </div>
+              </td>
+              <td class="sse-rationale">${s.rationale || '<span style="color:var(--muted)">No rationale recorded.</span>'}</td>
+            </tr>`;
+          }).join('');
+          return `
+            <div class="sse-block">
+              <div class="sse-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.sse-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
+                <span class="sse-name">${p.name}</span>
+                <span class="sse-avg">Avg: ${avg} / 5.0</span>
+                <span class="sse-toggle">${idx === 0 ? '▲' : '▼'}</span>
+              </div>
+              <div class="sse-body ${idx === 0 ? 'open' : ''}">
+                <table class="sse-table">
+                  <thead><tr><th>WP</th><th>Work Package</th><th>Score</th><th>AI Rationale</th></tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+            </div>`;
+        }).join('');
+      }
     }
 
     document.getElementById('refreshConsortiumBtn').addEventListener('click', async () => {
