@@ -598,6 +598,19 @@ app.get('/api/partner/analysis-status', requireAuth('partner'), (req, res) => {
   res.json({ analyzing: isAnalyzing, partnerId });
 });
 
+// Partner: Update task status (only if assigned to this partner)
+app.patch('/api/partner/tasks/:id/status', requireAuth('partner'), (req, res) => {
+  const taskId = Number(req.params.id);
+  const partnerId = req.session.partnerId;
+  const { status } = req.body;
+  const allowed = ['not_started', 'in_progress', 'completed'];
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  const assigned = db.prepare('SELECT 1 FROM task_assignments WHERE task_id = ? AND partner_id = ?').get(taskId, partnerId);
+  if (!assigned) return res.status(403).json({ error: 'Not assigned to this task' });
+  db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run(status, taskId);
+  res.json({ ok: true });
+});
+
 // Partner: Save URLs batch only — no scraping, no analysis
 app.post('/api/partner/urls/save-only', requireAuth('partner'), (req, res) => {
   const partnerId = req.session.partnerId;

@@ -93,6 +93,42 @@
     .fc-task .t-name { font-size: .78rem; font-weight: 600; color: var(--text); line-height: 1.2; }
     .fc-task .t-lead { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
 
+    /* Gantt Chart */
+    .gantt-wrap { overflow-x: auto; }
+    .gantt-table { border-collapse: collapse; min-width: 100%; font-size: .82rem; }
+    .gantt-table th, .gantt-table td { padding: 0; }
+    .gantt-name-col { position: sticky; left: 0; background: #fff; z-index: 2; min-width: 180px; max-width: 220px; padding: .35rem .6rem; border-right: 2px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gantt-table thead .gantt-name-col { background: #f6f8fa; font-weight: 600; color: var(--muted); font-size: .78rem; border-bottom: 1px solid var(--border); }
+    .gantt-month-header { min-width: 36px; width: 36px; text-align: center; background: #f6f8fa; font-weight: 600; color: var(--muted); font-size: .72rem; padding: .3rem 0; border-bottom: 1px solid var(--border); border-left: 1px solid #eaecef; }
+    .gantt-month-header.current-month { background: #dbeafe; color: var(--primary); }
+    .gantt-row-wp .gantt-name-col { font-weight: 700; color: var(--primary); background: #eef4fa; font-size: .85rem; border-bottom: 1px solid var(--border); }
+    .gantt-row-wp .gantt-cell { background: #eef4fa; border-bottom: 1px solid var(--border); }
+    .gantt-row-task .gantt-name-col { padding-left: 1.4rem; color: var(--text); border-bottom: 1px solid #f0f0f0; }
+    .gantt-row-task .gantt-cell { border-bottom: 1px solid #f0f0f0; }
+    .gantt-cell { min-width: 36px; width: 36px; height: 28px; border-left: 1px solid #f0f0f0; position: relative; }
+    .gantt-cell.current-month { background: rgba(219,234,254,.25); }
+    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 14px; border-radius: 3px; left: 0; right: 0; }
+    .gantt-bar-start { border-radius: 3px 0 0 3px; }
+    .gantt-bar-end   { border-radius: 0 3px 3px 0; }
+    .gantt-bar-mid   { border-radius: 0; }
+    .gantt-bar-only  { border-radius: 3px; }
+    .bar-not-started { background: #94a3b8; }
+    .bar-in-progress { background: var(--accent); }
+    .bar-completed   { background: var(--success); }
+    .bar-wp-not-started { background: #64748b; }
+    .bar-wp-in-progress { background: #1d4ed8; }
+    .bar-wp-completed   { background: #15803d; }
+    .gantt-status-cell { position: sticky; right: 0; background: #fff; z-index: 2; padding: .2rem .5rem; border-left: 2px solid var(--border); min-width: 120px; }
+    .gantt-row-wp .gantt-status-cell { background: #eef4fa; }
+    .status-badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: .15rem .45rem; border-radius: 4px; white-space: nowrap; }
+    .status-not-started { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+    .status-in-progress { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+    .status-completed   { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .status-select { font-size: .75rem; border: 1px solid var(--border); border-radius: 4px; padding: .15rem .3rem; cursor: pointer; background: #fff; }
+    .gantt-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .6rem; align-items: center; }
+    .gantt-legend-item { display: flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--muted); }
+    .gantt-legend-dot { width: 12px; height: 12px; border-radius: 2px; }
+
     /* Consortium / Skill Pool Cards */
     .consortium-grid {
       display: grid;
@@ -224,6 +260,22 @@
     </div>
 
     <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <h2 style="margin:0;">Project Timeline</h2>
+        <span style="font-size:.8rem;color:var(--muted)">Click your assigned tasks to update status</span>
+      </div>
+      <div class="gantt-legend">
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#94a3b8"></div>Not Started</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:var(--accent)"></div>In Progress</div>
+        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:var(--success)"></div>Completed</div>
+        <div class="gantt-legend-item" style="margin-left:auto"><div class="gantt-legend-dot" style="background:rgba(219,234,254,.6);border:1px solid #93c5fd"></div>Current month</div>
+      </div>
+      <div class="gantt-wrap">
+        <table class="gantt-table" id="ganttTable"><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
         <h2 style="margin:0;">Consortium Partners & Skill Pools</h2>
         <button class="btn btn-primary" id="refreshSkillsBtn" title="Refresh skill analysis data">Refresh</button>
@@ -301,13 +353,131 @@
       wps = data.wps;
       document.getElementById('pageTitle').textContent = partner.name + ' — Alloc8 Dashboard';
       renderWPs();
-      
+      await renderGantt();
+
       // Check if analysis is in progress before loading skills
       const analyzing = await isAnalysisInProgress();
       if (analyzing) {
         startAnalysisPolling();
       }
       await loadSkills();
+    }
+
+    async function renderGantt() {
+      const settRes = await fetch('/api/settings');
+      const settings = settRes.ok ? await settRes.json() : {};
+      const totalMonths = settings.project_duration_months || 48;
+      const currentMonth = null; // no real date context — highlight could be added later
+
+      const table = document.getElementById('ganttTable');
+      if (!wps || !wps.length) { table.innerHTML = '<tr><td style="padding:.8rem;color:var(--muted)">No Work Packages defined yet.</td></tr>'; return; }
+
+      const statusLabel = { not_started: 'Not Started', in_progress: 'In Progress', completed: 'Completed' };
+      const statusClass = { not_started: 'status-not-started', in_progress: 'status-in-progress', completed: 'status-completed' };
+      const barClass   = { not_started: 'bar-not-started', in_progress: 'bar-in-progress', completed: 'bar-completed' };
+      const wpBarClass = { not_started: 'bar-wp-not-started', in_progress: 'bar-wp-in-progress', completed: 'bar-wp-completed' };
+
+      // Build month header row
+      let headHtml = `<thead><tr>
+        <th class="gantt-name-col">Work Package / Task</th>`;
+      for (let m = 1; m <= totalMonths; m++) {
+        headHtml += `<th class="gantt-month-header">M${m}</th>`;
+      }
+      headHtml += `<th class="gantt-status-cell" style="background:#f6f8fa;font-weight:600;color:var(--muted);font-size:.78rem;border-bottom:1px solid var(--border)">Status</th></tr></thead>`;
+
+      let bodyHtml = '<tbody>';
+
+      for (const wp of wps) {
+        const wpStart = wp.start_month || 1;
+        const wpEnd   = wp.end_month   || totalMonths;
+        const wpLabel = (wp.name||'').match(/^(WP\d+)/i)?.[1] || wp.name;
+
+        // Derive WP status from tasks
+        const taskStatuses = wp.tasks.map(t => t.status || 'not_started');
+        const wpStatus = taskStatuses.every(s => s === 'completed') ? 'completed'
+          : taskStatuses.some(s => s === 'in_progress' || s === 'completed') ? 'in_progress'
+          : 'not_started';
+
+        // WP header row
+        bodyHtml += `<tr class="gantt-row-wp">
+          <td class="gantt-name-col" title="${wp.name}">${wpLabel} <span style="font-weight:400;font-size:.78rem;opacity:.7">${wp.name.replace(/^WP\d+\s*[-–]?\s*/i,'').trim()}</span></td>`;
+        for (let m = 1; m <= totalMonths; m++) {
+          const inRange = m >= wpStart && m <= wpEnd;
+          let barHtml = '';
+          if (inRange) {
+            const pos = m === wpStart && m === wpEnd ? 'only' : m === wpStart ? 'start' : m === wpEnd ? 'end' : 'mid';
+            barHtml = `<div class="gantt-bar gantt-bar-${pos} ${wpBarClass[wpStatus]}" style="opacity:.7"></div>`;
+          }
+          bodyHtml += `<td class="gantt-cell">${barHtml}</td>`;
+        }
+        bodyHtml += `<td class="gantt-status-cell"><span class="status-badge ${statusClass[wpStatus]}">${statusLabel[wpStatus]}</span></td></tr>`;
+
+        // Task rows
+        for (const task of wp.tasks) {
+          const tStart  = task.start_month || wpStart;
+          const tEnd    = task.end_month   || wpEnd;
+          const tStatus = task.status || 'not_started';
+          const isAssigned = task.assigned_partner_ids && task.assigned_partner_ids.includes(partner.id);
+          const taskLabel = task.name;
+
+          bodyHtml += `<tr class="gantt-row-task" id="gantt-task-row-${task.id}">
+            <td class="gantt-name-col" title="${task.name}">${taskLabel}</td>`;
+          for (let m = 1; m <= totalMonths; m++) {
+            const inRange = m >= tStart && m <= tEnd;
+            let barHtml = '';
+            if (inRange) {
+              const pos = m === tStart && m === tEnd ? 'only' : m === tStart ? 'start' : m === tEnd ? 'end' : 'mid';
+              barHtml = `<div class="gantt-bar gantt-bar-${pos} ${barClass[tStatus]}"></div>`;
+            }
+            bodyHtml += `<td class="gantt-cell">${barHtml}</td>`;
+          }
+
+          if (isAssigned) {
+            bodyHtml += `<td class="gantt-status-cell">
+              <select class="status-select" data-taskid="${task.id}" data-wpid="${wp.id}">
+                <option value="not_started" ${tStatus==='not_started'?'selected':''}>Not Started</option>
+                <option value="in_progress" ${tStatus==='in_progress'?'selected':''}>In Progress</option>
+                <option value="completed"   ${tStatus==='completed'?'selected':''}>Completed</option>
+              </select></td>`;
+          } else {
+            bodyHtml += `<td class="gantt-status-cell"><span class="status-badge ${statusClass[tStatus]}">${statusLabel[tStatus]}</span></td>`;
+          }
+          bodyHtml += '</tr>';
+        }
+      }
+
+      bodyHtml += '</tbody>';
+      table.innerHTML = headHtml + bodyHtml;
+
+      // Status change handlers
+      table.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', async () => {
+          const taskId = sel.dataset.taskid;
+          const newStatus = sel.value;
+          sel.disabled = true;
+          try {
+            const res = await fetch(`/api/partner/tasks/${taskId}/status`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: newStatus })
+            });
+            if (!res.ok) { alert('Failed to update status'); sel.value = sel.dataset.prev || 'not_started'; }
+            else {
+              sel.dataset.prev = newStatus;
+              // Update bar colour in this row
+              const row = document.getElementById(`gantt-task-row-${taskId}`);
+              row.querySelectorAll('.gantt-bar').forEach(bar => {
+                bar.classList.remove('bar-not-started','bar-in-progress','bar-completed');
+                bar.classList.add(barClass[newStatus]);
+              });
+              // Refresh WP status badge
+              await renderGantt();
+            }
+          } catch(e) { alert('Error: ' + e.message); }
+          finally { sel.disabled = false; }
+        });
+        sel.dataset.prev = sel.value;
+      });
     }
 
     async function loadSkills() {

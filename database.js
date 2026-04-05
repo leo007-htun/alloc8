@@ -170,6 +170,7 @@ try { db.exec("ALTER TABLE wps ADD COLUMN start_month INTEGER DEFAULT 1"); } cat
 try { db.exec("ALTER TABLE wps ADD COLUMN end_month INTEGER DEFAULT 48"); } catch(e) {}
 try { db.exec("ALTER TABLE tasks ADD COLUMN start_month INTEGER DEFAULT 1"); } catch(e) {}
 try { db.exec("ALTER TABLE tasks ADD COLUMN end_month INTEGER DEFAULT 48"); } catch(e) {}
+try { db.exec("ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT 'not_started'"); } catch(e) {}
 
 // Hash function for passwords
 function hash(password) {
