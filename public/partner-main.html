@@ -93,41 +93,59 @@
     .fc-task .t-name { font-size: .78rem; font-weight: 600; color: var(--text); line-height: 1.2; }
     .fc-task .t-lead { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
 
-    /* Gantt Chart */
-    .gantt-wrap { overflow-x: auto; }
-    .gantt-table { border-collapse: collapse; min-width: 100%; font-size: .82rem; }
-    .gantt-table th, .gantt-table td { padding: 0; }
-    .gantt-name-col { position: sticky; left: 0; background: #fff; z-index: 2; min-width: 180px; max-width: 220px; padding: .35rem .6rem; border-right: 2px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .gantt-table thead .gantt-name-col { background: #f6f8fa; font-weight: 600; color: var(--muted); font-size: .78rem; border-bottom: 1px solid var(--border); }
-    .gantt-month-header { min-width: 36px; width: 36px; text-align: center; background: #f6f8fa; font-weight: 600; color: var(--muted); font-size: .72rem; padding: .3rem 0; border-bottom: 1px solid var(--border); border-left: 1px solid #eaecef; }
-    .gantt-month-header.current-month { background: #dbeafe; color: var(--primary); }
-    .gantt-row-wp .gantt-name-col { font-weight: 700; color: var(--primary); background: #eef4fa; font-size: .85rem; border-bottom: 1px solid var(--border); }
-    .gantt-row-wp .gantt-cell { background: #eef4fa; border-bottom: 1px solid var(--border); }
-    .gantt-row-task .gantt-name-col { padding-left: 1.4rem; color: var(--text); border-bottom: 1px solid #f0f0f0; }
-    .gantt-row-task .gantt-cell { border-bottom: 1px solid #f0f0f0; }
-    .gantt-cell { min-width: 36px; width: 36px; height: 28px; border-left: 1px solid #f0f0f0; position: relative; }
-    .gantt-cell.current-month { background: rgba(219,234,254,.25); }
-    .gantt-bar { position: absolute; top: 50%; transform: translateY(-50%); height: 14px; border-radius: 3px; left: 0; right: 0; }
-    .gantt-bar-start { border-radius: 3px 0 0 3px; }
-    .gantt-bar-end   { border-radius: 0 3px 3px 0; }
-    .gantt-bar-mid   { border-radius: 0; }
-    .gantt-bar-only  { border-radius: 3px; }
-    .bar-not-started { background: #94a3b8; }
-    .bar-in-progress { background: var(--accent); }
-    .bar-completed   { background: var(--success); }
-    .bar-wp-not-started { background: #64748b; }
-    .bar-wp-in-progress { background: #1d4ed8; }
-    .bar-wp-completed   { background: #15803d; }
-    .gantt-status-cell { position: sticky; right: 0; background: #fff; z-index: 2; padding: .2rem .5rem; border-left: 2px solid var(--border); min-width: 120px; }
-    .gantt-row-wp .gantt-status-cell { background: #eef4fa; }
-    .status-badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: .15rem .45rem; border-radius: 4px; white-space: nowrap; }
-    .status-not-started { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
-    .status-in-progress { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
-    .status-completed   { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-    .status-select { font-size: .75rem; border: 1px solid var(--border); border-radius: 4px; padding: .15rem .3rem; cursor: pointer; background: #fff; }
-    .gantt-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .6rem; align-items: center; }
+    /* ── Gantt Chart ─────────────────────────────────────────── */
+    .gantt-outer { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+    /* Left name panel */
+    .gantt-names { width: 210px; min-width: 210px; flex-shrink: 0; border-right: 2px solid var(--border); background: #fff; z-index: 3; }
+    .gantt-names-hdr { height: 52px; background: #f6f8fa; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 .8rem; font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .gn-row { display: flex; align-items: center; gap: .4rem; padding: 0 .5rem 0 .8rem; overflow: hidden; white-space: nowrap; border-bottom: 1px solid #f0f2f4; font-size: .82rem; }
+    .gn-row.gn-wp { height: 48px; background: #f0f4f8; font-weight: 700; color: var(--primary); font-size: .84rem; border-bottom: 1px solid #dde3ea; }
+    .gn-row.gn-task { height: 40px; padding-left: 1.4rem; color: var(--text); }
+    .gn-row.gn-task.mine { color: var(--primary); }
+    .gn-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .gn-name { overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    /* Right scrollable timeline */
+    .gantt-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; }
+    .gantt-inner { position: relative; }
+    /* Month header */
+    .gantt-mhdr { display: flex; height: 52px; background: #f6f8fa; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; }
+    .gantt-mcell { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; color: var(--muted); border-right: 1px solid #eaecef; line-height: 1.2; gap: 2px; }
+    .gantt-mcell.quarter-start { border-left: 2px solid #c9d1da; }
+    .gantt-mcell .qlabel { font-size: .6rem; color: #94a3b8; font-weight: 600; }
+    /* Bar rows */
+    .gantt-brow { position: relative; border-bottom: 1px solid #f0f2f4; }
+    .gantt-brow.brow-wp   { height: 48px; background: #f8fafc; border-bottom: 1px solid #dde3ea; }
+    .gantt-brow.brow-task { height: 40px; }
+    /* Bars */
+    .gbar { position: absolute; top: 50%; transform: translateY(-50%); border-radius: 6px; display: flex; align-items: center; gap: 5px; padding: 0 8px; overflow: hidden; white-space: nowrap; transition: filter .15s, box-shadow .15s; box-sizing: border-box; }
+    .gbar.wp-bar  { height: 18px; opacity: .65; border-radius: 4px; }
+    .gbar.task-bar { height: 26px; }
+    .gbar.interactive { cursor: pointer; }
+    .gbar.interactive:hover { filter: brightness(1.1); box-shadow: 0 3px 12px rgba(0,0,0,.2); transform: translateY(-51%) scaleY(1.04); }
+    .gbar.s-not-started { background: #cbd5e1; }
+    .gbar.s-in-progress { background: linear-gradient(90deg,#3b82f6,#60a5fa); }
+    .gbar.s-completed   { background: linear-gradient(90deg,#059669,#34d399); }
+    .gbar.wp-not-started { background: #94a3b8; }
+    .gbar.wp-in-progress { background: linear-gradient(90deg,#1d4ed8,#3b82f6); }
+    .gbar.wp-completed   { background: linear-gradient(90deg,#065f46,#10b981); }
+    .gbar .bar-label { font-size: .7rem; font-weight: 600; color: rgba(255,255,255,.95); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .gbar.s-not-started .bar-label { color: #475569; }
+    /* Partner chips */
+    .pchip { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: .58rem; font-weight: 800; color: #fff; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,.7); }
+    .pchip-more { font-size: .62rem; color: rgba(255,255,255,.85); font-weight: 700; }
+    /* Status popover */
+    .gantt-pop { position: fixed; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.18); padding: .8rem; z-index: 9999; width: 210px; animation: popIn .12s ease; }
+    @keyframes popIn { from { opacity:0; transform: scale(.92) translateY(4px); } to { opacity:1; transform: scale(1) translateY(0); } }
+    .gantt-pop .pop-name { font-size: .82rem; font-weight: 700; color: var(--text); margin-bottom: .5rem; line-height: 1.35; }
+    .gantt-pop .pop-hint { font-size: .72rem; color: var(--muted); margin-bottom: .5rem; }
+    .gpop-btn { display: flex; align-items: center; gap: .6rem; width: 100%; padding: .45rem .6rem; border: 1.5px solid transparent; border-radius: 7px; background: #f8fafc; cursor: pointer; font-size: .82rem; margin-bottom: .25rem; transition: all .12s; }
+    .gpop-btn:hover { background: #eef4fa; border-color: var(--border); }
+    .gpop-btn.active { border-color: var(--primary); background: #eef4fa; font-weight: 700; }
+    .gpop-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    /* Legend */
+    .gantt-legend { display: flex; gap: .8rem; flex-wrap: wrap; margin-bottom: .7rem; align-items: center; }
     .gantt-legend-item { display: flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--muted); }
-    .gantt-legend-dot { width: 12px; height: 12px; border-radius: 2px; }
+    .gl-dot { width: 10px; height: 10px; border-radius: 2px; }
 
     /* Consortium / Skill Pool Cards */
     .consortium-grid {
@@ -262,16 +280,19 @@
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
         <h2 style="margin:0;">Project Timeline</h2>
-        <span style="font-size:.8rem;color:var(--muted)">Click your assigned tasks to update status</span>
+        <span style="font-size:.78rem;color:var(--muted)">Click highlighted bars to update your task status</span>
       </div>
       <div class="gantt-legend">
-        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#94a3b8"></div>Not Started</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:var(--accent)"></div>In Progress</div>
-        <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:var(--success)"></div>Completed</div>
-        <div class="gantt-legend-item" style="margin-left:auto"><div class="gantt-legend-dot" style="background:rgba(219,234,254,.6);border:1px solid #93c5fd"></div>Current month</div>
+        <div class="gantt-legend-item"><div class="gl-dot" style="background:#cbd5e1"></div>Not Started</div>
+        <div class="gantt-legend-item"><div class="gl-dot" style="background:linear-gradient(90deg,#3b82f6,#60a5fa)"></div>In Progress</div>
+        <div class="gantt-legend-item"><div class="gl-dot" style="background:linear-gradient(90deg,#059669,#34d399)"></div>Completed</div>
+        <div class="gantt-legend-item"><div class="gl-dot" style="background:#93c5fd;border-radius:50%"></div>Your assigned task</div>
       </div>
-      <div class="gantt-wrap">
-        <table class="gantt-table" id="ganttTable"><tbody></tbody></table>
+      <div class="gantt-outer">
+        <div class="gantt-names" id="ganttNames"></div>
+        <div class="gantt-scroll" id="ganttScroll">
+          <div class="gantt-inner" id="ganttInner"></div>
+        </div>
       </div>
     </div>
 
@@ -363,121 +384,201 @@
       await loadSkills();
     }
 
+    // Partner colour palette
+    const P_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#ef4444','#6366f1','#f97316','#84cc16'];
+    const pColor = id => P_COLORS[(id||0) % P_COLORS.length];
+    const pInitials = name => (name||'?').split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+
+    let _ganttScrollLeft = 0;
+    let _ganttSettings = null;
+
     async function renderGantt() {
-      const settRes = await fetch('/api/settings');
-      const settings = settRes.ok ? await settRes.json() : {};
-      const totalMonths = settings.project_duration_months || 48;
-      const currentMonth = null; // no real date context — highlight could be added later
-
-      const table = document.getElementById('ganttTable');
-      if (!wps || !wps.length) { table.innerHTML = '<tr><td style="padding:.8rem;color:var(--muted)">No Work Packages defined yet.</td></tr>'; return; }
-
-      const statusLabel = { not_started: 'Not Started', in_progress: 'In Progress', completed: 'Completed' };
-      const statusClass = { not_started: 'status-not-started', in_progress: 'status-in-progress', completed: 'status-completed' };
-      const barClass   = { not_started: 'bar-not-started', in_progress: 'bar-in-progress', completed: 'bar-completed' };
-      const wpBarClass = { not_started: 'bar-wp-not-started', in_progress: 'bar-wp-in-progress', completed: 'bar-wp-completed' };
-
-      // Build month header row
-      let headHtml = `<thead><tr>
-        <th class="gantt-name-col">Work Package / Task</th>`;
-      for (let m = 1; m <= totalMonths; m++) {
-        headHtml += `<th class="gantt-month-header">M${m}</th>`;
+      const CELL = 46;
+      if (!_ganttSettings) {
+        const sr = await fetch('/api/settings');
+        _ganttSettings = sr.ok ? await sr.json() : {};
       }
-      headHtml += `<th class="gantt-status-cell" style="background:#f6f8fa;font-weight:600;color:var(--muted);font-size:.78rem;border-bottom:1px solid var(--border)">Status</th></tr></thead>`;
+      const totalMonths = _ganttSettings.project_duration_months || 48;
+      const totalWidth = totalMonths * CELL;
 
-      let bodyHtml = '<tbody>';
+      const namesEl  = document.getElementById('ganttNames');
+      const innerEl  = document.getElementById('ganttInner');
+      const scrollEl = document.getElementById('ganttScroll');
+      if (!namesEl || !innerEl) return;
+
+      // Save scroll position
+      _ganttScrollLeft = scrollEl.scrollLeft;
+
+      if (!wps || !wps.length) {
+        namesEl.innerHTML = '<div class="gantt-names-hdr">Timeline</div><div style="padding:.8rem;color:var(--muted);font-size:.85rem">No WPs defined yet.</div>';
+        innerEl.innerHTML = '';
+        return;
+      }
+
+      const statusMeta = {
+        not_started: { label:'Not Started', dot:'#94a3b8', barCls:'s-not-started' },
+        in_progress:  { label:'In Progress', dot:'#3b82f6', barCls:'s-in-progress' },
+        completed:    { label:'Completed',   dot:'#059669', barCls:'s-completed'   },
+      };
+
+      // ── Names panel ──────────────────────────────────────────
+      let namesHtml = '<div class="gantt-names-hdr">Work Package / Task</div>';
+      // ── Timeline panel ───────────────────────────────────────
+      // Month header
+      let mhdrHtml = `<div class="gantt-mhdr">`;
+      for (let m = 1; m <= totalMonths; m++) {
+        const qStart = (m - 1) % 3 === 0;
+        const qNum   = Math.ceil(m / 3);
+        mhdrHtml += `<div class="gantt-mcell${qStart?' quarter-start':''}" style="width:${CELL}px">
+          ${qStart ? `<span class="qlabel">Q${qNum}</span>` : ''}
+          <span>M${m}</span>
+        </div>`;
+      }
+      mhdrHtml += '</div>';
+      let rowsHtml = '';
+
+      // Grid line background helper
+      const gridBg = `background-image:repeating-linear-gradient(90deg,transparent 0px,transparent ${CELL-1}px,#e8ecf0 ${CELL-1}px,#e8ecf0 ${CELL}px);background-size:${CELL}px 100%;`;
 
       for (const wp of wps) {
         const wpStart = wp.start_month || 1;
         const wpEnd   = wp.end_month   || totalMonths;
         const wpLabel = (wp.name||'').match(/^(WP\d+)/i)?.[1] || wp.name;
+        const wpSub   = (wp.name||'').replace(/^WP\d+\s*[-–—]?\s*/i,'').trim();
 
-        // Derive WP status from tasks
-        const taskStatuses = wp.tasks.map(t => t.status || 'not_started');
-        const wpStatus = taskStatuses.every(s => s === 'completed') ? 'completed'
-          : taskStatuses.some(s => s === 'in_progress' || s === 'completed') ? 'in_progress'
-          : 'not_started';
+        const taskStatuses = (wp.tasks||[]).map(t => t.status||'not_started');
+        const wpStatus = taskStatuses.every(s=>s==='completed') ? 'completed'
+          : taskStatuses.some(s=>s==='in_progress'||s==='completed') ? 'in_progress' : 'not_started';
+        const wpSm = statusMeta[wpStatus];
 
-        // WP header row
-        bodyHtml += `<tr class="gantt-row-wp">
-          <td class="gantt-name-col" title="${wp.name}">${wpLabel} <span style="font-weight:400;font-size:.78rem;opacity:.7">${wp.name.replace(/^WP\d+\s*[-–]?\s*/i,'').trim()}</span></td>`;
-        for (let m = 1; m <= totalMonths; m++) {
-          const inRange = m >= wpStart && m <= wpEnd;
-          let barHtml = '';
-          if (inRange) {
-            const pos = m === wpStart && m === wpEnd ? 'only' : m === wpStart ? 'start' : m === wpEnd ? 'end' : 'mid';
-            barHtml = `<div class="gantt-bar gantt-bar-${pos} ${wpBarClass[wpStatus]}" style="opacity:.7"></div>`;
-          }
-          bodyHtml += `<td class="gantt-cell">${barHtml}</td>`;
-        }
-        bodyHtml += `<td class="gantt-status-cell"><span class="status-badge ${statusClass[wpStatus]}">${statusLabel[wpStatus]}</span></td></tr>`;
+        // WP name row
+        namesHtml += `<div class="gn-row gn-wp" title="${wp.name}">
+          <span class="gn-dot" style="background:${wpSm.dot}"></span>
+          <span class="gn-name"><strong>${wpLabel}</strong> <span style="font-weight:400;font-size:.75rem;opacity:.7">${wpSub}</span></span>
+        </div>`;
 
-        // Task rows
+        // WP bar row — chips for WP-level assignees
+        const wpChips = (wp.assigned_names||[]).slice(0,3).map((n,i) =>
+          `<span class="pchip" style="background:${pColor(wp.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`
+        ).join('') + (wp.assigned_names.length > 3 ? `<span class="pchip-more">+${wp.assigned_names.length-3}</span>` : '');
+
+        const wpBarLeft  = (wpStart - 1) * CELL;
+        const wpBarWidth = (wpEnd - wpStart + 1) * CELL;
+        rowsHtml += `<div class="gantt-brow brow-wp" style="width:${totalWidth}px;${gridBg}">
+          <div class="gbar wp-bar wp-${wpStatus}" style="left:${wpBarLeft}px;width:${wpBarWidth}px" title="${wp.name} (M${wpStart}–M${wpEnd})">
+            ${wpChips}
+          </div>
+        </div>`;
+
+        // ── Task rows ───────────────────────────────────────────
         for (const task of wp.tasks) {
-          const tStart  = task.start_month || wpStart;
-          const tEnd    = task.end_month   || wpEnd;
+          const tStart = task.start_month || wpStart;
+          const tEnd   = task.end_month   || wpEnd;
           const tStatus = task.status || 'not_started';
-          const isAssigned = task.assigned_partner_ids && task.assigned_partner_ids.includes(partner.id);
-          const taskLabel = task.name;
+          const tsm = statusMeta[tStatus];
+          const isAssigned = (task.assigned_partner_ids||[]).includes(partner.id);
 
-          bodyHtml += `<tr class="gantt-row-task" id="gantt-task-row-${task.id}">
-            <td class="gantt-name-col" title="${task.name}">${taskLabel}</td>`;
-          for (let m = 1; m <= totalMonths; m++) {
-            const inRange = m >= tStart && m <= tEnd;
-            let barHtml = '';
-            if (inRange) {
-              const pos = m === tStart && m === tEnd ? 'only' : m === tStart ? 'start' : m === tEnd ? 'end' : 'mid';
-              barHtml = `<div class="gantt-bar gantt-bar-${pos} ${barClass[tStatus]}"></div>`;
-            }
-            bodyHtml += `<td class="gantt-cell">${barHtml}</td>`;
-          }
+          // Name row
+          namesHtml += `<div class="gn-row gn-task${isAssigned?' mine':''}" title="${task.name}">
+            ${isAssigned ? `<span class="gn-dot" style="background:#3b82f6"></span>` : `<span style="width:7px;flex-shrink:0"></span>`}
+            <span class="gn-name">${task.name}</span>
+          </div>`;
 
-          if (isAssigned) {
-            bodyHtml += `<td class="gantt-status-cell">
-              <select class="status-select" data-taskid="${task.id}" data-wpid="${wp.id}">
-                <option value="not_started" ${tStatus==='not_started'?'selected':''}>Not Started</option>
-                <option value="in_progress" ${tStatus==='in_progress'?'selected':''}>In Progress</option>
-                <option value="completed"   ${tStatus==='completed'?'selected':''}>Completed</option>
-              </select></td>`;
-          } else {
-            bodyHtml += `<td class="gantt-status-cell"><span class="status-badge ${statusClass[tStatus]}">${statusLabel[tStatus]}</span></td>`;
-          }
-          bodyHtml += '</tr>';
+          // Bar
+          const tLeft  = (tStart - 1) * CELL;
+          const tWidth = (tEnd - tStart + 1) * CELL;
+          const chips  = (task.assigned_names||[]).slice(0,3).map((n,i) =>
+            `<span class="pchip" style="background:${pColor(task.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`
+          ).join('') + (task.assigned_names.length > 3 ? `<span class="pchip-more">+${task.assigned_names.length-3}</span>` : '');
+
+          // Show partner name label if bar is wide enough
+          const charsRoom = Math.floor((tWidth - 16 - (task.assigned_names||[]).length * 22) / 7);
+          const label = charsRoom > 6 && task.assigned_names.length
+            ? `<span class="bar-label">${task.assigned_names.join(', ').slice(0, charsRoom)}</span>` : '';
+
+          const interactAttr = isAssigned
+            ? `data-taskid="${task.id}" data-tname="${task.name.replace(/"/g,'')}" data-status="${tStatus}"`
+            : '';
+
+          rowsHtml += `<div class="gantt-brow brow-task" style="width:${totalWidth}px;${gridBg}">
+            <div class="gbar task-bar ${tsm.barCls}${isAssigned?' interactive':''}" style="left:${tLeft}px;width:${tWidth}px" ${interactAttr}
+                 title="${task.name} (M${tStart}–M${tEnd}) — ${tsm.label}${isAssigned?' — click to update':''}" >
+              ${chips}${label}
+            </div>
+          </div>`;
         }
       }
 
-      bodyHtml += '</tbody>';
-      table.innerHTML = headHtml + bodyHtml;
+      namesEl.innerHTML = namesHtml;
+      innerEl.style.width = totalWidth + 'px';
+      innerEl.innerHTML = mhdrHtml + rowsHtml;
+      scrollEl.scrollLeft = _ganttScrollLeft;
 
-      // Status change handlers
-      table.querySelectorAll('.status-select').forEach(sel => {
-        sel.addEventListener('change', async () => {
-          const taskId = sel.dataset.taskid;
-          const newStatus = sel.value;
-          sel.disabled = true;
+      // ── Click handlers on interactive bars ──────────────────
+      innerEl.querySelectorAll('.gbar.interactive').forEach(bar => {
+        bar.addEventListener('click', e => { e.stopPropagation(); showGanttPop(bar); });
+      });
+    }
+
+    // ── Popover ───────────────────────────────────────────────
+    function showGanttPop(bar) {
+      closeGanttPop();
+      const taskId  = bar.dataset.taskid;
+      const tname   = bar.dataset.tname;
+      const current = bar.dataset.status;
+
+      const pop = document.createElement('div');
+      pop.className = 'gantt-pop';
+      pop.id = 'ganttPop';
+
+      const opts = [
+        { val:'not_started', label:'Not Started', color:'#94a3b8' },
+        { val:'in_progress', label:'In Progress', color:'#3b82f6' },
+        { val:'completed',   label:'Completed',   color:'#059669' },
+      ];
+
+      pop.innerHTML = `
+        <div class="pop-name">${tname}</div>
+        <div class="pop-hint">Update your task status</div>
+        ${opts.map(o=>`
+          <button class="gpop-btn${current===o.val?' active':''}" data-val="${o.val}">
+            <span class="gpop-dot" style="background:${o.color}"></span>
+            ${o.label}
+            ${current===o.val ? '<span style="margin-left:auto;font-size:.8rem">✓</span>' : ''}
+          </button>`).join('')}`;
+
+      document.body.appendChild(pop);
+
+      // Position near bar
+      const rect = bar.getBoundingClientRect();
+      const pw = 214, ph = 170;
+      let left = Math.min(rect.left, window.innerWidth - pw - 8);
+      let top  = rect.bottom + 6;
+      if (top + ph > window.innerHeight - 8) top = rect.top - ph - 6;
+      pop.style.cssText += `left:${left}px;top:${top}px`;
+
+      pop.querySelectorAll('.gpop-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.stopPropagation();
+          const newStatus = btn.dataset.val;
+          closeGanttPop();
+          if (newStatus === current) return;
           try {
             const res = await fetch(`/api/partner/tasks/${taskId}/status`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
+              method: 'PATCH', headers: {'Content-Type':'application/json'},
               body: JSON.stringify({ status: newStatus })
             });
-            if (!res.ok) { alert('Failed to update status'); sel.value = sel.dataset.prev || 'not_started'; }
-            else {
-              sel.dataset.prev = newStatus;
-              // Update bar colour in this row
-              const row = document.getElementById(`gantt-task-row-${taskId}`);
-              row.querySelectorAll('.gantt-bar').forEach(bar => {
-                bar.classList.remove('bar-not-started','bar-in-progress','bar-completed');
-                bar.classList.add(barClass[newStatus]);
-              });
-              // Refresh WP status badge
-              await renderGantt();
-            }
-          } catch(e) { alert('Error: ' + e.message); }
-          finally { sel.disabled = false; }
+            if (res.ok) await renderGantt();
+            else alert('Failed to update status');
+          } catch(err) { alert('Error: ' + err.message); }
         });
-        sel.dataset.prev = sel.value;
       });
+
+      setTimeout(() => document.addEventListener('click', closeGanttPop, { once: true }), 0);
+    }
+
+    function closeGanttPop() {
+      document.getElementById('ganttPop')?.remove();
     }
 
     async function loadSkills() {
