@@ -18,24 +18,50 @@
     }
     header h1 { margin: 0; font-size: 1.2rem; }
     .btn { border: none; padding: .5rem .8rem; border-radius: 6px; cursor: pointer; font-size: .9rem; font-weight: 600; }
-    .btn-sm { padding: .35rem .55rem; font-size: .8rem; }
+    .btn-sm { padding: .3rem .5rem; font-size: .78rem; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: #1f5c99; }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-danger:hover { background: #a3001c; }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
-    .container { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 1rem; }
+    .container { max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem; display: flex; flex-direction: column; gap: 1rem; }
     .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; }
-    .card h2 { margin: 0 0 .8rem; font-size: 1.05rem; color: var(--primary); }
+    .card h2 { margin: 0 0 .6rem; font-size: 1.05rem; color: var(--primary); }
     .hint { font-size: .85rem; color: var(--muted); margin-bottom: .8rem; }
     .toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .8rem; }
-    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-    th, td { padding: .35rem .5rem; border: 1px solid var(--border); text-align: left; }
-    thead tr { background: #f6f8fa; }
-    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: .5rem; }
-    .project-card { background: #fafbfc; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+    th, td { padding: .35rem .55rem; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+    thead tr { background: #f0f4f8; }
+    /* Projects grid */
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: .5rem; }
+    .project-card { background: #fafbfc; border: 1px solid var(--border); border-radius: 8px; padding: .9rem 1rem; }
     .project-card h3 { margin: 0 0 .4rem; font-size: .95rem; color: var(--primary); }
-    .project-card .meta { font-size: .8rem; color: var(--muted); line-height: 1.6; }
+    .project-card .meta { font-size: .8rem; color: var(--muted); line-height: 1.7; }
+    /* Project group blocks */
+    .project-group { margin-bottom: 1.4rem; }
+    .project-group:last-child { margin-bottom: 0; }
+    .pg-header {
+      display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap;
+      background: #eef3f8; border: 1px solid var(--border); border-radius: 6px 6px 0 0;
+      padding: .55rem .9rem; font-size: .9rem;
+    }
+    .pg-header .pg-name { font-weight: 700; color: var(--primary); }
+    .pg-header .pg-admins { font-size: .78rem; color: var(--muted); }
+    .pg-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 6px 6px; overflow: hidden; }
+    .pg-body table { margin: 0; }
+    .pg-body table thead tr { background: #f6f8fa; }
+    /* Task indent */
+    .task-row td:first-child { padding-left: 1.8rem; font-size: .8rem; color: var(--muted); }
+    .task-row { background: #fafbfc; }
+    .wp-row td { font-weight: 600; background: #fff; }
+    .badge {
+      display: inline-block; font-size: .68rem; font-weight: 600; padding: .1rem .4rem;
+      border-radius: 4px; white-space: nowrap;
+    }
+    .badge-ok   { background: #d4edda; color: #155724; }
+    .badge-pending { background: #fff3cd; color: #856404; }
+    .badge-fail { background: #f8d7da; color: #721c24; }
+    .empty-msg { padding: .7rem 1rem; font-size: .83rem; color: var(--muted); font-style: italic; }
   </style>
 </head>
 <body>
@@ -49,16 +75,35 @@
     <!-- All Projects Overview -->
     <div class="card">
       <h2>All Projects</h2>
-      <p class="hint">Every project registered in the system with their admins and partner counts.</p>
-      <div class="projects-grid" id="projectsGrid">
-        <p style="color:var(--muted)">Loading...</p>
-      </div>
+      <p class="hint">Every project in the system with admins and partner counts.</p>
+      <div class="projects-grid" id="projectsGrid"><p style="color:var(--muted)">Loading...</p></div>
+    </div>
+
+    <!-- Work Packages & Tasks -->
+    <div class="card">
+      <h2>Work Packages &amp; Tasks — by Project</h2>
+      <p class="hint">All WPs and their tasks, grouped by project and showing the owning admin(s).</p>
+      <div id="wpTasksView"><p style="color:var(--muted)">Loading...</p></div>
+    </div>
+
+    <!-- Scraped Data -->
+    <div class="card">
+      <h2>Scraped Data — by Project</h2>
+      <p class="hint">Partner URL scraping results grouped by project and admin.</p>
+      <div id="scrapedView"><p style="color:var(--muted)">Loading...</p></div>
+    </div>
+
+    <!-- AI Analysis -->
+    <div class="card">
+      <h2>AI Analysis — by Project</h2>
+      <p class="hint">AI skill analysis results grouped by project and admin.</p>
+      <div id="aiView"><p style="color:var(--muted)">Loading...</p></div>
     </div>
 
     <!-- Database Management -->
     <div class="card">
       <h2>Database Management</h2>
-      <p class="hint">Direct database access. Use with caution — deletions are irreversible.</p>
+      <p class="hint">Direct table access. Deletions are irreversible.</p>
       <div class="toolbar">
         <button class="btn btn-primary" onclick="showTable('users')">Users</button>
         <button class="btn btn-primary" onclick="showTable('tenants')">Projects</button>
@@ -79,7 +124,6 @@
   </div>
 
   <script>
-    // Guard — only primary admin can access this page
     async function init() {
       const res = await fetch('/api/me');
       if (!res.ok) return window.location.href = '/login.html';
@@ -88,52 +132,210 @@
         window.location.href = me.role === 'admin' ? '/admin.html' : '/login.html';
         return;
       }
-      loadProjects();
+      loadAll();
     }
 
-    async function loadProjects() {
-      const [tenantsRes, usersRes, partnersRes] = await Promise.all([
+    async function loadAll() {
+      const [tenantsR, usersR, partnersR, membershipsR, wpsR, tasksR, scrapedR, aiR] = await Promise.all([
         fetch('/api/admin/db/tenants'),
         fetch('/api/admin/db/users'),
-        fetch('/api/admin/db/partners')
+        fetch('/api/admin/db/partners'),
+        fetch('/api/admin/db/tenant_memberships'),
+        fetch('/api/admin/db/wps'),
+        fetch('/api/admin/db/tasks'),
+        fetch('/api/admin/db/scraped_content'),
+        fetch('/api/admin/db/partner_ai_analysis'),
       ]);
-      const tenants  = tenantsRes.ok  ? await tenantsRes.json()  : [];
-      const users    = usersRes.ok    ? await usersRes.json()    : [];
-      const partners = partnersRes.ok ? await partnersRes.json() : [];
 
-      // Build lookup maps
-      const membershipsRes = await fetch('/api/admin/db/tenant_memberships');
-      const memberships = membershipsRes.ok ? await membershipsRes.json() : [];
+      const tenants     = tenantsR.ok     ? await tenantsR.json()     : [];
+      const users       = usersR.ok       ? await usersR.json()       : [];
+      const partners    = partnersR.ok    ? await partnersR.json()    : [];
+      const memberships = membershipsR.ok ? await membershipsR.json() : [];
+      const wps         = wpsR.ok         ? await wpsR.json()         : [];
+      const tasks       = tasksR.ok       ? await tasksR.json()       : [];
+      const scraped     = scrapedR.ok     ? await scrapedR.json()     : [];
+      const aiRows      = aiR.ok          ? await aiR.json()          : [];
 
+      // Helper: admins for a tenant
+      function tenantAdmins(tenantId) {
+        return memberships
+          .filter(m => m.tenant_id === tenantId)
+          .map(m => { const u = users.find(u => u.id === m.user_id); return u ? `${u.username} (${m.role})` : `user#${m.user_id}`; })
+          .join(', ') || '—';
+      }
+
+      // ── All Projects ──────────────────────────────────────────────────
       const grid = document.getElementById('projectsGrid');
       if (!tenants.length) {
         grid.innerHTML = '<p style="color:var(--muted)">No projects yet.</p>';
-        return;
+      } else {
+        grid.innerHTML = tenants.map(t => {
+          const partnerCount = partners.filter(p => p.tenant_id === t.id).length;
+          const wpCount      = wps.filter(w => w.tenant_id === t.id).length;
+          return `
+            <div class="project-card">
+              <h3>${t.name}</h3>
+              <div class="meta">
+                <div><strong>ID:</strong> ${t.id}</div>
+                <div><strong>Status:</strong> ${t.active ? 'Active' : 'Inactive'}</div>
+                <div><strong>Admins:</strong> ${tenantAdmins(t.id)}</div>
+                <div><strong>Partners:</strong> ${partnerCount}</div>
+                <div><strong>Work Packages:</strong> ${wpCount}</div>
+                <div><strong>Created:</strong> ${t.created_at ? t.created_at.split('T')[0] : '—'}</div>
+                ${t.description ? `<div><strong>Desc:</strong> ${t.description}</div>` : ''}
+              </div>
+            </div>`;
+        }).join('');
       }
 
-      grid.innerHTML = tenants.map(t => {
-        const members = memberships.filter(m => m.tenant_id === t.id);
-        const adminMembers = members.map(m => {
-          const u = users.find(u => u.id === m.user_id);
-          return u ? `${u.username} (${m.role})` : `user#${m.user_id}`;
-        });
-        const partnerCount = partners.filter(p => p.tenant_id === t.id).length;
-        return `
-          <div class="project-card">
-            <h3>${t.name}</h3>
-            <div class="meta">
-              <div><strong>ID:</strong> ${t.id}</div>
-              <div><strong>Status:</strong> ${t.active ? 'Active' : 'Inactive'}</div>
-              <div><strong>Partners:</strong> ${partnerCount}</div>
-              <div><strong>Admins:</strong> ${adminMembers.join(', ') || '—'}</div>
-              <div><strong>Created:</strong> ${t.created_at ? t.created_at.split('T')[0] : '—'}</div>
-              ${t.description ? `<div><strong>Description:</strong> ${t.description}</div>` : ''}
-            </div>
-          </div>`;
-      }).join('');
+      // ── WPs & Tasks by Project ────────────────────────────────────────
+      const wpTasksView = document.getElementById('wpTasksView');
+      if (!tenants.length) {
+        wpTasksView.innerHTML = '<p class="empty-msg">No projects.</p>';
+      } else {
+        wpTasksView.innerHTML = tenants.map(t => {
+          const tWps = wps.filter(w => w.tenant_id === t.id).sort((a,b) => a.sort_order - b.sort_order);
+          const rows = tWps.map(wp => {
+            const tTasks = tasks.filter(tk => tk.wp_id === wp.id).sort((a,b) => a.sort_order - b.sort_order);
+            const wpMonths = `M${wp.start_month||1}–M${wp.end_month||'?'}`;
+            const wpRow = `<tr class="wp-row">
+              <td>${wp.id}</td>
+              <td>${wp.name}</td>
+              <td>${wpMonths}</td>
+              <td>${tTasks.length} task(s)</td>
+            </tr>`;
+            const taskRows = tTasks.map(tk => {
+              const tkMonths = `M${tk.start_month||wp.start_month||1}–M${tk.end_month||wp.end_month||'?'}`;
+              return `<tr class="task-row">
+                <td>${tk.id}</td>
+                <td>↳ ${tk.name}</td>
+                <td>${tkMonths}</td>
+                <td></td>
+              </tr>`;
+            }).join('');
+            return wpRow + taskRows;
+          }).join('');
+
+          return `
+            <div class="project-group">
+              <div class="pg-header">
+                <span class="pg-name">${t.name}</span>
+                <span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span>
+              </div>
+              <div class="pg-body">
+                ${tWps.length ? `
+                  <table>
+                    <thead><tr><th>ID</th><th>Work Package / Task</th><th>Months</th><th>Tasks</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                  </table>` : `<div class="empty-msg">No work packages in this project.</div>`}
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      // ── Scraped Data by Project ───────────────────────────────────────
+      const scrapedView = document.getElementById('scrapedView');
+      if (!scraped.length) {
+        scrapedView.innerHTML = '<p class="empty-msg">No scraped data yet.</p>';
+      } else {
+        const partnerMap = {};
+        partners.forEach(p => { partnerMap[p.id] = p; });
+
+        scrapedView.innerHTML = tenants.map(t => {
+          const tPartnerIds = partners.filter(p => p.tenant_id === t.id).map(p => p.id);
+          const tRows = scraped.filter(s => tPartnerIds.includes(s.partner_id));
+          if (!tRows.length) return '';
+
+          const rowsHtml = tRows.map(s => {
+            const pName = partnerMap[s.partner_id]?.name || `partner#${s.partner_id}`;
+            const statusBadge = s.status === 'completed'
+              ? `<span class="badge badge-ok">completed</span>`
+              : s.status === 'failed'
+                ? `<span class="badge badge-fail">failed</span>`
+                : `<span class="badge badge-pending">${s.status||'pending'}</span>`;
+            const snippet = s.content ? s.content.replace(/</g,'&lt;').substring(0,120) + '…' : '—';
+            return `<tr>
+              <td>${s.id}</td>
+              <td>${pName}</td>
+              <td style="max-width:220px;word-break:break-all;font-size:.76rem">${s.url||'—'}</td>
+              <td>${statusBadge}</td>
+              <td style="max-width:300px;font-size:.76rem;color:var(--muted)">${snippet}</td>
+              <td>${s.scraped_at ? s.scraped_at.split('T')[0] : '—'}</td>
+            </tr>`;
+          }).join('');
+
+          return `
+            <div class="project-group">
+              <div class="pg-header">
+                <span class="pg-name">${t.name}</span>
+                <span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span>
+                <span class="pg-admins">${tRows.length} record(s)</span>
+              </div>
+              <div class="pg-body">
+                <table>
+                  <thead><tr><th>ID</th><th>Partner</th><th>URL</th><th>Status</th><th>Content Preview</th><th>Date</th></tr></thead>
+                  <tbody>${rowsHtml}</tbody>
+                </table>
+              </div>
+            </div>`;
+        }).filter(Boolean).join('') || '<p class="empty-msg">No scraped data for any project.</p>';
+      }
+
+      // ── AI Analysis by Project ────────────────────────────────────────
+      const aiView = document.getElementById('aiView');
+      if (!aiRows.length) {
+        aiView.innerHTML = '<p class="empty-msg">No AI analysis data yet.</p>';
+      } else {
+        const wpMap = {};
+        wps.forEach(w => { wpMap[w.id] = w.name; });
+        const partnerMap2 = {};
+        partners.forEach(p => { partnerMap2[p.id] = p; });
+
+        aiView.innerHTML = tenants.map(t => {
+          const tPartnerIds = partners.filter(p => p.tenant_id === t.id).map(p => p.id);
+          const tRows = aiRows.filter(a => tPartnerIds.includes(a.partner_id));
+          if (!tRows.length) return '';
+
+          const rowsHtml = tRows.map(a => {
+            const pName = partnerMap2[a.partner_id]?.name || `partner#${a.partner_id}`;
+            const wpName = a.wp_id ? (wpMap[a.wp_id] || `WP#${a.wp_id}`) : '—';
+            const skills = a.skills ? (() => {
+              try {
+                const s = JSON.parse(a.skills);
+                return Array.isArray(s) ? s.map(x => `${x.wp||x.name||'?'}: ${x.score??x}`).join(', ').substring(0,100) : String(a.skills).substring(0,100);
+              } catch { return String(a.skills).substring(0,100); }
+            })() : '—';
+            const confidence = a.confidence_score != null ? Number(a.confidence_score).toFixed(2) : '—';
+            return `<tr>
+              <td>${a.id}</td>
+              <td>${pName}</td>
+              <td>${wpName}</td>
+              <td>${a.analysis_type||'—'}</td>
+              <td>${confidence}</td>
+              <td style="max-width:260px;font-size:.76rem;color:var(--muted)">${skills}</td>
+              <td>${a.analyzed_at ? a.analyzed_at.split('T')[0] : '—'}</td>
+            </tr>`;
+          }).join('');
+
+          return `
+            <div class="project-group">
+              <div class="pg-header">
+                <span class="pg-name">${t.name}</span>
+                <span class="pg-admins">Admins: ${tenantAdmins(t.id)}</span>
+                <span class="pg-admins">${tRows.length} record(s)</span>
+              </div>
+              <div class="pg-body">
+                <table>
+                  <thead><tr><th>ID</th><th>Partner</th><th>WP</th><th>Type</th><th>Confidence</th><th>Skills</th><th>Date</th></tr></thead>
+                  <tbody>${rowsHtml}</tbody>
+                </table>
+              </div>
+            </div>`;
+        }).filter(Boolean).join('') || '<p class="empty-msg">No AI analysis for any project.</p>';
+      }
     }
 
-    // Database table viewer
+    // ── Raw DB table viewer ───────────────────────────────────────────────
     let currentTable = '';
     window.showTable = async function(tableName) {
       currentTable = tableName;
@@ -143,10 +345,7 @@
         const res = await fetch(`/api/admin/db/${tableName}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
-        if (!data.length) {
-          container.innerHTML = '<p style="color:var(--muted)">No data in this table.</p>';
-          return;
-        }
+        if (!data.length) { container.innerHTML = '<p style="color:var(--muted)">No data in this table.</p>'; return; }
         const columns = Object.keys(data[0]);
         container.innerHTML = `
           <div style="margin-bottom:.5rem">
@@ -154,41 +353,32 @@
             <button class="btn btn-sm btn-danger" onclick="deleteAllRows('${tableName}')" style="margin-left:1rem">Delete All</button>
           </div>
           <table>
-            <thead><tr>
-              <th>Actions</th>
-              ${columns.map(c => `<th>${c}</th>`).join('')}
-            </tr></thead>
-            <tbody>
-              ${data.map((row, idx) => `
-                <tr>
-                  <td><button class="btn btn-sm btn-danger" onclick="deleteRow('${tableName}',${row.id||idx})">Delete</button></td>
-                  ${columns.map(c => {
-                    let v = row[c];
-                    if (v === null) v = '<em style="color:var(--muted)">null</em>';
-                    else if (typeof v === 'object') v = JSON.stringify(v).substring(0,60);
-                    else v = String(v).substring(0,120);
-                    return `<td>${v}</td>`;
-                  }).join('')}
-                </tr>`).join('')}
+            <thead><tr><th>Actions</th>${columns.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+            <tbody>${data.map((row,idx)=>`
+              <tr>
+                <td><button class="btn btn-sm btn-danger" onclick="deleteRow('${tableName}',${row.id||idx})">Delete</button></td>
+                ${columns.map(c=>{
+                  let v=row[c];
+                  if(v===null) v='<em style="color:var(--muted)">null</em>';
+                  else if(typeof v==='object') v=JSON.stringify(v).substring(0,60);
+                  else v=String(v).replace(/</g,'&lt;').substring(0,120);
+                  return `<td>${v}</td>`;
+                }).join('')}
+              </tr>`).join('')}
             </tbody>
           </table>`;
-      } catch (e) {
-        container.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`;
-      }
+      } catch(e) { container.innerHTML = `<p style="color:var(--danger)">Error: ${e.message}</p>`; }
     };
 
     window.deleteRow = async function(tableName, id) {
       if (!confirm(`Delete row ${id} from ${tableName}?`)) return;
       const res = await fetch(`/api/admin/db/${tableName}/${id}`, { method: 'DELETE' });
-      if (res.ok) showTable(tableName);
-      else alert('Failed to delete row');
+      if (res.ok) showTable(tableName); else alert('Failed to delete row');
     };
-
     window.deleteAllRows = async function(tableName) {
       if (!confirm(`DELETE ALL ROWS from ${tableName}? This cannot be undone!`)) return;
       const res = await fetch(`/api/admin/db/${tableName}`, { method: 'DELETE' });
-      if (res.ok) showTable(tableName);
-      else alert('Failed to delete rows');
+      if (res.ok) showTable(tableName); else alert('Failed to delete rows');
     };
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
