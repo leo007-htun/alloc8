@@ -165,6 +165,12 @@ db.exec(`
   );
 `);
 
+// Migrations: add start_month / end_month to wps and tasks if not present
+try { db.exec("ALTER TABLE wps ADD COLUMN start_month INTEGER DEFAULT 1"); } catch(e) {}
+try { db.exec("ALTER TABLE wps ADD COLUMN end_month INTEGER DEFAULT 48"); } catch(e) {}
+try { db.exec("ALTER TABLE tasks ADD COLUMN start_month INTEGER DEFAULT 1"); } catch(e) {}
+try { db.exec("ALTER TABLE tasks ADD COLUMN end_month INTEGER DEFAULT 48"); } catch(e) {}
+
 // Hash function for passwords
 function hash(password) {
   return bcrypt.hashSync(password, 10);

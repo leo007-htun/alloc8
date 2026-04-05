@@ -1224,14 +1224,14 @@ app.get('/api/admin/wps', requireAuth('admin'), (req, res) => {
 
 app.post('/api/admin/wps', requireAuth('admin'), (req, res) => {
   const tenantId = req.session.tenantId;
-  const { name } = req.body;
+  const { name, start_month, end_month } = req.body;
   const maxQuery = tenantId
     ? "SELECT COALESCE(MAX(sort_order), -1) as m FROM wps WHERE tenant_id = ?"
     : "SELECT COALESCE(MAX(sort_order), -1) as m FROM wps";
   const max = tenantId
     ? db.prepare(maxQuery).get(tenantId).m
     : db.prepare(maxQuery).get().m;
-  const info = db.prepare("INSERT INTO wps (name, sort_order, tenant_id) VALUES (?, ?, ?)").run(name, max + 1, tenantId || null);
+  const info = db.prepare("INSERT INTO wps (name, sort_order, tenant_id, start_month, end_month) VALUES (?, ?, ?, ?, ?)").run(name, max + 1, tenantId || null, start_month || 1, end_month || 48);
   res.json({ id: info.lastInsertRowid });
 });
 
@@ -1249,7 +1249,12 @@ app.delete('/api/admin/wps/:id', requireAuth('admin'), (req, res) => {
 });
 
 app.put('/api/admin/wps/:id', requireAuth('admin'), (req, res) => {
-  db.prepare("UPDATE wps SET name = ? WHERE id = ?").run(req.body.name, req.params.id);
+  const { name, start_month, end_month } = req.body;
+  const sets = [], params = [];
+  if (name !== undefined)        { sets.push('name = ?');        params.push(name); }
+  if (start_month !== undefined) { sets.push('start_month = ?'); params.push(start_month); }
+  if (end_month !== undefined)   { sets.push('end_month = ?');   params.push(end_month); }
+  if (sets.length) { params.push(req.params.id); db.prepare(`UPDATE wps SET ${sets.join(', ')} WHERE id = ?`).run(...params); }
   res.json({ ok: true });
 });
 
@@ -1273,9 +1278,12 @@ app.post('/api/admin/wps/reorder', requireAuth('admin'), (req, res) => {
 // Task management
 app.post('/api/admin/wps/:wpId/tasks', requireAuth('admin'), (req, res) => {
   const wpId = req.params.wpId;
-  const { name } = req.body;
+  const { name, start_month, end_month } = req.body;
   const max = db.prepare("SELECT COALESCE(MAX(sort_order), -1) as m FROM tasks WHERE wp_id = ?").get(wpId).m;
-  const info = db.prepare("INSERT INTO tasks (wp_id, name, sort_order) VALUES (?, ?, ?)").run(wpId, name, max + 1);
+  const wp = db.prepare("SELECT start_month, end_month FROM wps WHERE id = ?").get(wpId);
+  const sMonth = start_month || (wp ? wp.start_month : 1) || 1;
+  const eMonth = end_month   || (wp ? wp.end_month   : 48) || 48;
+  const info = db.prepare("INSERT INTO tasks (wp_id, name, sort_order, start_month, end_month) VALUES (?, ?, ?, ?, ?)").run(wpId, name, max + 1, sMonth, eMonth);
   res.json({ id: info.lastInsertRowid });
 });
 
@@ -1291,7 +1299,12 @@ app.delete('/api/admin/tasks/:id', requireAuth('admin'), (req, res) => {
 });
 
 app.put('/api/admin/tasks/:id', requireAuth('admin'), (req, res) => {
-  db.prepare("UPDATE tasks SET name = ? WHERE id = ?").run(req.body.name, req.params.id);
+  const { name, start_month, end_month } = req.body;
+  const sets = [], params = [];
+  if (name !== undefined)        { sets.push('name = ?');        params.push(name); }
+  if (start_month !== undefined) { sets.push('start_month = ?'); params.push(start_month); }
+  if (end_month !== undefined)   { sets.push('end_month = ?');   params.push(end_month); }
+  if (sets.length) { params.push(req.params.id); db.prepare(`UPDATE tasks SET ${sets.join(', ')} WHERE id = ?`).run(...params); }
   res.json({ ok: true });
 });
 

@@ -479,6 +479,54 @@
     </div>
   </div>
 
+  <!-- Add WP Modal -->
+  <div class="modal-overlay" id="addWPModal" style="display:none">
+    <div class="modal" style="max-width:420px">
+      <h3>Add Work Package</h3>
+      <div style="display:flex;flex-direction:column;gap:.8rem;margin-bottom:1rem">
+        <label style="display:flex;flex-direction:column;gap:.3rem">WP Name
+          <input id="newWPName" class="form-control" placeholder="e.g. WP1 – Management" style="padding:.45rem .6rem" />
+        </label>
+        <div style="display:flex;gap:.8rem">
+          <label style="flex:1;display:flex;flex-direction:column;gap:.3rem">Start Month
+            <select id="newWPStart" class="form-control" style="padding:.45rem .6rem"></select>
+          </label>
+          <label style="flex:1;display:flex;flex-direction:column;gap:.3rem">End Month
+            <select id="newWPEnd" class="form-control" style="padding:.45rem .6rem"></select>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#e0e0e0;color:#333" id="cancelAddWP">Cancel</button>
+        <button class="btn btn-primary" id="confirmAddWP">Add WP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-overlay" id="addTaskModal" style="display:none">
+    <div class="modal" style="max-width:420px">
+      <h3>Add Task</h3>
+      <div style="display:flex;flex-direction:column;gap:.8rem;margin-bottom:1rem">
+        <label style="display:flex;flex-direction:column;gap:.3rem">Task Name
+          <input id="newTaskName" class="form-control" placeholder="Task name" style="padding:.45rem .6rem" />
+        </label>
+        <div style="display:flex;gap:.8rem">
+          <label style="flex:1;display:flex;flex-direction:column;gap:.3rem">Start Month
+            <select id="newTaskStart" class="form-control" style="padding:.45rem .6rem"></select>
+          </label>
+          <label style="flex:1;display:flex;flex-direction:column;gap:.3rem">End Month
+            <select id="newTaskEnd" class="form-control" style="padding:.45rem .6rem"></select>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#e0e0e0;color:#333" id="cancelAddTask">Cancel</button>
+        <button class="btn btn-primary" id="confirmAddTask">Add Task</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
     let partners = [];
@@ -722,12 +770,27 @@
       load();
     }
 
+    function monthOpts(min, max, selected) {
+      let html = '';
+      for (let m = min; m <= max; m++) html += `<option value="${m}"${m === selected ? ' selected' : ''}>M${m}</option>`;
+      return html;
+    }
+
     function renderWPs() {
       const list = document.getElementById('wpList');
-      list.innerHTML = wps.map((wp, i) => `
+      const dur = projectDurationMonths || 48;
+      list.innerHTML = wps.map((wp, i) => {
+        const wpStart = wp.start_month || 1;
+        const wpEnd   = wp.end_month   || dur;
+        return `
         <div class="wp-block">
           <div class="wp-header">
             <input value="${wp.name}" onchange="renameWP(${wp.id}, this.value)" />
+            <span style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;color:var(--muted)">
+              <select id="wpStart_${wp.id}" style="font-size:.8rem;padding:.2rem .3rem" onchange="saveWPMonths(${wp.id})">${monthOpts(1, dur, wpStart)}</select>
+              –
+              <select id="wpEnd_${wp.id}" style="font-size:.8rem;padding:.2rem .3rem" onchange="saveWPMonths(${wp.id})">${monthOpts(1, dur, wpEnd)}</select>
+            </span>
             <label>Assign WP Leader
               ${partnerCheckboxList('Wp', wp.id, wp.assigned_partner_ids)}
             </label>
@@ -737,18 +800,26 @@
             <button class="btn btn-sm btn-danger" onclick="removeWP(${wp.id})">Remove WP</button>
           </div>
           <div class="task-list">
-            ${(wp.tasks || []).map((t, ti) => `
+            ${(wp.tasks || []).map((t, ti) => {
+              const tStart = t.start_month || wpStart;
+              const tEnd   = t.end_month   || wpEnd;
+              return `
               <div class="task-chip">
                 <input value="${t.name}" onchange="renameTask(${t.id}, this.value)" />
+                <span style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--muted);margin-top:.1rem">
+                  <select id="taskStart_${t.id}" style="font-size:.75rem;padding:.15rem .25rem" onchange="saveTaskMonths(${t.id})">${monthOpts(wpStart, wpEnd, tStart)}</select>
+                  –
+                  <select id="taskEnd_${t.id}" style="font-size:.75rem;padding:.15rem .25rem" onchange="saveTaskMonths(${t.id})">${monthOpts(wpStart, wpEnd, tEnd)}</select>
+                </span>
                 <label style="font-size:.7rem;color:var(--muted);margin-top:.1rem">Assign Task
                   ${partnerCheckboxList('Task', t.id, t.assigned_partner_ids)}
                 </label>
                 <button class="btn btn-sm btn-danger" style="margin-top:.2rem;align-self:flex-start" onclick="removeTask(${t.id})">Remove Task</button>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     async function renameWP(id, name) { await fetch(`/api/admin/wps/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) }); load(); }
@@ -766,24 +837,88 @@
       await fetch(`/api/admin/wps/${id}`, { method: 'DELETE' });
       load();
     }
-    async function addTask(wpId) {
-      const name = prompt('Task name:');
-      if (!name) return;
-      await fetch(`/api/admin/wps/${wpId}/tasks`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) });
+    // ── WP month save (inline selects) ────────────────────────────────────
+    async function saveWPMonths(id) {
+      const start = parseInt(document.getElementById('wpStart_' + id).value);
+      const end   = parseInt(document.getElementById('wpEnd_'   + id).value);
+      if (start > end) { alert('Start month cannot be after end month.'); return; }
+      await fetch(`/api/admin/wps/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ start_month: start, end_month: end }) });
       load();
     }
+    async function saveTaskMonths(id) {
+      const start = parseInt(document.getElementById('taskStart_' + id).value);
+      const end   = parseInt(document.getElementById('taskEnd_'   + id).value);
+      if (start > end) { alert('Start month cannot be after end month.'); return; }
+      await fetch(`/api/admin/tasks/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ start_month: start, end_month: end }) });
+    }
+
+    // ── Add WP modal ──────────────────────────────────────────────────────
+    function fillSelect(selectId, min, max, selected) {
+      const el = document.getElementById(selectId);
+      el.innerHTML = '';
+      for (let m = min; m <= max; m++) {
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = 'M' + m;
+        if (m === selected) opt.selected = true;
+        el.appendChild(opt);
+      }
+    }
+
+    document.getElementById('addWPBtn').addEventListener('click', () => {
+      const dur = projectDurationMonths || 48;
+      document.getElementById('newWPName').value = `WP${wps.length + 1}`;
+      fillSelect('newWPStart', 1, dur, 1);
+      fillSelect('newWPEnd',   1, dur, dur);
+      document.getElementById('addWPModal').style.display = 'flex';
+      document.getElementById('newWPName').focus();
+    });
+    document.getElementById('cancelAddWP').addEventListener('click', () => {
+      document.getElementById('addWPModal').style.display = 'none';
+    });
+    document.getElementById('confirmAddWP').addEventListener('click', async () => {
+      const name  = document.getElementById('newWPName').value.trim();
+      if (!name) { alert('Please enter a WP name.'); return; }
+      const start = parseInt(document.getElementById('newWPStart').value);
+      const end   = parseInt(document.getElementById('newWPEnd').value);
+      if (start > end) { alert('Start month cannot be after end month.'); return; }
+      document.getElementById('addWPModal').style.display = 'none';
+      await fetch('/api/admin/wps', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, start_month: start, end_month: end }) });
+      load();
+    });
+
+    // ── Add Task modal ────────────────────────────────────────────────────
+    let _addTaskWpId = null;
+    function addTask(wpId) {
+      _addTaskWpId = wpId;
+      const wp = wps.find(w => w.id === wpId);
+      const wpStart = (wp && wp.start_month) || 1;
+      const wpEnd   = (wp && wp.end_month)   || (projectDurationMonths || 48);
+      document.getElementById('newTaskName').value = '';
+      fillSelect('newTaskStart', wpStart, wpEnd, wpStart);
+      fillSelect('newTaskEnd',   wpStart, wpEnd, wpEnd);
+      document.getElementById('addTaskModal').style.display = 'flex';
+      document.getElementById('newTaskName').focus();
+    }
+    document.getElementById('cancelAddTask').addEventListener('click', () => {
+      document.getElementById('addTaskModal').style.display = 'none';
+    });
+    document.getElementById('confirmAddTask').addEventListener('click', async () => {
+      const name  = document.getElementById('newTaskName').value.trim();
+      if (!name) { alert('Please enter a task name.'); return; }
+      const start = parseInt(document.getElementById('newTaskStart').value);
+      const end   = parseInt(document.getElementById('newTaskEnd').value);
+      if (start > end) { alert('Start month cannot be after end month.'); return; }
+      document.getElementById('addTaskModal').style.display = 'none';
+      await fetch(`/api/admin/wps/${_addTaskWpId}/tasks`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, start_month: start, end_month: end }) });
+      load();
+    });
+
     async function renameTask(id, name) { await fetch(`/api/admin/tasks/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) }); load(); }
     async function removeTask(id) {
       if (!confirm('Delete this task?')) return;
       await fetch(`/api/admin/tasks/${id}`, { method: 'DELETE' });
       load();
     }
-    document.getElementById('addWPBtn').addEventListener('click', async () => {
-      const name = prompt('WP name:', `WP${wps.length+1}`);
-      if (!name) return;
-      await fetch('/api/admin/wps', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({name}) });
-      load();
-    });
 
     function renderPartnersTable() {
       const tbody = document.querySelector('#partnersTable tbody');
