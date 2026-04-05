@@ -1785,56 +1785,106 @@
 
 
     document.getElementById('exportExcelBtn').addEventListener('click', async () => {
-      // json-as-xlsx style: define sheets with columns and content
-      const sheets = [
-        {
-          sheet: 'Partners',
-          columns: [
-            { label: 'Name',         value: 'name' },
-            { label: 'Type',         value: 'type' },
-            { label: 'Country',      value: 'country' },
-            { label: 'Rate (day)',   value: 'rate' },
-            { label: 'Funding Rate', value: 'funding_rate' },
-            { label: 'Username',     value: 'username' },
-          ],
-          content: partners
-        },
-        {
-          sheet: 'Work Packages',
-          columns: [
-            { label: 'ID',   value: 'id' },
-            { label: 'Name', value: 'name' },
-          ],
-          content: wps
-        }
-      ];
+      const wb = XLSX.utils.book_new();
 
-      // Build skill scores sheet: partners as rows, WPs as columns
+      // Sheet 1: Partners Overview
+      const partnerRows = partners.map((p, i) => ({
+        '#': i + 1,
+        'Name': p.name,
+        'Type': p.type || '',
+        'Country': p.country || '',
+        'PIC': p.pic || '',
+        'Day Rate': Number(p.rate) || 0,
+        'Funding Rate': Number(p.funding_rate) || 1,
+        'Contact Name': p.contact_name || '',
+        'Contact Email': p.contact_email || '',
+        'Contact Phone': p.contact_phone || '',
+        'Contact Position': p.contact_position || '',
+        'Username': p.username || '',
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(partnerRows), 'Partners');
+
+      // Sheet 2: Budget Summary
+      let gPmCost=0,gOther=0,gSub=0,gTdc=0,gInd=0,gBudget=0,gFund=0,gPM=0;
+      const budgetRows = partners.map((p, i) => {
+        const c = calcPartner(p);
+        gPmCost+=c.pmCost; gOther+=c.other; gSub+=c.sub; gTdc+=c.tdc;
+        gInd+=c.indirect; gBudget+=c.totalBudget; gFund+=c.totalFunding; gPM+=c.totalPM;
+        return {
+          '#': i+1, 'Partner': p.name, 'Type': p.type||'',
+          'PM Cost (EUR)': Math.round(c.pmCost),
+          'Other Direct Cost (EUR)': Math.round(c.other),
+          'Subcontracting (EUR)': Math.round(c.sub),
+          'TDC (EUR)': Math.round(c.tdc),
+          'Indirect Cost (EUR)': Math.round(c.indirect),
+          'Total Budget (EUR)': Math.round(c.totalBudget),
+          'Funding Rate': c.fundingRate,
+          'Total Funding (EUR)': Math.round(c.totalFunding),
+          'Total PM': Number(c.totalPM.toFixed(2)),
+          'Persons/Year': Number(c.personsYear.toFixed(2)),
+        };
+      });
+      budgetRows.push({
+        '#':'', 'Partner':'TOTAL', 'Type':'',
+        'PM Cost (EUR)': Math.round(gPmCost),
+        'Other Direct Cost (EUR)': Math.round(gOther),
+        'Subcontracting (EUR)': Math.round(gSub),
+        'TDC (EUR)': Math.round(gTdc),
+        'Indirect Cost (EUR)': Math.round(gInd),
+        'Total Budget (EUR)': Math.round(gBudget),
+        'Funding Rate':'',
+        'Total Funding (EUR)': Math.round(gFund),
+        'Total PM': Number(gPM.toFixed(2)),
+        'Persons/Year':'',
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(budgetRows), 'Budget Summary');
+
+      // Sheet 3: Person Months per WP
+      let grandWP = new Array(wps.length).fill(0), grandTotalPM2 = 0;
+      const pmRows = partners.map((p, i) => {
+        const c = calcPartner(p);
+        const row = { '#': i+1, 'Partner': p.name };
+        wps.forEach((wp, j) => {
+          let s = 0;
+          (wp.tasks||[]).forEach(t => s += (Number(p.wp_data&&p.wp_data[t.id])||0));
+          row[wp.name] = Number(s.toFixed(2));
+          grandWP[j] += s;
+        });
+        row['Total PM'] = Number(c.totalPM.toFixed(2));
+        row['Persons/Year'] = Number(c.personsYear.toFixed(2));
+        grandTotalPM2 += c.totalPM;
+        return row;
+      });
+      const pmTotRow = {'#':'', 'Partner':'TOTAL'};
+      wps.forEach((wp,j) => { pmTotRow[wp.name] = Number(grandWP[j].toFixed(2)); });
+      pmTotRow['Total PM'] = Number(grandTotalPM2.toFixed(2));
+      pmTotRow['Persons/Year'] = '';
+      pmRows.push(pmTotRow);
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pmRows), 'Person Months');
+
+      // Sheet 4: WPs and Tasks
+      const wpTaskRows = [];
+      wps.forEach(wp => {
+        wpTaskRows.push({
+          'WP': wp.name, 'Task': '',
+          'Lead': wp.lead_name||'', 'Assigned Partners': (wp.assigned_names||[]).join(', '),
+        });
+        (wp.tasks||[]).forEach(t => wpTaskRows.push({
+          'WP': wp.name, 'Task': t.name,
+          'Lead': t.lead_name||'', 'Assigned Partners': (t.assigned_names||[]).join(', '),
+        }));
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wpTaskRows), 'WPs and Tasks');
+
+      // Sheet 5: Skill Scores
       const skillRows = partners.map(p => {
-        const row = { Partner: p.name };
-        (p.skills || []).forEach(s => { row[s.wp_name || ('WP ' + s.wp_id)] = s.score; });
+        const row = { 'Partner': p.name, 'Type': p.type||'' };
+        (p.skills||[]).forEach(s => { row[s.wp_name||('WP '+s.wp_id)] = s.score; });
         return row;
       });
       if (skillRows.length) {
-        sheets.push({ sheet: 'Skill Scores', columns: null, content: skillRows });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(skillRows), 'Skill Scores');
       }
-
-      // Convert to xlsx using SheetJS (same approach as json-as-xlsx internally)
-      const wb = XLSX.utils.book_new();
-      sheets.forEach(({ sheet, columns, content }) => {
-        let rows;
-        if (columns) {
-          rows = content.map(row => {
-            const out = {};
-            columns.forEach(col => { out[col.label] = row[col.value] ?? ''; });
-            return out;
-          });
-        } else {
-          rows = content;
-        }
-        const ws = XLSX.utils.json_to_sheet(rows);
-        XLSX.utils.book_append_sheet(wb, ws, sheet);
-      });
 
       XLSX.writeFile(wb, 'Alloc8_Budget.xlsx');
     });
