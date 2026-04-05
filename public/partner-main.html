@@ -415,7 +415,7 @@
         const isWpAssigned = wp.assigned_partner_ids.includes(partner.id);
         return `
           <div class="wp-block ${isWpAssigned ? 'assigned' : ''}">
-            <div class="wp-header">${wp.name}</div>
+            <div class="wp-header">${wp.name} <span style="font-size:.8em;font-weight:normal;opacity:.7">(M${wp.start_month||1}–M${wp.end_month||'?'})</span></div>
             <div class="flowchart">
               <div class="fc-wp-box">${wp.assigned_names.join(', ') || '—'}</div>
               <div class="fc-line"></div>
@@ -424,7 +424,7 @@
                   const isTaskAssigned = t.assigned_partner_ids.includes(partner.id);
                   return `
                     <div class="fc-task ${isTaskAssigned ? 'assigned' : ''}">
-                      <div class="t-name">${t.name}</div>
+                      <div class="t-name">${t.name} <span style="font-size:.8em;opacity:.7">(M${t.start_month||wp.start_month||1}–M${t.end_month||wp.end_month||'?'})</span></div>
                       <div class="t-lead">${t.assigned_names.join(', ') || '—'}</div>
                     </div>
                   `;
