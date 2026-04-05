@@ -2202,15 +2202,6 @@
       e.target.value = '';
     });
 
-    setInterval(() => {
-      if (document.visibilityState === 'visible' && document.getElementById('editModal').style.display !== 'flex' && document.getElementById('addModal').style.display !== 'flex') {
-        load();
-      }
-    }, 5000);
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) load();
-    });
-
     load();
   </script>
 </body>
