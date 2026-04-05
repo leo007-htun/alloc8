@@ -290,7 +290,6 @@
       <div class="toolbar">
         <button class="btn btn-primary" id="addPartnerBtn">+ Add Partner</button>
         <button class="btn btn-success" id="exportBtn">Export JSON</button>
-        <button class="btn btn-success" id="exportExcelBtn">Export Excel</button>
         <input type="file" id="importFile" accept=".json" style="display:none" />
         <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Import JSON</button>
         <button class="btn btn-success" id="reanalyzeBtn">Force Global Re-analysis</button>
@@ -1783,10 +1782,6 @@
       const a = document.createElement('a'); a.href = url; a.download = 'Alloc8_Budget.json'; a.click(); URL.revokeObjectURL(url);
     });
 
-
-    document.getElementById('exportExcelBtn').addEventListener('click', () => {
-      window.location.href = '/api/admin/export-excel';
-    });
 
     document.getElementById('reanalyzeBtn').addEventListener('click', async () => {
       const btn = document.getElementById('reanalyzeBtn');
