@@ -710,7 +710,7 @@
         if (!p.skills || p.skills.length === 0) return;
         const ctx = document.getElementById(`adminSkillChart-${p.id}`);
         if (!ctx) return;
-        const wpLabels = p.skills.map(s => (s.wp_name || `WP${s.wp_id}`).split('–')[0].trim());
+        const wpLabels = p.skills.map(s => { const m = (s.wp_name||'').match(/^(WP\d+)/i); return m ? m[1] : `WP${s.wp_id}`; });
         const wpData   = p.skills.map(s => s.score);
         _consortiumCharts[p.id] = new Chart(ctx, {
           type: 'radar',
