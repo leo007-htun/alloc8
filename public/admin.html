@@ -287,7 +287,7 @@
     </div>
 
     <!-- WPs / Tasks -->
-    <div class="card">
+    <div class="card" id="wpCard">
       <h2>Work Packages & Tasks</h2>
       <div class="toolbar">
         <button class="btn btn-primary" id="addWPBtn">+ Add WP</button>
@@ -710,10 +710,8 @@
         if (!p.skills || p.skills.length === 0) return;
         const ctx = document.getElementById(`adminSkillChart-${p.id}`);
         if (!ctx) return;
-        const skillMap = {};
-        p.skills.forEach(s => { skillMap[s.wp_id] = s.score; });
-        const wpLabels = wps.map(w => w.name.split('–')[0].trim());
-        const wpData   = wps.map(w => skillMap[w.id] !== undefined ? skillMap[w.id] : 0);
+        const wpLabels = p.skills.map(s => (s.wp_name || `WP${s.wp_id}`).split('–')[0].trim());
+        const wpData   = p.skills.map(s => s.score);
         _consortiumCharts[p.id] = new Chart(ctx, {
           type: 'radar',
           data: {

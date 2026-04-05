@@ -354,14 +354,8 @@
         if (!p.skills || p.skills.length === 0) return;
         const ctx = document.getElementById(`skillChart-${p.id}`);
         if (!ctx) return;
-        const skillMap = {};
-        p.skills.forEach(s => skillMap[s.wp_id] = s.score);
-        const wpLabels = [];
-        const wpData = [];
-        wps.forEach(wp => {
-          wpLabels.push(wp.name.split('–')[0].trim());
-          wpData.push(skillMap[wp.id] !== undefined ? skillMap[wp.id] : 0);
-        });
+        const wpLabels = p.skills.map(s => (s.wp_name || `WP${s.wp_id}`).split('–')[0].trim());
+        const wpData   = p.skills.map(s => s.score);
         new Chart(ctx, {
           type: 'radar',
           data: {
