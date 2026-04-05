@@ -164,17 +164,24 @@
     .sse-header .sse-toggle { font-size: .8rem; color: var(--muted); }
     .sse-body { display: none; }
     .sse-body.open { display: block; }
-    .sse-table { width: 100%; border-collapse: collapse; font-size: .85rem; table-layout: fixed; }
+    .sse-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
     .sse-table th { background: #f6f8fa; padding: .45rem .7rem; text-align: left; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); }
-    .sse-table td { padding: .5rem .7rem; border-bottom: 1px solid #f0f0f0; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
-    .sse-table tr:last-child td { border-bottom: none; }
-    .sse-table .td-wp { white-space: nowrap; font-weight: 700; color: var(--primary); width: 4rem; }
-    .sse-table .td-wpname { color: var(--muted); font-size: .8rem; width: 28%; min-width: 140px; }
-    .sse-table .td-score { width: 6rem; min-width: 6rem; }
-    .sse-score-bar { display: flex; align-items: center; gap: .5rem; white-space: nowrap; }
-    .sse-score-bar .bar { height: 8px; border-radius: 4px; background: var(--accent); min-width: 4px; }
-    .sse-score-bar .val { font-weight: 700; font-size: .88rem; }
-    .sse-rationale { color: var(--text); line-height: 1.6; font-size: .83rem; white-space: normal; }
+    .sse-row-main { cursor: pointer; transition: background .15s; }
+    .sse-row-main:hover { background: #f6f8fa; }
+    .sse-row-main td { padding: .5rem .7rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; white-space: nowrap; }
+    .sse-row-main .td-wp { font-weight: 700; color: var(--primary); width: 4rem; }
+    .sse-row-main .td-wpname { color: var(--text); font-size: .88rem; white-space: normal; width: auto; }
+    .sse-row-main .td-score { width: 130px; }
+    .sse-row-main .td-caret { width: 1.5rem; text-align: center; color: var(--muted); font-size: .75rem; }
+    .sse-row-detail { display: none; }
+    .sse-row-detail.open { display: table-row; }
+    .sse-row-detail td { padding: .5rem 1rem .8rem 3rem; border-bottom: 1px solid #f0f0f0; background: #fafbfc; }
+    .sse-confidence { display: inline-block; font-size: .75rem; padding: .15rem .4rem; border-radius: 4px; font-weight: 600; margin-bottom: .35rem; }
+    .sse-rationale-text { font-size: .85rem; color: var(--text); line-height: 1.6; white-space: normal; word-wrap: break-word; }
+    .sse-score-bar { display: flex; align-items: center; gap: .5rem; }
+    .sse-score-bar .bar-track { flex: 1; height: 8px; border-radius: 4px; background: #e8ecf0; }
+    .sse-score-bar .bar-fill { height: 8px; border-radius: 4px; }
+    .sse-score-bar .val { font-weight: 700; font-size: .88rem; min-width: 2.2rem; text-align: right; }
     /* Consortium / Skill Pool Cards */
     .consortium-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem; }
     .consortium-item { background:#fafbfc; border:1px solid var(--border); border-radius:8px; padding:.8rem .6rem; display:flex; flex-direction:column; gap:.4rem; }
@@ -766,22 +773,35 @@
       } else {
         expContainer.innerHTML = partnersWithSkills.map((p, idx) => {
           const avg = (p.skills.reduce((a, s) => a + s.score, 0) / p.skills.length).toFixed(1);
-          const rows = p.skills.map(s => {
-            const wpLabel = (s.wp_name||'').match(/^(WP\d+)/i)?.[1] || `WP${s.wp_id}`;
-            const fullName = (s.wp_name||'').replace(/^WP\d+\s*[-–]?\s*/i, '').trim() || s.wp_name || '';
-            const barWidth = Math.round((s.score / 5) * 80);
-            const barColor = s.score >= 4 ? '#1a7f37' : s.score >= 2.5 ? '#2e75b6' : '#cf222e';
-            return `<tr>
-              <td class="td-wp">${wpLabel}</td>
-              <td class="td-wpname">${fullName}</td>
-              <td class="td-score">
-                <div class="sse-score-bar">
-                  <div class="bar" style="width:${barWidth}px;background:${barColor}"></div>
-                  <span class="val" style="color:${barColor}">${Number(s.score).toFixed(1)}</span>
-                </div>
-              </td>
-              <td class="sse-rationale">${s.rationale || '<span style="color:var(--muted)">No rationale recorded.</span>'}</td>
-            </tr>`;
+          const rows = p.skills.map((s, si) => {
+            const wpLabel   = (s.wp_name||'').match(/^(WP\d+)/i)?.[1] || `WP${s.wp_id}`;
+            const fullName  = (s.wp_name||'').replace(/^WP\d+\s*[-–]?\s*/i, '').trim() || s.wp_name || '';
+            const barColor  = s.score >= 4 ? '#1a7f37' : s.score >= 2.5 ? '#2e75b6' : '#cf222e';
+            const barPct    = Math.round((s.score / 5) * 100);
+            const confVal   = s.confidence != null ? Math.round(s.confidence * 100) : null;
+            const confLabel = confVal != null ? `${confVal}% confidence` : '';
+            const confBg    = confVal >= 70 ? '#d1fae5' : confVal >= 40 ? '#dbeafe' : '#fee2e2';
+            const confColor = confVal >= 70 ? '#065f46' : confVal >= 40 ? '#1e40af' : '#991b1b';
+            const detailId  = `sse-detail-${p.id}-${si}`;
+            const rationale = s.rationale || '';
+            return `
+              <tr class="sse-row-main" onclick="document.getElementById('${detailId}').classList.toggle('open');this.querySelector('.td-caret').textContent=document.getElementById('${detailId}').classList.contains('open')?'▲':'▼'">
+                <td class="td-wp">${wpLabel}</td>
+                <td class="td-wpname">${fullName}</td>
+                <td class="td-score">
+                  <div class="sse-score-bar">
+                    <div class="bar-track"><div class="bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>
+                    <span class="val" style="color:${barColor}">${Number(s.score).toFixed(1)}</span>
+                  </div>
+                </td>
+                <td class="td-caret">▼</td>
+              </tr>
+              <tr class="sse-row-detail" id="${detailId}">
+                <td colspan="4">
+                  ${confLabel ? `<span class="sse-confidence" style="background:${confBg};color:${confColor}">${confLabel}</span>` : ''}
+                  <div class="sse-rationale-text">${rationale || '<span style="color:var(--muted)">No rationale recorded.</span>'}</div>
+                </td>
+              </tr>`;
           }).join('');
           return `
             <div class="sse-block">
@@ -792,7 +812,7 @@
               </div>
               <div class="sse-body ${idx === 0 ? 'open' : ''}">
                 <table class="sse-table">
-                  <thead><tr><th>WP</th><th>Work Package</th><th>Score</th><th>AI Rationale</th></tr></thead>
+                  <thead><tr><th>WP</th><th>Work Package</th><th>Score</th><th></th></tr></thead>
                   <tbody>${rows}</tbody>
                 </table>
               </div>
