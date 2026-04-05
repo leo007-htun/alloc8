@@ -861,6 +861,55 @@ app.delete('/api/admin/users/:id', requireAuth('admin'), (req, res) => {
   res.json({ ok: true });
 });
 
+// Primary admin: delete an entire project and all its data
+app.delete('/api/admin/projects/:id', requireAuth('admin'), (req, res) => {
+  const caller = db.prepare("SELECT username FROM users WHERE id = ?").get(req.session.userId);
+  if (caller?.username !== 'admin') return res.status(403).json({ error: 'Primary admin only' });
+
+  const tenantId = parseInt(req.params.id);
+  if (!tenantId) return res.status(400).json({ error: 'Invalid project id' });
+
+  try {
+    db.transaction(() => {
+      const partnerIds = db.prepare("SELECT id FROM partners WHERE tenant_id = ?").all(tenantId).map(p => p.id);
+      const wpIds      = db.prepare("SELECT id FROM wps     WHERE tenant_id = ?").all(tenantId).map(w => w.id);
+      const taskIds    = wpIds.length
+        ? db.prepare(`SELECT id FROM tasks WHERE wp_id IN (${wpIds.map(() => '?').join(',')})`).all(...wpIds).map(t => t.id)
+        : [];
+
+      if (taskIds.length) {
+        const ph = taskIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM task_assignments WHERE task_id IN (${ph})`).run(...taskIds);
+      }
+      if (wpIds.length) {
+        const ph = wpIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM wp_assignments WHERE wp_id IN (${ph})`).run(...wpIds);
+      }
+
+      db.prepare("DELETE FROM tasks WHERE wp_id IN (SELECT id FROM wps WHERE tenant_id = ?)").run(tenantId);
+      db.prepare("DELETE FROM wps   WHERE tenant_id = ?").run(tenantId);
+
+      if (partnerIds.length) {
+        const ph = partnerIds.map(() => '?').join(',');
+        db.prepare(`DELETE FROM partner_wp_skills    WHERE partner_id IN (${ph})`).run(...partnerIds);
+        db.prepare(`DELETE FROM scraped_content      WHERE partner_id IN (${ph})`).run(...partnerIds);
+        db.prepare(`DELETE FROM partner_ai_analysis  WHERE partner_id IN (${ph})`).run(...partnerIds);
+        db.prepare(`DELETE FROM partner_urls         WHERE partner_id IN (${ph})`).run(...partnerIds);
+        db.prepare(`DELETE FROM users                WHERE partner_id IN (${ph})`).run(...partnerIds);
+      }
+
+      db.prepare("DELETE FROM partners          WHERE tenant_id = ?").run(tenantId);
+      db.prepare("DELETE FROM tenant_memberships WHERE tenant_id = ?").run(tenantId);
+      db.prepare("DELETE FROM tenants            WHERE id = ?").run(tenantId);
+    })();
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete project error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Tenant management endpoints
 app.get('/api/tenants', requireAuth('admin'), (req, res) => {
   const userId = req.session.userId;

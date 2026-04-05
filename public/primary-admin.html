@@ -159,6 +159,10 @@
               <div><strong>Created:</strong> ${t.created_at ? t.created_at.split('T')[0] : '—'}</div>
               ${t.description ? `<div><strong>Desc:</strong> ${t.description}</div>` : ''}
             </div>
+            <button class="btn btn-sm btn-danger" style="margin-top:.7rem;width:100%"
+              onclick="deleteProject(${t.id}, '${t.name.replace(/'/g,"\\'")}')">
+              Delete Project
+            </button>
           </div>`;
       }).join('');
     }
@@ -344,6 +348,18 @@
         return;
       }
     }
+
+    // ── Delete project ────────────────────────────────────────────────────
+    window.deleteProject = async function(tenantId, name) {
+      if (!confirm(`DELETE PROJECT "${name}"?\n\nThis will permanently remove:\n• All partners and their login accounts\n• All work packages and tasks\n• All scraped data and AI analysis\n• All skill scores\n• All project memberships\n\nThis cannot be undone.`)) return;
+      const res = await fetch(`/api/admin/projects/${tenantId}`, { method: 'DELETE' });
+      if (res.ok) {
+        await loadAll();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert('Failed to delete project: ' + (err.error || 'Unknown error'));
+      }
+    };
 
     // ── Raw table view (users, tenants, memberships, partners, settings) ──
     async function showRaw(tableName, container) {
