@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alloc8 — Product Demo</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0d1117;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#24292f}
+
+    /* ── Player ── */
+    #player{width:1280px;height:720px;position:relative;overflow:hidden;background:#f5f7fa;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+
+    /* ── Controls ── */
+    #controls{width:1280px;background:#161b22;padding:10px 20px;display:flex;align-items:center;gap:14px}
+    #playBtn{width:34px;height:34px;border:none;background:#2e75b6;color:#fff;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    #playBtn:hover{background:#1f4e79}
+    #timeDisplay{font-size:12px;color:#8b949e;white-space:nowrap;min-width:60px}
+    #progressWrap{flex:1;height:5px;background:#30363d;border-radius:3px;position:relative;cursor:pointer}
+    #progressFill{height:100%;background:linear-gradient(90deg,#2e75b6,#5b9bd5);border-radius:3px;transition:width .12s linear;pointer-events:none}
+    .cdot{position:absolute;top:-4px;width:13px;height:13px;border-radius:50%;background:#30363d;border:2px solid #484f58;transform:translateX(-50%);cursor:pointer;transition:all .2s;z-index:2}
+    .cdot:hover,.cdot.passed{background:#2e75b6;border-color:#2e75b6}
+    .cdot-label{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:#161b22;color:#8b949e;font-size:10px;white-space:nowrap;padding:2px 6px;border-radius:3px;opacity:0;transition:opacity .2s;pointer-events:none}
+    .cdot:hover .cdot-label{opacity:1}
+    #restartBtn{font-size:12px;color:#8b949e;background:none;border:none;cursor:pointer;padding:4px 8px}
+    #restartBtn:hover{color:#fff}
+
+    /* ── Subtitle ── */
+    #subtitle{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 28px;border-radius:8px;font-size:17px;text-align:center;max-width:820px;line-height:1.55;z-index:200;pointer-events:none;transition:opacity .35s;min-height:44px}
+
+    /* ── Scene base ── */
+    .scene{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .55s ease}
+    .scene.active{opacity:1;pointer-events:all}
+
+    /* ── Scene label badge ── */
+    .slabel{position:absolute;top:14px;right:16px;background:rgba(31,78,121,.88);color:#fff;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;z-index:50}
+
+    /* ── Browser chrome ── */
+    .browser{position:absolute;inset:0;display:flex;flex-direction:column}
+    .bbar{background:#e8ecf1;height:38px;display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid #d0d7de;flex-shrink:0}
+    .bdot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+    .burl{flex:1;background:#fff;border:1px solid #d0d7de;border-radius:20px;padding:4px 16px;font-size:12px;color:#57606a;max-width:480px;margin:0 auto;text-align:center}
+    .bcontent{flex:1;overflow:hidden;position:relative;background:#f5f7fa}
+
+    /* ── App chrome ── */
+    .aheader{background:linear-gradient(90deg,#1f4e79,#2e75b6);color:#fff;padding:11px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .aheader h1{font-size:16px;margin:0;font-weight:700}
+    .aheader .sub{font-size:11px;opacity:.8;margin-top:1px}
+    .ainner{padding:12px;overflow:hidden;height:calc(100% - 42px)}
+
+    /* ── Cards ── */
+    .card{background:#fff;border:1px solid #d0d7de;border-radius:9px;padding:14px;margin-bottom:10px;box-shadow:0 2px 5px rgba(0,0,0,.04)}
+    .card h2{font-size:13px;color:#1f4e79;margin:0 0 10px;font-weight:700}
+    .card h3{font-size:12px;color:#1f4e79;margin:0 0 8px}
+
+    /* ── Buttons ── */
+    .btn{border:none;padding:6px 13px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:opacity .2s}
+    .btn:hover{opacity:.88}
+    .btn-pri{background:#1f4e79;color:#fff}
+    .btn-suc{background:#1a7f37;color:#fff}
+    .btn-pur{background:#7c3aed;color:#fff}
+    .btn-whi{background:#fff;color:#1f4e79;border:1px solid #1f4e79}
+    .btn-dan{background:#cf222e;color:#fff}
+    .btn-acc{background:#2e75b6;color:#fff}
+
+    /* ── Form elements ── */
+    .flabel{display:block;font-size:11px;color:#57606a;margin-bottom:3px;font-weight:600}
+    .finput{width:100%;padding:6px 9px;border:1px solid #d0d7de;border-radius:6px;font-size:13px;background:#fff;color:#24292f}
+    .finput.focus{border-color:#2e75b6;box-shadow:0 0 0 3px rgba(46,117,182,.15)}
+    .fgroup{margin-bottom:10px}
+
+    /* ── Table ── */
+    .tbl{width:100%;border-collapse:collapse;font-size:11px}
+    .tbl th{background:#e8ecf1;padding:5px 8px;text-align:left;font-weight:700;color:#57606a;border:1px solid #d0d7de}
+    .tbl td{padding:5px 8px;border:1px solid #d0d7de;color:#24292f}
+    .tbl tr:nth-child(even) td{background:#f6f8fa}
+
+    /* ── Status badges ── */
+    .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700}
+    .badge-ns{background:#f0f0f0;color:#888}
+    .badge-ip{background:#dbeafe;color:#1e40af}
+    .badge-dn{background:#dcfce7;color:#166534}
+
+    /* ── Gantt ── */
+    .gcell{width:22px;height:22px;border:1px solid #e8ecf1;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;cursor:pointer;transition:all .25s;flex-shrink:0}
+    .gcell-ns{background:#f6f8fa;color:#ccc}
+    .gcell-ip{background:#bfdbfe;color:#1e40af}
+    .gcell-dn{background:#bbf7d0;color:#166534}
+
+    /* ── Radar chart (SVG-based) ── */
+    .radar-wrap{display:flex;align-items:center;justify-content:center;height:140px}
+
+    /* ── PDF pages ── */
+    .pdf-page{width:160px;height:113px;background:#fff;border:1px solid #d0d7de;border-radius:4px;box-shadow:2px 3px 8px rgba(0,0,0,.15);padding:8px;flex-shrink:0}
+    .pdf-page-hdr{height:10px;background:linear-gradient(90deg,#1f4e79,#2e75b6);border-radius:2px;margin-bottom:5px}
+
+    /* ── Animations ── */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.75)}to{opacity:1;transform:scale(1)}}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(46,117,182,.5)}50%{box-shadow:0 0 0 10px rgba(46,117,182,0)}}
+    @keyframes pulseGreen{0%,100%{box-shadow:0 0 0 0 rgba(26,127,55,.5)}50%{box-shadow:0 0 0 12px rgba(26,127,55,0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes drawBar{from{width:0}}
+    @keyframes popIn{0%{opacity:0;transform:scale(.5) rotate(-10deg)}80%{transform:scale(1.05) rotate(1deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+    @keyframes typing{from{width:0}to{width:100%}}
+    @keyframes clickRipple{from{transform:scale(0);opacity:.7}to{transform:scale(2.5);opacity:0}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes progressBar{from{width:0}to{width:100%}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+
+    .anim-fadeup{animation:fadeUp .6s ease forwards}
+    .anim-fadein{animation:fadeIn .5s ease forwards}
+    .anim-slider{animation:slideR .5s ease forwards}
+    .anim-scalein{animation:scaleIn .5s ease forwards}
+    .anim-popin{animation:popIn .5s ease forwards}
+    .hidden{opacity:0}
+
+    /* ── Highlight ring ── */
+    .hring{position:absolute;border:2.5px solid #f0a500;border-radius:6px;pointer-events:none;z-index:80;animation:pulseRing 1.2s ease infinite}
+    @keyframes pulseRing{0%,100%{box-shadow:0 0 0 0 rgba(240,165,0,.5)}50%{box-shadow:0 0 0 8px rgba(240,165,0,0)}}
+
+    /* ── Click cursor ── */
+    .cursor{position:absolute;width:24px;height:24px;background:rgba(0,0,0,.7);border-radius:50%;pointer-events:none;z-index:90;transform:translate(-50%,-50%);transition:all .4s cubic-bezier(.4,0,.2,1)}
+    .cursor::after{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.3);animation:clickRipple .4s ease}
+
+    /* ════════════════════════════
+       SCENE 1 — INTRO
+    ═══════════════════════════════ */
+    #s1{background:linear-gradient(135deg,#0d1b2e 0%,#1a3a5c 40%,#0d1b2e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+    .s1-logo{font-size:72px;font-weight:900;color:#fff;letter-spacing:6px;opacity:0}
+    .s1-sub{font-size:20px;color:rgba(255,255,255,.7);margin-top:6px;letter-spacing:2px;opacity:0}
+    .s1-line{width:0;height:3px;background:linear-gradient(90deg,transparent,#2e75b6,transparent);margin:18px auto;transition:width 1s ease}
+    .s1-stats{display:flex;gap:24px;margin-top:8px;opacity:0}
+    .s1-stat{text-align:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px 24px;backdrop-filter:blur(4px)}
+    .s1-stat .val{font-size:28px;font-weight:800;color:#5b9bd5}
+    .s1-stat .lbl{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px;text-transform:uppercase;letter-spacing:1px}
+    .s1-tag{position:absolute;bottom:70px;font-size:13px;color:rgba(255,255,255,.45);letter-spacing:1px;opacity:0}
+
+    /* ════════════════════════════
+       SCENE 2 — SIGNUP
+    ═══════════════════════════════ */
+    #s2{background:#f5f7fa}
+    .step-ind{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
+    .step-dot{width:28px;height:28px;border-radius:50%;background:#d0d7de;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#57606a;transition:all .4s}
+    .step-dot.active{background:#1f4e79;color:#fff}
+    .step-dot.done{background:#1a7f37;color:#fff}
+    .signup-box{max-width:420px;margin:0 auto;padding:28px;background:#fff;border:1px solid #d0d7de;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+    .signup-box h1{text-align:center;font-size:22px;color:#1f4e79;margin-bottom:4px}
+    .signup-box p{text-align:center;font-size:12px;color:#57606a;margin-bottom:18px}
+    .email-preview{background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:16px;max-width:560px;margin:0 auto;opacity:0}
+    .email-from{font-size:11px;color:#57606a;margin-bottom:4px}
+    .email-subj{font-weight:700;font-size:14px;margin-bottom:12px;color:#24292f}
+    .email-body{font-size:12px;color:#24292f;line-height:1.6}
+    .email-btns{display:flex;gap:10px;margin-top:14px}
+    .approval-toast{background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:12px 18px;display:flex;align-items:center;gap:10px;max-width:420px;margin:12px auto;opacity:0}
+    .approval-toast .icon{font-size:20px}
+    .approval-toast p{font-size:13px;color:#166534;font-weight:600}
+
+    /* ════════════════════════════
+       SCENE 3 — ADMIN SETUP
+    ═══════════════════════════════ */
+    #s3{background:#f5f7fa}
+    .wp-block{border:1px solid #d0d7de;border-radius:8px;padding:10px 12px;margin-bottom:7px;background:#fff;opacity:0}
+    .wp-name{font-weight:700;font-size:13px;color:#1f4e79}
+    .wp-tasks{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+    .task-chip{background:#eef4fa;border:1px solid #bdd7ee;border-radius:5px;padding:3px 10px;font-size:11px;color:#1f4e79;opacity:0}
+    .partner-row{opacity:0}
+    .pm-cell{width:44px;height:26px;border:1px solid #d0d7de;border-radius:4px;text-align:center;font-size:11px;font-weight:700;color:#1f4e79;background:#f0f7ff;display:inline-flex;align-items:center;justify-content:center}
+
+    /* ════════════════════════════
+       SCENE 4 — PARTNER PORTAL
+    ═══════════════════════════════ */
+    #s4{background:#f5f7fa}
+    .url-row{display:flex;gap:8px;align-items:center;margin-bottom:7px;opacity:0}
+    .url-input{flex:1;padding:6px 9px;border:1px solid #d0d7de;border-radius:6px;font-size:11px;color:#57606a;background:#fff}
+    .analysis-status{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12px;color:#0369a1;opacity:0;display:flex;align-items:center;gap:8px}
+    .spinner{width:16px;height:16px;border:2px solid #bae6fd;border-top-color:#0369a1;border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0}
+
+    /* ════════════════════════════
+       SCENE 5 — GANTT
+    ═══════════════════════════════ */
+    #s5{background:#f5f7fa}
+    .gantt-outer{display:flex;font-size:11px}
+    .gantt-names{width:160px;flex-shrink:0}
+    .gantt-scroll{flex:1;overflow:hidden}
+    .gname-row{height:26px;display:flex;align-items:center;padding:0 8px;border-bottom:1px solid #f0f0f0;font-weight:600;color:#24292f;font-size:11px}
+    .gname-row.wp{background:#eef4fa;color:#1f4e79;font-weight:700}
+    .gname-sub{height:26px;display:flex;align-items:center;padding:0 8px 0 20px;border-bottom:1px solid #f0f0f0;font-size:10px;color:#57606a}
+    .gcells-row{height:26px;display:flex;align-items:center;gap:2px;padding:2px 4px;border-bottom:1px solid #f0f0f0}
+    .pchip{display:inline-flex;align-items:center;gap:4px;background:#e8f0fe;border:1px solid #c5d5f5;border-radius:12px;padding:1px 7px;font-size:9px;font-weight:600;color:#3c5a9a}
+    .expand-btn{width:16px;height:16px;border-radius:50%;border:1px solid #d0d7de;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;margin-right:4px;color:#57606a}
+
+    /* ════════════════════════════
+       SCENE 6 — REPORT
+    ═══════════════════════════════ */
+    #s6{background:#f5f7fa}
+    .pdf-preview{display:flex;gap:14px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-top:16px}
+    .pdf-page{width:154px;height:109px;background:#fff;border:1px solid #d0d7de;border-radius:5px;box-shadow:2px 4px 10px rgba(0,0,0,.12);padding:8px;opacity:0;flex-shrink:0}
+    .pdf-page-hdr{height:10px;background:linear-gradient(90deg,#1f4e79,#2e75b6);border-radius:2px;margin-bottom:6px}
+    .pdf-bar{height:5px;border-radius:2px;margin-bottom:3px;animation:drawBar .6s ease forwards}
+    .pdf-chart-row{display:flex;align-items:flex-end;gap:3px;height:40px;margin-top:4px}
+    .pdf-cbar{width:12px;border-radius:2px 2px 0 0}
+    .progress-wrap{background:#e8ecf1;border-radius:4px;height:8px;margin:10px 0;overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#2e75b6,#1a7f37);border-radius:4px}
+
+    /* ════════════════════════════
+       SCENE 7 — CLOSING
+    ═══════════════════════════════ */
+    #s7{background:linear-gradient(135deg,#0d1b2e 0%,#1a3a5c 50%,#0d1b2e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+    .s7-logo{font-size:64px;font-weight:900;color:#fff;letter-spacing:5px;opacity:0}
+    .s7-tagline{font-size:18px;color:rgba(255,255,255,.7);margin-top:8px;opacity:0;text-align:center}
+    .s7-url{font-size:22px;color:#5b9bd5;font-weight:700;margin-top:18px;opacity:0;letter-spacing:1px}
+    .s7-cta{margin-top:24px;opacity:0}
+    .s7-features{display:flex;gap:16px;margin-top:28px;opacity:0}
+    .s7-feat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 18px;text-align:center;color:#fff}
+    .s7-feat .fi{font-size:22px;margin-bottom:5px}
+    .s7-feat .ft{font-size:11px;opacity:.7}
+  </style>
+</head>
+<body>
+
+<div id="player">
+
+  <!-- ════ SCENE 1 — INTRO ════ -->
+  <div class="scene active" id="s1">
+    <div class="s1-logo" id="s1logo">ALLOC8</div>
+    <div class="s1-sub" id="s1sub">Smart EU Consortium Management</div>
+    <div class="s1-line" id="s1line"></div>
+    <div class="s1-stats" id="s1stats">
+      <div class="s1-stat"><div class="val" id="c1">0</div><div class="lbl">Partners</div></div>
+      <div class="s1-stat"><div class="val" id="c2">0</div><div class="lbl">Work Packages</div></div>
+      <div class="s1-stat"><div class="val" id="c3">€0M</div><div class="lbl">Budget Managed</div></div>
+      <div class="s1-stat"><div class="val" id="c4">0</div><div class="lbl">Countries</div></div>
+    </div>
+    <div class="s1-tag" id="s1tag">alloc8.org</div>
+  </div>
+
+  <!-- ════ SCENE 2 — SIGNUP & APPROVAL ════ -->
+  <div class="scene" id="s2">
+    <div class="browser">
+      <div class="bbar">
+        <div class="bdot" style="background:#ff5f57"></div>
+        <div class="bdot" style="background:#ffbd2e"></div>
+        <div class="bdot" style="background:#28c840"></div>
+        <div class="burl" id="s2url">alloc8.org/signup</div>
+      </div>
+      <div class="bcontent" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+        <!-- Signup form -->
+        <div id="s2form" class="signup-box">
+          <h1>Alloc8</h1>
+          <p>Create your project workspace</p>
+          <div class="step-ind">
+            <div class="step-dot active" id="sd1">1</div>
+            <div class="step-dot" id="sd2">2</div>
+            <div class="step-dot" id="sd3">3</div>
+          </div>
+          <div id="s2step1">
+            <div class="fgroup">
+              <label class="flabel">Email Address</label>
+              <input class="finput" id="s2email" value="" readonly />
+            </div>
+            <button class="btn btn-pri" style="width:100%">Continue</button>
+          </div>
+          <div id="s2step2" style="display:none">
+            <div class="fgroup">
+              <label class="flabel">Project Name</label>
+              <input class="finput" id="s2proj" value="" readonly />
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Username</label>
+              <input class="finput" id="s2user" value="" readonly />
+            </div>
+            <div class="fgroup">
+              <label class="flabel">Password</label>
+              <input class="finput" type="password" id="s2pass" value="" readonly />
+            </div>
+            <button class="btn btn-pri" style="width:100%">Create Account</button>
+          </div>
+          <div id="s2step3" style="display:none;text-align:center;padding:16px 0">
+            <div style="font-size:36px;margin-bottom:10px">📬</div>
+            <h2 style="color:#1f4e79;font-size:16px;margin-bottom:8px">Request Submitted!</h2>
+            <p style="color:#57606a;font-size:12px;line-height:1.6">Our team has been notified.<br>You'll receive an email once your account is approved.</p>
+          </div>
+        </div>
+        <!-- Email notification (shown after step 3) -->
+        <div class="email-preview" id="s2email-card" style="width:100%;max-width:520px;margin-top:14px">
+          <div class="email-from">📧 From: noreply@alloc8.org → <strong>sithu.y.htun@gmail.com</strong></div>
+          <div class="email-subj">[Alloc8] New Account Request: coordinator1 (Horizon 2030 Project)</div>
+          <div class="email-body">A new user is requesting access to Alloc8.<br><br>
+            <strong>Username:</strong> coordinator1 &nbsp;|&nbsp; <strong>Project:</strong> Horizon 2030 Project<br>
+            <strong>Email:</strong> coord@university.eu
+          </div>
+          <div class="email-btns">
+            <button class="btn btn-suc" id="s2approveBtn" style="animation:pulseGreen 1.5s ease infinite">✓ Approve</button>
+            <button class="btn btn-dan">✕ Deny</button>
+          </div>
+        </div>
+        <div class="approval-toast" id="s2toast">
+          <div class="icon">✅</div>
+          <div><p>Account approved! Welcome email sent to coord@university.eu</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="slabel">SCENE 2 — Signup & Approval</div>
+  </div>
+
+  <!-- ════ SCENE 3 — ADMIN SETUP ════ -->
+  <div class="scene" id="s3">
+    <div class="browser">
+      <div class="bbar">
+        <div class="bdot" style="background:#ff5f57"></div>
+        <div class="bdot" style="background:#ffbd2e"></div>
+        <div class="bdot" style="background:#28c840"></div>
+        <div class="burl">alloc8.org/admin</div>
+      </div>
+      <div class="bcontent">
+        <div class="aheader">
+          <div><h1>Alloc8</h1><div class="sub">— Horizon 2030 Project</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-pur" id="s3rptBtn">📄 Generate Report</button>
+            <button class="btn btn-whi">Log out</button>
+          </div>
+        </div>
+        <div class="ainner" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;height:calc(100% - 42px)">
+          <!-- LEFT: WPs -->
+          <div style="overflow:hidden">
+            <div class="card" style="margin-bottom:8px">
+              <h2>Work Packages &amp; Tasks</h2>
+              <div id="s3wp1" class="wp-block">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div class="wp-name">WP1 — Management &amp; Coordination</div>
+                  <span style="font-size:10px;color:#57606a">M1–M48</span>
+                </div>
+                <div class="wp-tasks">
+                  <div class="task-chip" id="s3t1">T1.1 Project Management</div>
+                  <div class="task-chip" id="s3t2">T1.2 Reporting</div>
+                  <div class="task-chip" id="s3t3">T1.3 Ethics</div>
+                </div>
+              </div>
+              <div id="s3wp2" class="wp-block">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div class="wp-name">WP2 — Research &amp; Development</div>
+                  <span style="font-size:10px;color:#57606a">M3–M36</span>
+                </div>
+                <div class="wp-tasks">
+                  <div class="task-chip" id="s3t4">T2.1 Literature Review</div>
+                  <div class="task-chip" id="s3t5">T2.2 Prototype</div>
+                </div>
+              </div>
+              <div id="s3wp3" class="wp-block">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div class="wp-name">WP3 — Dissemination</div>
+                  <span style="font-size:10px;color:#57606a">M12–M48</span>
+                </div>
+                <div class="wp-tasks">
+                  <div class="task-chip" id="s3t6">T3.1 Publications</div>
+                  <div class="task-chip" id="s3t7">T3.2 Workshops</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- RIGHT: Partners + Budget -->
+          <div style="overflow:hidden">
+            <div class="card">
+              <h2>Partners</h2>
+              <table class="tbl">
+                <thead><tr><th>#</th><th>Partner</th><th>Country</th><th>Rate</th><th>PM</th><th>Budget</th></tr></thead>
+                <tbody id="s3ptbl">
+                  <tr class="partner-row" id="s3p1"><td>1</td><td><strong>LJMU</strong></td><td>🇬🇧 UK</td><td>€8,500</td><td><div class="pm-cell">24</div></td><td>€285k</td></tr>
+                  <tr class="partner-row" id="s3p2"><td>2</td><td><strong>TU Berlin</strong></td><td>🇩🇪 DE</td><td>€7,200</td><td><div class="pm-cell">18</div></td><td>€185k</td></tr>
+                  <tr class="partner-row" id="s3p3"><td>3</td><td><strong>Sorbonne</strong></td><td>🇫🇷 FR</td><td>€7,800</td><td><div class="pm-cell">20</div></td><td>€218k</td></tr>
+                  <tr class="partner-row" id="s3p4"><td>4</td><td><strong>UniMadrid</strong></td><td>🇪🇸 ES</td><td>€6,500</td><td><div class="pm-cell">16</div></td><td>€152k</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card" id="s3budget" style="opacity:0">
+              <h2>Grand Totals</h2>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+                <div style="background:#f0f4f8;border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#57606a">Total PM</div><div style="font-weight:800;color:#1f4e79;font-size:15px">78</div></div>
+                <div style="background:#f0f4f8;border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#57606a">Total Budget</div><div style="font-weight:800;color:#1f4e79;font-size:15px">€840k</div></div>
+                <div style="background:#f0f4f8;border-radius:6px;padding:8px;text-align:center"><div style="font-size:10px;color:#57606a">Total Funding</div><div style="font-weight:800;color:#1a7f37;font-size:15px">€756k</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slabel">SCENE 3 — Admin Setup</div>
+  </div>
+
+  <!-- ════ SCENE 4 — PARTNER PORTAL ════ -->
+  <div class="scene" id="s4">
+    <div class="browser">
+      <div class="bbar">
+        <div class="bdot" style="background:#ff5f57"></div>
+        <div class="bdot" style="background:#ffbd2e"></div>
+        <div class="bdot" style="background:#28c840"></div>
+        <div class="burl">alloc8.org/partner</div>
+      </div>
+      <div class="bcontent">
+        <div class="aheader" style="background:linear-gradient(90deg,#1f4e79,#2e75b6)">
+          <div><h1>Partner Dashboard</h1><div class="sub">LJMU — Liverpool John Moores University</div></div>
+          <button class="btn btn-whi">Log out</button>
+        </div>
+        <div class="ainner" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <!-- LEFT: Profile + URLs -->
+          <div>
+            <div class="card">
+              <h2>My Profile &amp; Costs</h2>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+                <div><div class="flabel">Contact Name</div><div style="padding:5px 8px;background:#f6f8fa;border-radius:4px" id="s4name"></div></div>
+                <div><div class="flabel">Position</div><div style="padding:5px 8px;background:#f6f8fa;border-radius:4px" id="s4pos"></div></div>
+                <div><div class="flabel">Email</div><div style="padding:5px 8px;background:#f6f8fa;border-radius:4px" id="s4email"></div></div>
+                <div><div class="flabel">Monthly Rate</div><div style="padding:5px 8px;background:#f6f8fa;border-radius:4px">€8,500</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Company URLs <span style="font-size:10px;color:#57606a;font-weight:400">(for AI analysis)</span></h2>
+              <div id="s4u1" class="url-row"><input class="url-input" readonly value="" id="s4url1" /><button class="btn btn-pri" style="font-size:10px;padding:4px 8px">✕</button></div>
+              <div id="s4u2" class="url-row"><input class="url-input" readonly value="" id="s4url2" /></div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="btn btn-acc" id="s4aiBtn" style="flex:1">🤖 AI Analysis</button>
+                <button class="btn btn-suc" style="flex:1">💾 Save</button>
+              </div>
+              <div class="analysis-status" id="s4status">
+                <div class="spinner"></div>
+                <span>Scraping URLs and analysing skills against all WPs…</span>
+              </div>
+            </div>
+          </div>
+          <!-- RIGHT: Skill Radar -->
+          <div>
+            <div class="card" style="height:calc(100% - 10px)">
+              <h2>My Skill Pool</h2>
+              <div style="text-align:center;margin-bottom:8px;font-size:12px;color:#57606a">Avg Skill Score: <strong style="color:#1f4e79" id="s4avg">—</strong> / 5.0</div>
+              <div class="radar-wrap" id="s4radar">
+                <svg width="200" height="180" viewBox="0 0 200 180" id="s4svg" style="opacity:0">
+                  <!-- Radar grid -->
+                  <g transform="translate(100,95)">
+                    <polygon points="0,-70 60.6,-35 60.6,35 0,70 -60.6,35 -60.6,-35" fill="none" stroke="#e8ecf1" stroke-width="1"/>
+                    <polygon points="0,-50 43.3,-25 43.3,25 0,50 -43.3,25 -43.3,-25" fill="none" stroke="#e8ecf1" stroke-width="1"/>
+                    <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="none" stroke="#e8ecf1" stroke-width="1"/>
+                    <!-- Axes -->
+                    <line x1="0" y1="0" x2="0" y2="-70" stroke="#e8ecf1" stroke-width="1"/>
+                    <line x1="0" y1="0" x2="60.6" y2="-35" stroke="#e8ecf1" stroke-width="1"/>
+                    <line x1="0" y1="0" x2="60.6" y2="35" stroke="#e8ecf1" stroke-width="1"/>
+                    <line x1="0" y1="0" x2="0" y2="70" stroke="#e8ecf1" stroke-width="1"/>
+                    <line x1="0" y1="0" x2="-60.6" y2="35" stroke="#e8ecf1" stroke-width="1"/>
+                    <line x1="0" y1="0" x2="-60.6" y2="-35" stroke="#e8ecf1" stroke-width="1"/>
+                    <!-- Data polygon -->
+                    <polygon id="s4poly" points="0,0 0,0 0,0 0,0 0,0 0,0" fill="rgba(46,117,182,0.25)" stroke="#2e75b6" stroke-width="2"/>
+                    <!-- Labels -->
+                    <text x="0" y="-78" text-anchor="middle" font-size="9" fill="#57606a">WP1</text>
+                    <text x="68" y="-32" text-anchor="start" font-size="9" fill="#57606a">WP2</text>
+                    <text x="68" y="42" text-anchor="start" font-size="9" fill="#57606a">WP3</text>
+                    <text x="0" y="84" text-anchor="middle" font-size="9" fill="#57606a">WP4</text>
+                    <text x="-68" y="42" text-anchor="end" font-size="9" fill="#57606a">WP5</text>
+                    <text x="-68" y="-32" text-anchor="end" font-size="9" fill="#57606a">WP6</text>
+                  </g>
+                </svg>
+                <div id="s4noradar" style="font-size:12px;color:#57606a;text-align:center">Run AI Analysis to generate<br>skill relevance scores</div>
+              </div>
+              <!-- Scores list -->
+              <div id="s4scores" style="opacity:0;margin-top:10px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#f6f8fa;border-radius:4px"><span>WP1</span><strong style="color:#1a7f37">4.8</strong></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#f6f8fa;border-radius:4px"><span>WP2</span><strong style="color:#1a7f37">4.2</strong></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#f6f8fa;border-radius:4px"><span>WP3</span><strong style="color:#2e75b6">3.5</strong></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#f6f8fa;border-radius:4px"><span>WP4</span><strong style="color:#2e75b6">3.1</strong></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#f6f8fa;border-radius:4px"><span>WP5</span><strong style="color:#1a7f37">4.5</strong></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#f6f8fa;border-radius:4px"><span>WP6</span><strong style="color:#2e75b6">3.8</strong></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slabel">SCENE 4 — Partner Portal</div>
+  </div>
+
+  <!-- ════ SCENE 5 — GANTT ════ -->
+  <div class="scene" id="s5">
+    <div class="browser">
+      <div class="bbar">
+        <div class="bdot" style="background:#ff5f57"></div>
+        <div class="bdot" style="background:#ffbd2e"></div>
+        <div class="bdot" style="background:#28c840"></div>
+        <div class="burl">alloc8.org/partner-main</div>
+      </div>
+      <div class="bcontent">
+        <div class="aheader"><h1>Project Timeline</h1></div>
+        <div style="padding:10px">
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;font-size:11px;flex-wrap:wrap">
+              <span style="font-weight:700;color:#1f4e79">Legend:</span>
+              <span><span style="display:inline-block;width:14px;height:14px;background:#f6f8fa;border:1px solid #d0d7de;border-radius:2px;vertical-align:middle"></span> Not started</span>
+              <span><span style="display:inline-block;width:14px;height:14px;background:#bfdbfe;border-radius:2px;vertical-align:middle"></span> In Progress</span>
+              <span><span style="display:inline-block;width:14px;height:14px;background:#bbf7d0;border-radius:2px;vertical-align:middle"></span> Completed</span>
+              <span style="margin-left:auto;font-size:10px;color:#57606a">Click cells to update · Click row to expand partners</span>
+            </div>
+            <!-- Month headers -->
+            <div style="display:flex;margin-left:160px;gap:2px;margin-bottom:2px">
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M1</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M2</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M3</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M4</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M5</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M6</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M7</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M8</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M9</div>
+              <div style="font-size:9px;color:#57606a;font-weight:600;text-align:center;width:22px">M10</div>
+            </div>
+            <div class="gantt-outer">
+              <div class="gantt-names">
+                <div class="gname-row wp">📁 WP1 — Management</div>
+                <div class="gname-row" style="cursor:pointer" id="g-t1name">
+                  <span class="expand-btn" id="g-t1exp">▶</span>T1.1 Project Mgmt
+                  <span class="pchip" style="margin-left:auto;margin-right:4px">4 partners</span>
+                </div>
+                <div class="gname-sub" id="g-sub1" style="display:none;background:#fafbfc">👤 You (LJMU)</div>
+                <div class="gname-sub" id="g-sub2" style="display:none;background:#fafbfc">TU Berlin</div>
+                <div class="gname-sub" id="g-sub3" style="display:none;background:#fafbfc">Sorbonne</div>
+                <div class="gname-row">  T1.2 Reporting</div>
+                <div class="gname-row wp">📁 WP2 — Research</div>
+                <div class="gname-row">  T2.1 Literature Review</div>
+                <div class="gname-row" id="g-t3name" style="cursor:pointer">
+                  <span class="expand-btn">▶</span>T2.2 Prototype
+                  <span class="pchip" style="margin-left:auto;margin-right:4px">3 partners</span>
+                </div>
+              </div>
+              <div class="gantt-scroll">
+                <!-- WP1 header row -->
+                <div class="gcells-row" style="background:#eef4fa">
+                  <div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-ip">↻</div><div class="gcell gcell-ip">↻</div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <!-- T1.1 aggregate row -->
+                <div class="gcells-row" id="g-t1row">
+                  <div class="gcell" id="gc1" style="background:#f0fdf4;color:#16a34a;border-color:#86efac;cursor:pointer">5/4</div>
+                  <div class="gcell" id="gc2" style="background:#f0fdf4;color:#16a34a;border-color:#86efac;cursor:pointer">5/4</div>
+                  <div class="gcell" id="gc3" style="background:#eff6ff;color:#2563eb;border-color:#93c5fd;cursor:pointer">3/4</div>
+                  <div class="gcell" id="gc4" style="background:#eff6ff;color:#2563eb;border-color:#93c5fd;cursor:pointer">2/4</div>
+                  <div class="gcell gcell-ns" id="gc5" style="cursor:pointer"></div>
+                  <div class="gcell gcell-ns" id="gc6" style="cursor:pointer"></div>
+                  <div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <!-- Sub-rows (hidden) -->
+                <div class="gcells-row" id="g-subrow1" style="display:none;background:#fafbfc">
+                  <div class="gcell gcell-dn" id="myc1" style="cursor:pointer">✓</div>
+                  <div class="gcell gcell-dn" id="myc2" style="cursor:pointer">✓</div>
+                  <div class="gcell gcell-ip" id="myc3" style="cursor:pointer">↻</div>
+                  <div class="gcell gcell-ns" id="myc4" style="cursor:pointer"></div>
+                  <div class="gcell gcell-ns" id="myc5" style="cursor:pointer"></div>
+                  <div class="gcell gcell-ns" id="myc6" style="cursor:pointer"></div>
+                  <div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <div class="gcells-row" id="g-subrow2" style="display:none;background:#fafbfc">
+                  <div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-ip">↻</div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <div class="gcells-row" id="g-subrow3" style="display:none;background:#fafbfc">
+                  <div class="gcell gcell-ip">↻</div><div class="gcell gcell-ip">↻</div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <!-- T1.2 -->
+                <div class="gcells-row">
+                  <div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <!-- WP2 header -->
+                <div class="gcells-row" style="background:#eef4fa">
+                  <div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-ip">↻</div><div class="gcell gcell-ip">↻</div><div class="gcell gcell-ip">↻</div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <!-- T2.1 -->
+                <div class="gcells-row">
+                  <div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-dn">✓</div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+                <!-- T2.2 -->
+                <div class="gcells-row">
+                  <div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ip" id="gc-proto5" style="cursor:pointer">↻</div><div class="gcell gcell-ip" id="gc-proto6" style="cursor:pointer">↻</div><div class="gcell gcell-ip" id="gc-proto7" style="cursor:pointer">↻</div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div><div class="gcell gcell-ns"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slabel">SCENE 5 — Gantt Chart</div>
+  </div>
+
+  <!-- ════ SCENE 6 — REPORT ════ -->
+  <div class="scene" id="s6">
+    <div class="browser">
+      <div class="bbar">
+        <div class="bdot" style="background:#ff5f57"></div>
+        <div class="bdot" style="background:#ffbd2e"></div>
+        <div class="bdot" style="background:#28c840"></div>
+        <div class="burl">alloc8.org/admin</div>
+      </div>
+      <div class="bcontent" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+        <div style="text-align:center;margin-bottom:20px">
+          <h2 style="color:#1f4e79;font-size:18px;margin-bottom:6px">Ready to generate your project report?</h2>
+          <p style="color:#57606a;font-size:13px">A full PDF with Gantt charts, budget analysis, skill pool, and more — in one click.</p>
+        </div>
+        <button class="btn btn-pur" id="s6rptBtn" style="font-size:15px;padding:12px 28px;animation:pulseGreen 2s ease infinite">
+          📄 Generate Report
+        </button>
+        <div id="s6progress" style="width:500px;margin-top:20px;display:none">
+          <div style="font-size:13px;color:#57606a;margin-bottom:8px;text-align:center" id="s6status">Building PDF (1/11) cover page...</div>
+          <div class="progress-wrap"><div class="progress-fill" id="s6bar" style="width:0%;transition:width .4s ease"></div></div>
+        </div>
+        <div class="pdf-preview" id="s6pages" style="margin-top:16px">
+          <!-- PDF page thumbnails -->
+          <div class="pdf-page" id="pdf1">
+            <div class="pdf-page-hdr"></div>
+            <div style="font-size:9px;font-weight:900;color:#1f4e79;text-align:center;margin-bottom:4px">ALLOC8</div>
+            <div style="font-size:7px;color:#57606a;text-align:center;margin-bottom:6px">Horizon 2030 Project Report</div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center">
+              <div style="background:#eef4fa;border-radius:3px;padding:2px 5px;font-size:6px;color:#1f4e79;font-weight:700">4 Partners</div>
+              <div style="background:#eef4fa;border-radius:3px;padding:2px 5px;font-size:6px;color:#1f4e79;font-weight:700">3 WPs</div>
+              <div style="background:#eef4fa;border-radius:3px;padding:2px 5px;font-size:6px;color:#1f4e79;font-weight:700">€840k</div>
+            </div>
+          </div>
+          <div class="pdf-page" id="pdf2">
+            <div class="pdf-page-hdr"></div>
+            <div style="font-size:7px;color:#57606a;margin-bottom:3px;font-weight:700">Gantt Chart</div>
+            <div style="background:#eef4fa;height:12px;border-radius:2px;margin-bottom:2px">
+              <div style="height:100%;width:85%;background:#2e75b6;border-radius:2px"></div>
+            </div>
+            <div style="background:#f6f8fa;height:8px;border-radius:2px;margin-bottom:2px">
+              <div style="height:100%;width:60%;background:#e74c3c;border-radius:2px"></div>
+            </div>
+            <div style="background:#f6f8fa;height:8px;border-radius:2px;margin-bottom:2px">
+              <div style="height:100%;width:45%;background:#1abc9c;border-radius:2px"></div>
+            </div>
+            <div style="background:#f6f8fa;height:8px;border-radius:2px;margin-bottom:2px">
+              <div style="height:100%;width:70%;background:#9b59b6;border-radius:2px"></div>
+            </div>
+            <div style="background:#f6f8fa;height:8px;border-radius:2px">
+              <div style="height:100%;width:30%;background:#f0a500;border-radius:2px"></div>
+            </div>
+          </div>
+          <div class="pdf-page" id="pdf3">
+            <div class="pdf-page-hdr"></div>
+            <div style="font-size:7px;color:#57606a;margin-bottom:4px;font-weight:700">Budget Analysis</div>
+            <div class="pdf-chart-row">
+              <div class="pdf-cbar" style="height:55%;background:#3498db;animation:drawBar .5s .1s ease forwards"></div>
+              <div class="pdf-cbar" style="height:40%;background:#e67e22;animation:drawBar .5s .2s ease forwards"></div>
+              <div class="pdf-cbar" style="height:70%;background:#9b59b6;animation:drawBar .5s .3s ease forwards"></div>
+              <div class="pdf-cbar" style="height:35%;background:#95a5a6;animation:drawBar .5s .4s ease forwards"></div>
+              <div class="pdf-cbar" style="height:60%;background:#3498db;animation:drawBar .5s .5s ease forwards"></div>
+              <div class="pdf-cbar" style="height:45%;background:#e67e22;animation:drawBar .5s .6s ease forwards"></div>
+            </div>
+          </div>
+          <div class="pdf-page" id="pdf4">
+            <div class="pdf-page-hdr"></div>
+            <div style="font-size:7px;color:#57606a;margin-bottom:4px;font-weight:700">Skill Pool</div>
+            <div style="display:flex;justify-content:center;align-items:center;height:70px">
+              <svg width="70" height="70" viewBox="-35 -35 70 70">
+                <polygon points="0,-28 24.2,-14 24.2,14 0,28 -24.2,14 -24.2,-14" fill="none" stroke="#e8ecf1" stroke-width="1"/>
+                <polygon points="0,-20 17.3,-10 17.3,10 0,20 -17.3,10 -17.3,-10" fill="none" stroke="#e8ecf1" stroke-width="1"/>
+                <polygon points="0,-25.2 15.5,-4.2 8.4,22.2 -8.4,22.2 -15.5,-4.2" fill="rgba(46,117,182,0.3)" stroke="#2e75b6" stroke-width="1.5"/>
+              </svg>
+            </div>
+          </div>
+          <div class="pdf-page" id="pdf5">
+            <div class="pdf-page-hdr"></div>
+            <div style="font-size:7px;color:#57606a;margin-bottom:3px;font-weight:700">Budget Summary</div>
+            <div style="font-size:6px">
+              <div style="display:flex;gap:3px;border-bottom:1px solid #e8ecf1;padding:2px 0;font-weight:700;color:#57606a"><span style="flex:2">Partner</span><span style="flex:1;text-align:right">PM</span><span style="flex:2;text-align:right">Budget</span></div>
+              <div style="display:flex;gap:3px;padding:2px 0"><span style="flex:2;color:#1f4e79">LJMU</span><span style="flex:1;text-align:right">24</span><span style="flex:2;text-align:right">€285k</span></div>
+              <div style="display:flex;gap:3px;padding:2px 0;background:#f6f8fa"><span style="flex:2;color:#1f4e79">TU Berlin</span><span style="flex:1;text-align:right">18</span><span style="flex:2;text-align:right">€185k</span></div>
+              <div style="display:flex;gap:3px;padding:2px 0"><span style="flex:2;color:#1f4e79">Sorbonne</span><span style="flex:1;text-align:right">20</span><span style="flex:2;text-align:right">€218k</span></div>
+              <div style="display:flex;gap:3px;padding:2px 0;background:#f6f8fa"><span style="flex:2;color:#1f4e79">UniMadrid</span><span style="flex:1;text-align:right">16</span><span style="flex:2;text-align:right">€152k</span></div>
+              <div style="display:flex;gap:3px;padding:3px 0;border-top:1px solid #d0d7de;font-weight:700;background:#dbe4ee"><span style="flex:2">TOTAL</span><span style="flex:1;text-align:right">78</span><span style="flex:2;text-align:right">€840k</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="s6done" style="opacity:0;margin-top:16px;text-align:center">
+          <div style="font-size:28px;margin-bottom:6px">✅</div>
+          <div style="font-size:15px;font-weight:700;color:#1a7f37">Report downloaded!</div>
+          <div style="font-size:12px;color:#57606a;margin-top:4px">alloc8-report-horizon-2030-2026-04-06.pdf</div>
+        </div>
+      </div>
+    </div>
+    <div class="slabel">SCENE 6 — Report Generation</div>
+  </div>
+
+  <!-- ════ SCENE 7 — CLOSING ════ -->
+  <div class="scene" id="s7">
+    <div class="s7-logo" id="s7logo">ALLOC8</div>
+    <div class="s7-tagline" id="s7tag">Smart EU Consortium Management<br>Plan · Allocate · Analyse · Report</div>
+    <div class="s7-features" id="s7feats">
+      <div class="s7-feat"><div class="fi">📊</div><div class="ft">Budget Automation</div></div>
+      <div class="s7-feat"><div class="fi">🤖</div><div class="ft">AI Skill Analysis</div></div>
+      <div class="s7-feat"><div class="fi">📅</div><div class="ft">Gantt Tracking</div></div>
+      <div class="s7-feat"><div class="fi">📄</div><div class="ft">PDF Reports</div></div>
+      <div class="s7-feat"><div class="fi">🌍</div><div class="ft">Multi-Partner</div></div>
+    </div>
+    <div class="s7-url" id="s7url">alloc8.org</div>
+    <div class="s7-cta" id="s7cta">
+      <button class="btn btn-acc" style="font-size:15px;padding:11px 30px">Get Started Free →</button>
+    </div>
+  </div>
+
+  <div id="subtitle"></div>
+</div>
+
+<!-- ── Controls ── -->
+<div id="controls">
+  <button id="playBtn" title="Play / Pause">▶</button>
+  <span id="timeDisplay">0:00 / 3:40</span>
+  <div id="progressWrap">
+    <div id="progressFill" style="width:0%"></div>
+    <!-- Chapter dots injected by JS -->
+  </div>
+  <button id="restartBtn">↩ Restart</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// TIMELINE DEFINITION
+// ══════════════════════════════════════════════════════
+const TOTAL = 220; // seconds
+
+const chapters = [
+  { t:0,   id:'s1', label:'Intro' },
+  { t:12,  id:'s2', label:'Signup' },
+  { t:52,  id:'s3', label:'Admin Setup' },
+  { t:105, id:'s4', label:'Partner Portal' },
+  { t:145, id:'s5', label:'Gantt Chart' },
+  { t:182, id:'s6', label:'Report' },
+  { t:210, id:'s7', label:'Closing' },
+];
+
+// Each action: { t: seconds_from_scene_start, fn: function }
+const actions = {
+  // SCENE 1
+  s1: [
+    { t:0.5,  fn: () => anim('s1logo','fadeUp .7s ease forwards') },
+    { t:1.5,  fn: () => anim('s1sub','fadeUp .7s ease forwards') },
+    { t:2.2,  fn: () => { document.getElementById('s1line').style.width='280px'; } },
+    { t:3.0,  fn: () => anim('s1stats','fadeUp .7s ease forwards') },
+    { t:3.2,  fn: () => countUp('c1',0,26,1.5,'') },
+    { t:3.4,  fn: () => countUp('c2',0,7,1.5,'') },
+    { t:3.6,  fn: () => countUpFloat('c3',0,4.2,1.5,'€','M') },
+    { t:3.8,  fn: () => countUp('c4',0,14,1.5,'') },
+    { t:8.0,  fn: () => anim('s1tag','fadeIn 1s ease forwards') },
+  ],
+  // SCENE 2
+  s2: [
+    { t:0.5,  fn: () => typeInto('s2email','coord@university.eu',1.5) },
+    { t:2.5,  fn: () => {
+      document.getElementById('sd1').classList.add('done');
+      document.getElementById('sd2').classList.add('active');
+      document.getElementById('s2step1').style.display='none';
+      document.getElementById('s2step2').style.display='block';
+    }},
+    { t:3.5,  fn: () => typeInto('s2proj','Horizon 2030 Project',1.5) },
+    { t:5.5,  fn: () => typeInto('s2user','coordinator1',1) },
+    { t:7,    fn: () => typeInto('s2pass','••••••••',0.8) },
+    { t:9,    fn: () => {
+      document.getElementById('sd2').classList.remove('active'); document.getElementById('sd2').classList.add('done');
+      document.getElementById('sd3').classList.add('active');
+      document.getElementById('s2step2').style.display='none';
+      document.getElementById('s2step3').style.display='block';
+    }},
+    { t:11,   fn: () => anim('s2email-card','fadeUp .6s ease forwards') },
+    { t:18,   fn: () => { document.getElementById('s2approveBtn').style.transform='scale(1.08)'; } },
+    { t:20,   fn: () => {
+      document.getElementById('s2approveBtn').style.transform='scale(0.95)';
+      setTimeout(()=>{ document.getElementById('s2approveBtn').style.transform='scale(1)'; },200);
+    }},
+    { t:22,   fn: () => anim('s2toast','fadeUp .6s ease forwards') },
+  ],
+  // SCENE 3
+  s3: [
+    { t:0.5,  fn: () => anim('s3wp1','fadeUp .5s ease forwards') },
+    { t:1,    fn: () => anim('s3t1','fadeIn .4s ease forwards') },
+    { t:1.4,  fn: () => anim('s3t2','fadeIn .4s ease forwards') },
+    { t:1.8,  fn: () => anim('s3t3','fadeIn .4s ease forwards') },
+    { t:3,    fn: () => anim('s3wp2','fadeUp .5s ease forwards') },
+    { t:3.5,  fn: () => anim('s3t4','fadeIn .4s ease forwards') },
+    { t:3.9,  fn: () => anim('s3t5','fadeIn .4s ease forwards') },
+    { t:5,    fn: () => anim('s3wp3','fadeUp .5s ease forwards') },
+    { t:5.5,  fn: () => anim('s3t6','fadeIn .4s ease forwards') },
+    { t:5.9,  fn: () => anim('s3t7','fadeIn .4s ease forwards') },
+    { t:8,    fn: () => { document.getElementById('s3p1').style.animation='fadeUp .5s ease forwards'; document.getElementById('s3p1').style.opacity=1; } },
+    { t:9,    fn: () => { document.getElementById('s3p2').style.animation='fadeUp .5s ease forwards'; document.getElementById('s3p2').style.opacity=1; } },
+    { t:10,   fn: () => { document.getElementById('s3p3').style.animation='fadeUp .5s ease forwards'; document.getElementById('s3p3').style.opacity=1; } },
+    { t:11,   fn: () => { document.getElementById('s3p4').style.animation='fadeUp .5s ease forwards'; document.getElementById('s3p4').style.opacity=1; } },
+    { t:13,   fn: () => anim('s3budget','fadeUp .6s ease forwards') },
+  ],
+  // SCENE 4
+  s4: [
+    { t:0.5,  fn: () => typeInto('s4name','Dr. Sarah Mitchell',1) },
+    { t:2,    fn: () => typeInto('s4pos','Principal Investigator',1) },
+    { t:3.5,  fn: () => typeInto('s4email','s.mitchell@ljmu.ac.uk',1) },
+    { t:6,    fn: () => { anim('s4u1','fadeUp .5s ease forwards'); setTimeout(()=>typeInto('s4url1','linkedin.com/company/ljmu',1),200); } },
+    { t:8,    fn: () => { anim('s4u2','fadeUp .5s ease forwards'); setTimeout(()=>typeInto('s4url2','ljmu.ac.uk/research',1),200); } },
+    { t:11,   fn: () => {
+      document.getElementById('s4aiBtn').style.transform='scale(.96)';
+      setTimeout(()=>{ document.getElementById('s4aiBtn').style.transform='scale(1)'; },200);
+    }},
+    { t:12,   fn: () => anim('s4status','fadeIn .5s ease forwards') },
+    { t:18,   fn: () => {
+      document.getElementById('s4status').style.opacity=0;
+      document.getElementById('s4noradar').style.display='none';
+      const svg = document.getElementById('s4svg');
+      anim('s4svg','popIn .7s ease forwards');
+      // Animate radar polygon
+      setTimeout(()=>{
+        const poly = document.getElementById('s4poly');
+        poly.setAttribute('points','0,-56 52.4,-18 43.3,25 0,42 -52.4,28 -43.3,-28');
+      },300);
+    }},
+    { t:20,   fn: () => {
+      anim('s4scores','fadeUp .5s ease forwards');
+      document.getElementById('s4avg').textContent='4.0';
+    }},
+  ],
+  // SCENE 5
+  s5: [
+    { t:1,    fn: () => {} },
+    { t:4,    fn: () => {
+      // Click M3 cell
+      const c = document.getElementById('myc3');
+      c.className='gcell gcell-dn'; c.textContent='✓';
+    }},
+    { t:7,    fn: () => {
+      // Click M4 cell
+      const c = document.getElementById('myc4');
+      c.className='gcell gcell-ip'; c.textContent='↻';
+    }},
+    { t:10,   fn: () => {
+      // Expand row
+      const rows = ['g-subrow1','g-subrow2','g-subrow3'];
+      rows.forEach((id,i)=>setTimeout(()=>{document.getElementById(id).style.display='flex';},i*150));
+      document.getElementById('g-t1exp').textContent='▼';
+    }},
+    { t:16,   fn: () => {
+      // Click M5 cell
+      const c = document.getElementById('myc5');
+      c.className='gcell gcell-ip'; c.textContent='↻';
+    }},
+    { t:20,   fn: () => {
+      // Click prototype M5
+      const c = document.getElementById('gc-proto5');
+      c.className='gcell gcell-dn'; c.textContent='✓';
+    }},
+    { t:24,   fn: () => {
+      const c = document.getElementById('gc-proto6');
+      c.className='gcell gcell-dn'; c.textContent='✓';
+    }},
+  ],
+  // SCENE 6
+  s6: [
+    { t:2,    fn: () => {
+      document.getElementById('s6rptBtn').style.transform='scale(.96)';
+      setTimeout(()=>{ document.getElementById('s6rptBtn').style.transform='scale(1)'; },200);
+    }},
+    { t:3,    fn: () => {
+      document.getElementById('s6rptBtn').style.display='none';
+      document.getElementById('s6progress').style.display='block';
+    }},
+    { t:3.5,  fn: () => setBar(10,'Building PDF (1/11) cover page...') },
+    { t:5,    fn: () => setBar(25,'Building PDF (3/11) gantt chart...') },
+    { t:7,    fn: () => setBar(42,'Building PDF (5/11) allocation matrix...') },
+    { t:9,    fn: () => setBar(60,'Building PDF (7/11) budget analysis...') },
+    { t:11,   fn: () => setBar(78,'Building PDF (9/11) analytics charts...') },
+    { t:13,   fn: () => setBar(95,'Building PDF (11/11) skill pool...') },
+    { t:14,   fn: () => setBar(100,'Done!') },
+    { t:15,   fn: () => anim('pdf1','scaleIn .5s ease forwards') },
+    { t:15.5, fn: () => anim('pdf2','scaleIn .5s .05s ease forwards') },
+    { t:16,   fn: () => anim('pdf3','scaleIn .5s .1s ease forwards') },
+    { t:16.5, fn: () => anim('pdf4','scaleIn .5s .15s ease forwards') },
+    { t:17,   fn: () => anim('pdf5','scaleIn .5s .2s ease forwards') },
+    { t:19,   fn: () => {
+      document.getElementById('s6progress').style.display='none';
+      anim('s6done','fadeUp .6s ease forwards');
+    }},
+  ],
+  // SCENE 7
+  s7: [
+    { t:0.5,  fn: () => anim('s7logo','fadeUp .8s ease forwards') },
+    { t:1.5,  fn: () => anim('s7tag','fadeUp .7s ease forwards') },
+    { t:2.5,  fn: () => anim('s7feats','fadeUp .7s ease forwards') },
+    { t:4,    fn: () => anim('s7url','fadeUp .7s ease forwards') },
+    { t:5.5,  fn: () => anim('s7cta','scaleIn .6s ease forwards') },
+  ],
+};
+
+// Subtitles: { t: absolute time, text, dur }
+const subtitles = [
+  { t:1,   text:'Welcome to Alloc8 — Smart EU Consortium Management', dur:5 },
+  { t:7,   text:'Trusted by research teams across Europe to manage multi-partner projects', dur:5 },
+
+  { t:13,  text:'Any coordinator can create a project workspace in minutes', dur:5 },
+  { t:20,  text:'Simply enter your email, project name, and account details', dur:5 },
+  { t:30,  text:'Your request is sent to the platform admin for approval', dur:5 },
+  { t:37,  text:'Once approved with a single click, you\'re ready to go', dur:5 },
+
+  { t:53,  text:'Set up your project: define Work Packages and Tasks with timelines', dur:6 },
+  { t:61,  text:'Work Packages contain tasks — each with a start and end month', dur:5 },
+  { t:72,  text:'Add consortium partners with their rates, countries, and funding rates', dur:6 },
+  { t:80,  text:'The system automatically calculates budgets, indirect costs, and funding', dur:6 },
+  { t:90,  text:'Assign partners to Work Packages and tasks with a simple checkbox', dur:5 },
+
+  { t:106, text:'Partners log in to their own personal dashboard', dur:5 },
+  { t:113, text:'Fill in contact details, declare travel and other costs', dur:5 },
+  { t:121, text:'Add company URLs — LinkedIn, GitHub, publications, project pages', dur:5 },
+  { t:128, text:'Click AI Analysis to let the system analyse your expertise against all WPs', dur:6 },
+  { t:136, text:'Your skill radar chart populates instantly — showing relevance per Work Package', dur:7 },
+
+  { t:146, text:'The Gantt chart shows the full project timeline across all partners', dur:5 },
+  { t:153, text:'Click any month cell assigned to you to update your progress', dur:5 },
+  { t:158, text:'Cycle through: Not Started → In Progress → Completed', dur:5 },
+  { t:163, text:'Expand any task row to see each partner\'s progress side by side', dur:5 },
+  { t:170, text:'Coordinators get a full consortium-wide view of project progress', dur:5 },
+
+  { t:183, text:'When it\'s time to report, click Generate Report', dur:4 },
+  { t:189, text:'The system builds a full PDF automatically — no manual formatting', dur:6 },
+  { t:196, text:'Gantt chart, budget analysis, skill pool, allocation matrix — all included', dur:6 },
+  { t:204, text:'Download in seconds, ready for submission or stakeholder review', dur:5 },
+
+  { t:211, text:'Alloc8 — built for EU research consortiums that need clarity, speed, and control', dur:8 },
+  { t:216, text:'Get started at alloc8.org', dur:5 },
+];
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function anim(id, animation) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.animation = animation;
+  el.style.opacity   = 1;
+}
+
+function typeInto(id, text, dur) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = ''; el.classList.add('focus');
+  let i = 0;
+  const delay = (dur * 1000) / text.length;
+  const iv = setInterval(() => {
+    el.value += text[i++];
+    if (i >= text.length) { clearInterval(iv); el.classList.remove('focus'); }
+  }, delay);
+}
+
+function countUp(id, from, to, dur, suffix) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = performance.now();
+  const tick = (now) => {
+    const p = Math.min((now - start) / (dur * 1000), 1);
+    el.textContent = Math.round(from + (to - from) * p) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function countUpFloat(id, from, to, dur, pre, suf) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = performance.now();
+  const tick = (now) => {
+    const p = Math.min((now - start) / (dur * 1000), 1);
+    el.textContent = pre + (from + (to - from) * p).toFixed(1) + suf;
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function setBar(pct, msg) {
+  document.getElementById('s6bar').style.width = pct + '%';
+  document.getElementById('s6status').textContent = msg;
+}
+
+// ══════════════════════════════════════════════════════
+// PLAYER ENGINE
+// ══════════════════════════════════════════════════════
+let elapsed = 0, playing = false, raf = null, lastRealTime = null;
+let currentScene = 's1', sceneElapsed = {};
+const firedActions = {}; // scene → Set of fired indices
+const firedSubs    = new Set();
+
+chapters.forEach(c => {
+  sceneElapsed[c.id] = -1;
+  firedActions[c.id] = new Set();
+});
+
+function getSceneAt(t) {
+  let sc = chapters[0];
+  for (const c of chapters) { if (t >= c.t) sc = c; }
+  return sc;
+}
+
+function tick(now) {
+  if (lastRealTime === null) lastRealTime = now;
+  const delta = (now - lastRealTime) / 1000;
+  lastRealTime = now;
+  elapsed = Math.min(elapsed + delta, TOTAL);
+
+  const scInfo = getSceneAt(elapsed);
+  const scId   = scInfo.id;
+  const scTime = elapsed - scInfo.t;
+
+  // Switch scene
+  if (scId !== currentScene) {
+    document.getElementById(currentScene).classList.remove('active');
+    document.getElementById(scId).classList.add('active');
+    currentScene = scId;
+  }
+
+  // Fire scene actions
+  const acts = actions[scId] || [];
+  acts.forEach((a, i) => {
+    if (!firedActions[scId].has(i) && scTime >= a.t) {
+      firedActions[scId].add(i);
+      a.fn();
+    }
+  });
+
+  // Subtitles
+  const sub = document.getElementById('subtitle');
+  let shown = false;
+  for (let i = 0; i < subtitles.length; i++) {
+    const s = subtitles[i];
+    if (elapsed >= s.t && elapsed < s.t + s.dur) {
+      if (!firedSubs.has(i)) { sub.textContent = s.text; firedSubs.add(i); }
+      sub.style.opacity = '1'; shown = true; break;
+    }
+  }
+  if (!shown) sub.style.opacity = '0';
+
+  // Progress bar + time
+  const pct = (elapsed / TOTAL) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  const mm = Math.floor(elapsed / 60), ss = Math.floor(elapsed % 60);
+  document.getElementById('timeDisplay').textContent = `${mm}:${ss.toString().padStart(2,'0')} / 3:40`;
+
+  // Chapter dots
+  document.querySelectorAll('.cdot').forEach(d => {
+    d.classList.toggle('passed', elapsed >= parseFloat(d.dataset.t));
+  });
+
+  if (elapsed >= TOTAL) { playing = false; document.getElementById('playBtn').textContent='▶'; return; }
+  if (playing) raf = requestAnimationFrame(tick);
+}
+
+function play() {
+  playing = true;
+  lastRealTime = null;
+  document.getElementById('playBtn').textContent = '⏸';
+  raf = requestAnimationFrame(tick);
+}
+
+function pause() {
+  playing = false;
+  document.getElementById('playBtn').textContent = '▶';
+  if (raf) cancelAnimationFrame(raf);
+}
+
+function restart() {
+  pause(); elapsed = 0;
+  // Reset scenes
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  document.getElementById('s1').classList.add('active');
+  currentScene = 's1';
+  Object.keys(firedActions).forEach(k => firedActions[k].clear());
+  firedSubs.clear();
+  // Reset animated elements
+  ['s1logo','s1sub','s1stats','s1tag'].forEach(id=>{ const el=document.getElementById(id); if(el){el.style.animation='';el.style.opacity=0;} });
+  document.getElementById('s1line').style.width='0';
+  document.getElementById('c1').textContent='0';
+  document.getElementById('c2').textContent='0';
+  document.getElementById('c3').textContent='€0M';
+  document.getElementById('c4').textContent='0';
+  // Reset scene 2
+  document.getElementById('s2step1').style.display='block';
+  document.getElementById('s2step2').style.display='none';
+  document.getElementById('s2step3').style.display='none';
+  document.getElementById('s2email').value='';
+  document.getElementById('s2proj').value='';
+  document.getElementById('s2user').value='';
+  document.getElementById('s2pass').value='';
+  ['sd1','sd2','sd3'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('active','done');});
+  document.getElementById('sd1').classList.add('active');
+  document.getElementById('s2email-card').style.opacity=0; document.getElementById('s2email-card').style.animation='';
+  document.getElementById('s2toast').style.opacity=0; document.getElementById('s2toast').style.animation='';
+  document.getElementById('s2approveBtn').style.transform='';
+  // Reset scene 3
+  ['s3wp1','s3wp2','s3wp3','s3t1','s3t2','s3t3','s3t4','s3t5','s3t6','s3t7','s3p1','s3p2','s3p3','s3p4','s3budget'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.opacity=0;el.style.animation='';}});
+  // Reset scene 4
+  ['s4name','s4pos','s4email'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+  document.getElementById('s4url1').value=''; document.getElementById('s4url2').value='';
+  document.getElementById('s4status').style.opacity=0; document.getElementById('s4status').style.animation='';
+  document.getElementById('s4svg').style.opacity=0; document.getElementById('s4svg').style.animation='';
+  document.getElementById('s4noradar').style.display='';
+  document.getElementById('s4scores').style.opacity=0; document.getElementById('s4scores').style.animation='';
+  document.getElementById('s4avg').textContent='—';
+  document.getElementById('s4u1').style.opacity=0; document.getElementById('s4u2').style.opacity=0;
+  document.getElementById('s4poly').setAttribute('points','0,0 0,0 0,0 0,0 0,0 0,0');
+  // Reset scene 5
+  document.getElementById('myc3').className='gcell gcell-ip'; document.getElementById('myc3').textContent='↻';
+  document.getElementById('myc4').className='gcell gcell-ns'; document.getElementById('myc4').textContent='';
+  document.getElementById('myc5').className='gcell gcell-ns'; document.getElementById('myc5').textContent='';
+  ['g-subrow1','g-subrow2','g-subrow3'].forEach(id=>{ document.getElementById(id).style.display='none'; });
+  document.getElementById('g-t1exp').textContent='▶';
+  document.getElementById('gc-proto5').className='gcell gcell-ip'; document.getElementById('gc-proto5').textContent='↻';
+  document.getElementById('gc-proto6').className='gcell gcell-ip'; document.getElementById('gc-proto6').textContent='↻';
+  // Reset scene 6
+  document.getElementById('s6rptBtn').style.display='';
+  document.getElementById('s6progress').style.display='none';
+  document.getElementById('s6bar').style.width='0%';
+  ['pdf1','pdf2','pdf3','pdf4','pdf5'].forEach(id=>{ const el=document.getElementById(id);el.style.opacity=0;el.style.animation=''; });
+  document.getElementById('s6done').style.opacity=0; document.getElementById('s6done').style.animation='';
+  // Reset scene 7
+  ['s7logo','s7tag','s7feats','s7url','s7cta'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.opacity=0;el.style.animation='';}});
+
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('timeDisplay').textContent='0:00 / 3:40';
+  document.getElementById('subtitle').textContent='';
+  document.getElementById('subtitle').style.opacity='0';
+  play();
+}
+
+// Controls
+document.getElementById('playBtn').addEventListener('click', () => { playing ? pause() : play(); });
+document.getElementById('restartBtn').addEventListener('click', restart);
+document.getElementById('progressWrap').addEventListener('click', (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct  = (e.clientX - rect.left) / rect.width;
+  elapsed = pct * TOTAL;
+  document.getElementById('progressFill').style.width = (pct * 100) + '%';
+  // Jump to right scene
+  const sc = getSceneAt(elapsed);
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  document.getElementById(sc.id).classList.add('active');
+  currentScene = sc.id;
+});
+
+// Inject chapter dots
+const pw = document.getElementById('progressWrap');
+chapters.forEach(c => {
+  const dot = document.createElement('div');
+  dot.className = 'cdot';
+  dot.dataset.t  = c.t;
+  dot.style.left = (c.t / TOTAL * 100) + '%';
+  dot.title = c.label;
+  const lbl = document.createElement('div');
+  lbl.className = 'cdot-label';
+  lbl.textContent = c.label;
+  dot.appendChild(lbl);
+  dot.addEventListener('click', (e) => {
+    e.stopPropagation();
+    elapsed = c.t;
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    document.getElementById(c.id).classList.add('active');
+    currentScene = c.id;
+    // Clear fired actions for this and later scenes
+    chapters.forEach(ch => { if (ch.t >= c.t) firedActions[ch.id].clear(); });
+    document.getElementById('progressFill').style.width = (c.t / TOTAL * 100) + '%';
+    if (!playing) play();
+  });
+  pw.appendChild(dot);
+});
+
+// Auto-play on load
+window.addEventListener('load', () => setTimeout(play, 600));
+</script>
+</body>
+</html>
