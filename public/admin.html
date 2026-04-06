@@ -2284,6 +2284,7 @@
         };
         const lerpColor = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * Math.min(Math.max(t, 0), 1)));
         const lastY = () => (doc.lastAutoTable ? doc.lastAutoTable.finalY : 30);
+        const SC = 5; // pixels per mm — used for all offscreen chart canvas sizing
 
         btn.textContent = '⏳ Building PDF (1/11) fetching data...';
         const skillsRes = await fetch('/api/partner/skills');
@@ -2355,10 +2356,11 @@
         btn.textContent = '⏳ Building PDF (3/11) gantt...';
         doc.addPage(); pHdr('Main Dashboard — Project Work Package Visualization');
 
-        // Layout: top=Gantt (full-width, tall), bottom=two panels
-        const gPanY = 23, gPanH = 103;
-        const botY2 = gPanY + gPanH + 3, botH2 = H - botY2 - 18;
-        const halfW2 = (W - 2 * margin - 4) / 2;
+        // Layout: top=Gantt (full-width), bottom=two panels
+        // gPanH reduced so bottom panels get ~80mm height for charts
+        const gPanY = 23, gPanH = 78;
+        const botY2 = gPanY + gPanH + 3, botH2 = H - botY2 - 18; // ~86mm
+        const halfW2 = (W - 2 * margin - 4) / 2; // ~134.5mm
         drawPanel(margin, gPanY, W - 2 * margin, gPanH, 'Gantt Chart — Work Packages & Tasks (color = partner)');
         drawPanel(margin, botY2, halfW2, botH2, 'Partner Workload (Total Person-Months)');
         drawPanel(margin + halfW2 + 4, botY2, halfW2, botH2, 'WP Duration Overview');
@@ -2468,20 +2470,22 @@
         // ── Partner Workload bar chart (offscreen Chart.js) ────
         btn.textContent = '⏳ Building PDF (4/11) workload...';
         const sortedP = [...partners].sort((a, b) => calcPartner(b).totalPM - calcPartner(a).totalPM);
+        // Canvas pixels must match PDF area aspect ratio exactly
+        const wl_wMM = halfW2 - 4, wl_hMM = botH2 - 10; // ~130 × 76mm
         const wlImg = await renderChart('bar', {
           labels: sortedP.map(p => p.name),
           datasets: [{ label: 'Person-Months', data: sortedP.map(p => Math.round(calcPartner(p).totalPM * 10) / 10),
-            backgroundColor: sortedP.map(p => pHex(pIdxMap[p.id])), borderWidth: 0, borderRadius: 5 }]
+            backgroundColor: sortedP.map(p => pHex(pIdxMap[p.id])), borderWidth: 0, borderRadius: 4 }]
         }, {
           indexAxis: 'y',
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { color: '#f0f4f8' }, ticks: { font: { size: 12 } }, title: { display: true, text: 'Person-Months', font: { size: 13 } } },
-            y: { grid: { display: false }, ticks: { font: { size: 12 } } }
+            x: { grid: { color: '#f0f4f8' }, ticks: { font: { size: 11 } }, title: { display: true, text: 'Person-Months', font: { size: 12 } } },
+            y: { grid: { display: false }, ticks: { font: { size: 11 } } }
           },
-          layout: { padding: { right: 20, top: 10, bottom: 10, left: 10 } }
-        }, 700, Math.max(sortedP.length * 32 + 80, 350));
-        doc.addImage(wlImg, 'PNG', margin + 2, botY2 + 8, halfW2 - 4, botH2 - 10);
+          layout: { padding: { right: 15, top: 8, bottom: 8, left: 8 } }
+        }, Math.round(wl_wMM * SC), Math.round(wl_hMM * SC));
+        doc.addImage(wlImg, 'PNG', margin + 2, botY2 + 8, wl_wMM, wl_hMM);
 
         // ── WP Duration Overview (jsPDF primitives) ──────────────
         {
@@ -2611,15 +2615,16 @@
               backgroundColor: pHex(pi), stack: 'total', borderWidth: 0 };
           }).filter(d => d.data.some(v => v > 0));
 
+          const ld_wMM = pa_pW - 4, ld_hMM = pa_pH - 10; // exact PDF area
           const loadImg = await renderChart('bar', { labels: qLabels, datasets: loadDS }, {
             scales: {
-              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 60 } },
-              y: { stacked: true, grid: { color: '#f0f4f8' }, ticks: { font: { size: 10 } }, title: { display: true, text: 'Person-Months / Quarter', font: { size: 11 } } }
+              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 55 } },
+              y: { stacked: true, grid: { color: '#f0f4f8' }, ticks: { font: { size: 10 } }, title: { display: true, text: 'PM / Quarter', font: { size: 11 } } }
             },
-            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 }, padding: 6 } } },
-            layout: { padding: 8 }
-          }, 820, 520);
-          doc.addImage(loadImg, 'PNG', margin + pa_pW + 6, 23 + 8, pa_pW - 4, pa_pH - 10);
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 9, font: { size: 8 }, padding: 5 } } },
+            layout: { padding: { top: 8, right: 8, bottom: 5, left: 5 } }
+          }, Math.round(ld_wMM * SC), Math.round(ld_hMM * SC));
+          doc.addImage(loadImg, 'PNG', margin + pa_pW + 6, 23 + 8, ld_wMM, ld_hMM);
         }
 
         // ═══════════════════════════════════════════════════════
@@ -2632,6 +2637,8 @@
         drawPanel(margin, 23, ba_pW, ba_pH, 'Cost Breakdown per Partner (Stacked)');
         drawPanel(margin + ba_pW + 4, 23, ba_pW, ba_pH, 'Overall Budget Distribution');
 
+        // LEFT panel: stacked horizontal bar — canvas matches exact PDF area
+        const ba_iW = ba_pW - 4, ba_iH = ba_pH - 10; // inner area: ~130 × 159mm
         const sortedBP = [...partners].sort((a, b) => calcPartner(b).totalBudget - calcPartner(a).totalBudget);
         const budStkImg = await renderChart('bar', {
           labels: sortedBP.map(p => p.name),
@@ -2647,42 +2654,51 @@
             x: { stacked: true, grid: { color: '#f5f5f5' }, ticks: { font: { size: 10 }, callback: v => '€' + (v/1000).toFixed(0) + 'k' } },
             y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } }
           },
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
-          layout: { padding: 10 }
-        }, 750, Math.max(sortedBP.length * 28 + 120, 380));
-        doc.addImage(budStkImg, 'PNG', margin + 2, 23 + 8, ba_pW - 4, ba_pH - 10);
+          plugins: { legend: { position: 'bottom', labels: { boxWidth: 9, font: { size: 9 } } } },
+          layout: { padding: { top: 8, right: 10, bottom: 5, left: 5 } }
+        }, Math.round(ba_iW * SC), Math.round(ba_iH * SC));
+        doc.addImage(budStkImg, 'PNG', margin + 2, 23 + 8, ba_iW, ba_iH);
 
-        // Donut + key numbers
+        // RIGHT panel: donut (square, centred) + key numbers below
+        const distX = margin + ba_pW + 6;
+        // Square donut: use min(panel width, ~60% of panel height) so it stays square
+        const donutSz = Math.min(ba_iW, ba_iH * 0.62); // mm, square
+        const donutX  = distX + (ba_iW - donutSz) / 2;  // centred horizontally
+        const donutY  = 23 + 8;
         const distImg = await renderChart('doughnut', {
           labels: ['PM Cost', 'Other Direct', 'Subcontracting', 'Indirect Cost'],
           datasets: [{ data: [Math.round(gPmCost), Math.round(gOther), Math.round(gSub), Math.round(gInd)],
             backgroundColor: ['#3498db','#e67e22','#9b59b6','#95a5a6'], borderWidth: 2, borderColor: '#fff' }]
         }, {
           plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 12 }, padding: 12 } },
-            tooltip: { callbacks: { label: ctx => `${ctx.label}: €${(ctx.parsed/1000).toFixed(0)}k (${(ctx.parsed / (gBudget||1) * 100).toFixed(1)}%)` } }
-          }, layout: { padding: 15 }
-        }, 580, 480);
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, padding: 10 } },
+            tooltip: { callbacks: { label: ctx => `${ctx.label}: €${(ctx.parsed/1000).toFixed(0)}k (${(ctx.parsed/(gBudget||1)*100).toFixed(1)}%)` } }
+          }, layout: { padding: 12 }
+        }, Math.round(donutSz * SC), Math.round(donutSz * SC)); // SQUARE canvas
+        doc.addImage(distImg, 'PNG', donutX, donutY, donutSz, donutSz);
 
-        const distX = margin + ba_pW + 6;
-        doc.addImage(distImg, 'PNG', distX, 23 + 8, ba_pW * 0.6, ba_pH - 10);
-
-        // Key numbers beside donut
-        const knX = distX + ba_pW * 0.62, knY = 23 + 10;
-        [{ l:'Total Budget',  v:'€'+fmtMoney(gBudget),  c:PRI },
-         { l:'Total Funding', v:'€'+fmtMoney(gFund),    c:[26,127,55] },
-         { l:'PM Cost',       v:'€'+fmtMoney(gPmCost),  c:[52,152,219] },
-         { l:'Other Direct',  v:'€'+fmtMoney(gOther),   c:[230,126,34] },
-         { l:'Subcontract',   v:'€'+fmtMoney(gSub),     c:[155,89,182] },
-         { l:`Indirect ${indirectCostPercentage}%`, v:'€'+fmtMoney(gInd), c:[130,140,150] },
-        ].forEach((kn, i) => {
-          const ky = knY + i * 17;
+        // Key numbers: 2-column grid below the donut
+        const knItems = [
+          { l:'Total Budget',  v:'€'+fmtMoney(gBudget),  c:PRI },
+          { l:'Total Funding', v:'€'+fmtMoney(gFund),    c:[26,127,55] },
+          { l:'PM Cost',       v:'€'+fmtMoney(gPmCost),  c:[52,152,219] },
+          { l:'Other Direct',  v:'€'+fmtMoney(gOther),   c:[230,126,34] },
+          { l:'Subcontract',   v:'€'+fmtMoney(gSub),     c:[155,89,182] },
+          { l:`Indirect ${indirectCostPercentage}%`, v:'€'+fmtMoney(gInd), c:[130,140,150] },
+        ];
+        const knStartY = donutY + donutSz + 3;
+        const knColW   = (ba_iW - 3) / 2;
+        const knRowH   = 14;
+        knItems.forEach((kn, i) => {
+          const col = i % 2, row = Math.floor(i / 2);
+          const kx = distX + col * (knColW + 3);
+          const ky = knStartY + row * (knRowH + 2);
           doc.setFillColor(...LGT); doc.setDrawColor(...BDR);
-          doc.roundedRect(knX, ky, ba_pW * 0.36 - 6, 14, 2, 2, 'FD');
-          doc.setFontSize(6.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUT);
-          doc.text(kn.l, knX + 4, ky + 5.5);
-          doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(...kn.c);
-          doc.text(kn.v, knX + 4, ky + 11.5);
+          doc.roundedRect(kx, ky, knColW, knRowH, 2, 2, 'FD');
+          doc.setFontSize(6); doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUT);
+          doc.text(kn.l, kx + 3, ky + 5);
+          doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...kn.c);
+          doc.text(kn.v, kx + 3, ky + 11);
         });
 
         // ═══════════════════════════════════════════════════════
