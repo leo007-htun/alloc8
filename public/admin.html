@@ -195,6 +195,8 @@
     .consortium-item .c-noskills { text-align:center; font-size:.8rem; color:var(--muted); padding:1rem 0; background:#f6f8fa; border-radius:6px; }
   </style>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
   <!-- Loading Overlay -->
@@ -331,6 +333,7 @@
         <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Import JSON</button>
         <button class="btn btn-success" id="reanalyzeBtn">Force Global Re-analysis</button>
         <span id="reanalyzeStatus" style="font-size:.85rem;color:var(--muted)"></span>
+        <button class="btn" style="background:#7c3aed;color:#fff;margin-left:auto" id="generateReportBtn" onclick="generateReport()">&#128196; Generate Report</button>
       </div>
       <div class="table-wrap">
         <table id="partnersTable">
@@ -2201,6 +2204,322 @@
       } catch (err) { alert('Failed to import: ' + err.message); }
       e.target.value = '';
     });
+
+    load();
+
+    // ─────────────────────────────────────────────────────────────
+    // PDF REPORT GENERATION
+    // ─────────────────────────────────────────────────────────────
+    async function generateReport() {
+      const btn = document.getElementById('generateReportBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Building PDF...';
+
+      try {
+        if (!window.jspdf) throw new Error('jsPDF not loaded');
+        const { jsPDF } = window.jspdf;
+
+        // landscape A4: W=297mm H=210mm
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const W = 297, H = 210;
+        const PRI  = [31, 78, 121];
+        const ACC  = [46, 117, 182];
+        const MUT  = [87, 96, 106];
+        const LGT  = [240, 244, 248];
+        const BDR  = [208, 215, 222];
+        const TOTBG= [219, 228, 238];
+        const margin = 12;
+
+        // helpers
+        const pHdr = (title) => {
+          doc.setFillColor(...PRI);
+          doc.rect(0, 0, W, 20, 'F');
+          doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+          doc.text('ALLOC8', margin, 13);
+          doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+          doc.text(title, W / 2, 13, { align: 'center' });
+          doc.setFontSize(8); doc.setTextColor(190, 210, 230);
+          doc.text(new Date().toLocaleDateString('en-GB'), W - margin, 13, { align: 'right' });
+        };
+        const addFooters = () => {
+          const n = doc.internal.getNumberOfPages();
+          for (let i = 1; i <= n; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8); doc.setTextColor(...MUT);
+            doc.text(`Page ${i} of ${n}`, W - margin, H - 5, { align: 'right' });
+            doc.text('© 2026 Alloc8 — Intelligent Resource Allocation', W / 2, H - 5, { align: 'center' });
+          }
+        };
+        const lastY = () => (doc.lastAutoTable ? doc.lastAutoTable.finalY : 30);
+
+        // Fetch skills
+        const skillsRes = await fetch('/api/partner/skills');
+        const skillsList = skillsRes.ok ? await skillsRes.json() : [];
+
+        // Project name
+        let projectName = '';
+        const cps = document.getElementById('currentProject');
+        const tdd = document.getElementById('tenantDropdown');
+        if (cps && cps.textContent.trim()) projectName = cps.textContent.replace(/^[—–-]\s*/, '').trim();
+        else if (tdd && tdd.options.length) projectName = tdd.options[tdd.selectedIndex]?.text || '';
+        if (!projectName) projectName = 'Project';
+
+        // Grand totals
+        let gPM=0, gPmCost=0, gOther=0, gSub=0, gTdc=0, gInd=0, gBudget=0, gFund=0;
+        partners.forEach(p => {
+          const c = calcPartner(p);
+          gPM += c.totalPM; gPmCost += c.pmCost; gOther += c.other; gSub += c.sub;
+          gTdc += c.tdc; gInd += c.indirect; gBudget += c.totalBudget; gFund += c.totalFunding;
+        });
+
+        // ── PAGE 1: COVER ────────────────────────────────────────
+        doc.setFillColor(...PRI);
+        doc.rect(0, 0, W, 55, 'F');
+        doc.setFillColor(...ACC);
+        doc.rect(0, 50, W, 5, 'F');
+
+        doc.setFontSize(34); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+        doc.text('ALLOC8', margin, 30);
+        doc.setFontSize(13); doc.setFont('helvetica', 'normal');
+        doc.text('Intelligent Resource Allocation Platform', margin, 42);
+
+        doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.setTextColor(...PRI);
+        doc.text(projectName, margin, 75);
+        doc.setFontSize(12); doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUT);
+        doc.text('Project Budget & Consortium Report', margin, 84);
+        doc.text(`Generated: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`, margin, 91);
+
+        // Stats boxes
+        const statsDef = [
+          { l: 'Partners', v: String(partners.length) },
+          { l: 'Work Packages', v: String(wps.length) },
+          { l: 'Total Person-Months', v: fmtNum(gPM) },
+          { l: 'Total Budget', v: '€' + fmtMoney(gBudget) },
+          { l: 'Total Funding', v: '€' + fmtMoney(gFund) },
+        ];
+        const bW = 48, bH = 26, bGap = 5, bY = 108;
+        const bStartX = (W - statsDef.length * (bW + bGap) + bGap) / 2;
+        statsDef.forEach((s, i) => {
+          const bx = bStartX + i * (bW + bGap);
+          doc.setFillColor(...LGT); doc.setDrawColor(...BDR);
+          doc.roundedRect(bx, bY, bW, bH, 3, 3, 'FD');
+          doc.setFontSize(15); doc.setFont('helvetica', 'bold'); doc.setTextColor(...PRI);
+          doc.text(s.v, bx + bW / 2, bY + 12, { align: 'center' });
+          doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUT);
+          doc.text(s.l, bx + bW / 2, bY + 21, { align: 'center' });
+        });
+
+        // ── PAGE 2: ANALYTICS CHARTS ─────────────────────────────
+        doc.addPage(); pHdr('Analytics Overview');
+
+        const chartDefs = [
+          { id: 'fundingByCountryChart', title: 'Funding by Country',          x: margin,         y: 28 },
+          { id: 'pmByCountryChart',      title: 'Person-Months by Country',     x: W / 2 + 3,     y: 28 },
+          { id: 'fundingByTypeChart',    title: 'Funding by Organization Type', x: margin,         y: 115 },
+          { id: 'pmByTypeChart',         title: 'PM by Organization Type',      x: W / 2 + 3,     y: 115 },
+        ];
+        const cW = W / 2 - margin - 6, cH = 80;
+
+        chartDefs.forEach(cd => {
+          doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(...PRI);
+          doc.text(cd.title, cd.x + cW / 2, cd.y - 2, { align: 'center' });
+          doc.setDrawColor(...BDR);
+          doc.roundedRect(cd.x, cd.y, cW, cH, 2, 2, 'S');
+          const canvas = document.getElementById(cd.id);
+          if (canvas) {
+            try {
+              doc.addImage(canvas.toDataURL('image/png'), 'PNG', cd.x + 2, cd.y + 2, cW - 4, cH - 4);
+            } catch (e) {
+              doc.setFontSize(8); doc.setTextColor(...MUT);
+              doc.text('Chart unavailable', cd.x + cW / 2, cd.y + cH / 2, { align: 'center' });
+            }
+          } else {
+            doc.setFontSize(8); doc.setTextColor(...MUT);
+            doc.text('No data', cd.x + cW / 2, cd.y + cH / 2, { align: 'center' });
+          }
+        });
+
+        // ── PAGE 3: BUDGET SUMMARY ───────────────────────────────
+        doc.addPage(); pHdr('Budget Summary');
+
+        const budHead = [['#', 'Partner', 'Type', 'Country', 'Total PM',
+          'PM Cost (€)', 'Other Direct (€)', 'Subcontract (€)',
+          'Total Direct (€)', `Indirect ${indirectCostPercentage}% (€)`,
+          'Total Budget (€)', 'Fund. Rate', 'Total Funding (€)']];
+        const budBody = partners.map((p, i) => {
+          const c = calcPartner(p);
+          return [i + 1, p.name, p.type || '', p.country || '',
+            fmtNum(c.totalPM), fmtMoney(c.pmCost), fmtMoney(c.other), fmtMoney(c.sub),
+            fmtMoney(c.tdc), fmtMoney(c.indirect), fmtMoney(c.totalBudget),
+            Number(c.fundingRate).toFixed(2), fmtMoney(c.totalFunding)];
+        });
+        budBody.push(['', 'TOTAL', '', '', fmtNum(gPM),
+          fmtMoney(gPmCost), fmtMoney(gOther), fmtMoney(gSub),
+          fmtMoney(gTdc), fmtMoney(gInd), fmtMoney(gBudget), '', fmtMoney(gFund)]);
+
+        doc.autoTable({
+          head: budHead, body: budBody, startY: 26,
+          styles: { fontSize: 7.5, cellPadding: 2.2 },
+          headStyles: { fillColor: PRI, textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
+          alternateRowStyles: { fillColor: [246, 248, 250] },
+          columnStyles: { 0: { cellWidth: 7 }, 1: { cellWidth: 38 }, 2: { cellWidth: 22 }, 3: { cellWidth: 18 } },
+          didParseCell: d => {
+            if (d.row.index === budBody.length - 1) {
+              d.cell.styles.fontStyle = 'bold'; d.cell.styles.fillColor = TOTBG;
+            }
+          },
+          margin: { left: margin, right: margin }
+        });
+
+        // ── PAGE 4: PM PER WORK PACKAGE ──────────────────────────
+        doc.addPage(); pHdr('Person-Months per Work Package');
+
+        const wpLabels = wps.map(w => w.name.match(/^(WP\d+)/i)?.[1] || w.name.split(/[–—-]/)[0].trim());
+        const pmHead2 = [['#', 'Partner', ...wpLabels, 'Total PM', 'Persons/yr']];
+        const grandWP = new Array(wps.length).fill(0);
+        let grandTotalPM2 = 0, grandPersons2 = 0;
+        const pmBody2 = partners.map((p, i) => {
+          const c = calcPartner(p);
+          const vals = wps.map((wp, j) => {
+            let s = 0;
+            (wp.tasks || []).forEach(t => s += (parseFloat(p.wp_data[t.id]) || 0));
+            grandWP[j] += s;
+            return fmtNum(s);
+          });
+          grandTotalPM2 += c.totalPM; grandPersons2 += c.personsYear;
+          return [i + 1, p.name, ...vals, fmtNum(c.totalPM), fmtNum(c.personsYear)];
+        });
+        pmBody2.push(['', 'TOTAL', ...grandWP.map(v => fmtNum(v)), fmtNum(grandTotalPM2), fmtNum(grandPersons2)]);
+
+        doc.autoTable({
+          head: pmHead2, body: pmBody2, startY: 26,
+          styles: { fontSize: 7.5, cellPadding: 2.2, halign: 'center' },
+          headStyles: { fillColor: PRI, textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 7.5 },
+          alternateRowStyles: { fillColor: [246, 248, 250] },
+          columnStyles: { 0: { cellWidth: 7, halign: 'center' }, 1: { cellWidth: 42, halign: 'left' } },
+          didParseCell: d => {
+            if (d.column.index === 1) d.cell.styles.halign = 'left';
+            if (d.row.index === pmBody2.length - 1) {
+              d.cell.styles.fontStyle = 'bold'; d.cell.styles.fillColor = TOTBG;
+            }
+          },
+          margin: { left: margin, right: margin }
+        });
+
+        // ── PAGE 5: PARTNER DETAILS ──────────────────────────────
+        doc.addPage(); pHdr('Partner Details');
+
+        const detHead = [['#', 'Partner', 'Type', 'Country', 'PIC',
+          'Contact Name', 'Contact Email', 'Rate (€/mo)',
+          'PM', 'PM Cost (€)', 'Other (€)', 'Sub (€)', 'Indirect (€)', 'Budget (€)', 'Funding (€)']];
+        const detBody = partners.map((p, i) => {
+          const c = calcPartner(p);
+          return [i + 1, p.name, p.type || '', p.country || '', p.pic || '',
+            p.contact_name || '', p.contact_email || '',
+            p.rate ? fmtMoney(p.rate) : '—',
+            fmtNum(c.totalPM), fmtMoney(c.pmCost), fmtMoney(c.other),
+            fmtMoney(c.sub), fmtMoney(c.indirect), fmtMoney(c.totalBudget), fmtMoney(c.totalFunding)];
+        });
+
+        doc.autoTable({
+          head: detHead, body: detBody, startY: 26,
+          styles: { fontSize: 7, cellPadding: 2 },
+          headStyles: { fillColor: PRI, textColor: 255, fontStyle: 'bold', fontSize: 7 },
+          alternateRowStyles: { fillColor: [246, 248, 250] },
+          columnStyles: {
+            0: { cellWidth: 7 }, 1: { cellWidth: 35 }, 2: { cellWidth: 20 },
+            3: { cellWidth: 18 }, 4: { cellWidth: 18 }, 5: { cellWidth: 28 }, 6: { cellWidth: 35 }
+          },
+          margin: { left: margin, right: margin }
+        });
+
+        // ── PAGE N: WORK PACKAGES & TASKS ────────────────────────
+        doc.addPage(); pHdr('Work Packages & Tasks');
+
+        const wpHead = [['WP', 'WP Name', 'Start', 'End', 'Task', 'Task Name', 'Task Start', 'Task End']];
+        const wpBody = [];
+        wps.forEach(wp => {
+          const label = wp.name.match(/^(WP\d+)/i)?.[1] || '';
+          if (!wp.tasks || wp.tasks.length === 0) {
+            wpBody.push([label, wp.name, `M${wp.start_month||1}`, `M${wp.end_month||projectDurationMonths}`, '', '(No tasks)', '', '']);
+          } else {
+            wp.tasks.forEach((t, ti) => {
+              const tLabel = `T${ti + 1}`;
+              wpBody.push([ti === 0 ? label : '', ti === 0 ? wp.name : '',
+                ti === 0 ? `M${wp.start_month||1}` : '', ti === 0 ? `M${wp.end_month||projectDurationMonths}` : '',
+                tLabel, t.name, `M${t.start_month||wp.start_month||1}`, `M${t.end_month||wp.end_month||projectDurationMonths}`]);
+            });
+          }
+        });
+
+        doc.autoTable({
+          head: wpHead, body: wpBody, startY: 26,
+          styles: { fontSize: 8, cellPadding: 2.5 },
+          headStyles: { fillColor: PRI, textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [246, 248, 250] },
+          columnStyles: { 0: { cellWidth: 14 }, 2: { cellWidth: 18 }, 3: { cellWidth: 18 }, 4: { cellWidth: 14 }, 6: { cellWidth: 20 }, 7: { cellWidth: 20 } },
+          margin: { left: margin, right: margin }
+        });
+
+        // ── PAGE N: SKILL POOL ───────────────────────────────────
+        if (skillsList.length > 0) {
+          doc.addPage(); pHdr('Consortium Skill Pool');
+
+          const skHead = [['Partner', 'Work Package', 'Score', 'Confidence', 'AI Rationale (excerpt)']];
+          const skBody = [];
+          skillsList.forEach(p => {
+            if (!p.skills || !p.skills.length) {
+              skBody.push([p.name, '—', '—', '—', 'No analysis yet.']);
+              return;
+            }
+            p.skills.forEach((s, si) => {
+              const wpL = (s.wp_name || '').match(/^(WP\d+)/i)?.[1] || `WP${s.wp_id}`;
+              const conf = s.confidence != null ? `${Math.round(s.confidence * 100)}%` : '—';
+              const excerpt = s.rationale
+                ? (s.rationale.length > 140 ? s.rationale.substring(0, 137) + '...' : s.rationale)
+                : '—';
+              skBody.push([si === 0 ? p.name : '', wpL, Number(s.score).toFixed(1), conf, excerpt]);
+            });
+          });
+
+          doc.autoTable({
+            head: skHead, body: skBody, startY: 26,
+            styles: { fontSize: 7.5, cellPadding: 2.2 },
+            headStyles: { fillColor: PRI, textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [246, 248, 250] },
+            columnStyles: {
+              0: { cellWidth: 40, fontStyle: 'bold' },
+              1: { cellWidth: 22 },
+              2: { cellWidth: 16, halign: 'center' },
+              3: { cellWidth: 22, halign: 'center' },
+              4: { cellWidth: 'auto' }
+            },
+            didParseCell: d => {
+              if (d.column.index === 2) {
+                const v = parseFloat(d.cell.raw);
+                if (!isNaN(v)) d.cell.styles.textColor = v >= 4 ? [26, 127, 55] : v >= 2.5 ? [46, 117, 182] : [207, 34, 46];
+              }
+            },
+            margin: { left: margin, right: margin }
+          });
+        }
+
+        // ── FOOTERS ON ALL PAGES ─────────────────────────────────
+        addFooters();
+
+        // Save
+        const safeName = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        doc.save(`alloc8-report-${safeName}-${new Date().toISOString().split('T')[0]}.pdf`);
+
+      } catch (err) {
+        console.error('Report generation failed:', err);
+        alert('Failed to generate report: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '📄 Generate Report';
+      }
+    }
+    // ─────────────────────────────────────────────────────────────
 
     load();
   </script>
