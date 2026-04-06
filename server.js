@@ -1661,7 +1661,10 @@ app.get('/api/admin/export-excel', requireAuth('admin'), (req, res) => {
   }
 });
 
-// Root served by static middleware (index.html = public landing page)
+// Serve marketing homepage at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.use((err, req, res, next) => {
   console.error(err);
