@@ -4,153 +4,95 @@
 <meta charset="UTF-8">
 <title>Alloc8 – Product Demo</title>
 <style>
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════
    DEMO PLAYER CHROME
-══════════════════════════════════════════════════════ */
+══════════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0;}
-body{
-  background:#0f172a;
-  display:flex;align-items:center;justify-content:center;
-  min-height:100vh;
-  font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-}
-#demo-wrap{
-  width:1280px;height:720px;
-  position:relative;
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 25px 80px rgba(0,0,0,.6);
-  display:flex;flex-direction:column;
-  flex-shrink:0;
-}
+body{background:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+#demo-wrap{width:1280px;height:720px;position:relative;border-radius:12px;overflow:hidden;box-shadow:0 25px 80px rgba(0,0,0,.65);display:flex;flex-direction:column;flex-shrink:0;}
 
-/* Part tabs */
-#part-tabs{
-  display:flex;background:#1e293b;
-  padding:.4rem .8rem .2rem;gap:.4rem;align-items:flex-end;
-  flex-shrink:0;height:36px;
-}
-.tab-lbl{color:rgba(255,255,255,.45);font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;align-self:center;margin-right:.3rem;}
-.part-tab{
-  padding:.25rem 1rem;border-radius:6px 6px 0 0;
-  background:#334155;color:rgba(255,255,255,.55);
-  cursor:pointer;font-size:.82rem;font-weight:600;border:none;transition:all .15s;
-}
+/* Tabs */
+#part-tabs{display:flex;background:#1e293b;padding:.35rem .8rem .2rem;gap:.4rem;align-items:flex-end;flex-shrink:0;height:36px;}
+.tab-lbl{color:rgba(255,255,255,.42);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;align-self:center;margin-right:.35rem;}
+.part-tab{padding:.22rem .95rem;border-radius:6px 6px 0 0;background:#334155;color:rgba(255,255,255,.52);cursor:pointer;font-size:.8rem;font-weight:600;border:none;transition:all .15s;}
 .part-tab.active{background:#f5f7fa;color:#1f4e79;}
 .part-tab:hover:not(.active){background:#475569;color:#fff;}
 
-/* Browser chrome */
-#browser-chrome{
-  display:flex;align-items:center;gap:.5rem;
-  background:#e8ecf1;border-bottom:1px solid #c8cfd8;
-  padding:.3rem .8rem;flex-shrink:0;height:34px;
-}
-.bc-dots{display:flex;gap:.3rem;}
+/* Browser bar */
+#browser-chrome{display:flex;align-items:center;gap:.5rem;background:#e8ecf1;border-bottom:1px solid #c8cfd8;padding:.28rem .8rem;flex-shrink:0;height:33px;}
+.bc-dots{display:flex;gap:.28rem;}
 .bc-dot{width:11px;height:11px;border-radius:50%;}
-.bc-dot.red{background:#ff5f57;}.bc-dot.yellow{background:#ffbd2e;}.bc-dot.green{background:#28c840;}
-.bc-addr{
-  flex:1;background:#fff;border:1px solid #c8cfd8;border-radius:5px;
-  padding:.18rem .6rem;font-size:.78rem;color:#57606a;font-family:monospace;
-}
+.bc-dot.r{background:#ff5f57;}.bc-dot.y{background:#ffbd2e;}.bc-dot.g{background:#28c840;}
+.bc-addr{flex:1;background:#fff;border:1px solid #c8cfd8;border-radius:5px;padding:.16rem .6rem;font-size:.77rem;color:#57606a;font-family:monospace;}
 
 /* Screen */
-#screen{
-  flex:1;position:relative;overflow:hidden;background:#f5f7fa;
-  min-height:0;
-}
-.scene{position:absolute;inset:0;display:none;overflow-y:auto;overflow-x:hidden;}
+#screen{flex:1;position:relative;overflow:hidden;background:#f5f7fa;min-height:0;}
+.scene{position:absolute;inset:0;display:none;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;}
 .scene.active{display:block;}
 
 /* Subtitle */
-#subtitle-bar{
-  height:32px;background:rgba(0,0,0,.78);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-#subtitle-text{color:#fff;font-size:.87rem;font-weight:500;text-align:center;}
+#sub-bar{height:34px;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#sub-txt{color:#fff;font-size:.86rem;font-weight:500;text-align:center;padding:0 1rem;}
 
 /* Controls */
-#controls{
-  background:#1e293b;padding:.4rem .8rem;
-  display:flex;align-items:center;gap:.7rem;
-  flex-shrink:0;height:48px;
-}
-#play-btn{
-  background:#2e75b6;color:#fff;border:none;
-  width:32px;height:32px;border-radius:50%;cursor:pointer;
-  font-size:.95rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
+#controls{background:#1e293b;padding:.38rem .8rem;display:flex;align-items:center;gap:.7rem;flex-shrink:0;height:47px;}
+#play-btn{background:#2e75b6;color:#fff;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #play-btn:hover{background:#1f4e79;}
-#progress-track{
-  flex:1;height:6px;background:#334155;border-radius:3px;cursor:pointer;position:relative;
-}
-#progress-fill{height:100%;background:#2e75b6;border-radius:3px;width:0%;transition:width .1s linear;}
-#time-label{color:rgba(255,255,255,.55);font-size:.76rem;font-family:monospace;flex-shrink:0;min-width:72px;}
-#chapters{display:flex;gap:.35rem;align-items:center;flex-shrink:0;}
-.chap-dot{
-  width:9px;height:9px;border-radius:50%;background:#475569;cursor:pointer;
-  border:2px solid transparent;transition:all .15s;position:relative;
-}
+#prog-track{flex:1;height:6px;background:#334155;border-radius:3px;cursor:pointer;position:relative;}
+#prog-fill{height:100%;background:#2e75b6;border-radius:3px;width:0%;transition:width .1s linear;}
+#time-lbl{color:rgba(255,255,255,.52);font-size:.75rem;font-family:monospace;flex-shrink:0;min-width:72px;}
+#chapters{display:flex;gap:.32rem;align-items:center;flex-shrink:0;}
+.chap-dot{width:9px;height:9px;border-radius:50%;background:#475569;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative;}
 .chap-dot:hover{background:#94a3b8;}
 .chap-dot.active{background:#2e75b6;border-color:#60a5fa;}
-.chap-dot .chap-tip{
-  position:absolute;bottom:140%;left:50%;transform:translateX(-50%);
-  background:#1e293b;color:#fff;font-size:.68rem;padding:.18rem .45rem;
-  border-radius:4px;white-space:nowrap;display:none;pointer-events:none;
-  border:1px solid #334155;
-}
-.chap-dot:hover .chap-tip{display:block;}
-#restart-btn{
-  background:#334155;color:rgba(255,255,255,.65);border:none;
-  padding:.28rem .55rem;border-radius:5px;cursor:pointer;font-size:.73rem;flex-shrink:0;
-}
+.chap-dot .tip{position:absolute;bottom:140%;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:.66rem;padding:.16rem .42rem;border-radius:4px;white-space:nowrap;display:none;pointer-events:none;border:1px solid #334155;}
+.chap-dot:hover .tip{display:block;}
+#restart-btn{background:#334155;color:rgba(255,255,255,.62);border:none;padding:.26rem .52rem;border-radius:5px;cursor:pointer;font-size:.72rem;flex-shrink:0;}
 #restart-btn:hover{background:#475569;color:#fff;}
 
-/* Cursor */
-#cursor{
-  position:absolute;width:20px;height:20px;pointer-events:none;z-index:9999;
-  transition:left .45s cubic-bezier(.4,0,.2,1),top .45s cubic-bezier(.4,0,.2,1);display:none;
+/* Highlight animation (replaces cursor) */
+.hl{outline:2.5px solid #2e75b6;outline-offset:2px;border-radius:4px;animation:hl-pulse 1s ease-in-out infinite;}
+@keyframes hl-pulse{0%,100%{outline-color:#2e75b6;box-shadow:0 0 0 3px rgba(46,117,182,.15);}50%{outline-color:#60a5fa;box-shadow:0 0 0 5px rgba(96,165,250,.2);}}
+.hl-btn{animation:btn-pulse 1s ease-in-out infinite;}
+@keyframes btn-pulse{0%,100%{filter:brightness(1);box-shadow:none;}50%{filter:brightness(1.15);box-shadow:0 0 0 4px rgba(46,117,182,.3);}}
+.callout{
+  position:absolute;background:#1e293b;color:#fff;font-size:.78rem;font-weight:600;
+  padding:.35rem .7rem;border-radius:6px;white-space:nowrap;z-index:200;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);pointer-events:none;
+  animation:callout-in .3s ease-out forwards;
 }
-#cursor svg{width:20px;height:20px;filter:drop-shadow(1px 2px 2px rgba(0,0,0,.45));}
-.click-ripple{
-  position:absolute;width:28px;height:28px;border:2px solid #2e75b6;
-  border-radius:50%;pointer-events:none;z-index:9998;
-  animation:ripple .45s ease-out forwards;transform:translate(-50%,-50%);
-}
-@keyframes ripple{from{opacity:1;transform:translate(-50%,-50%) scale(.4);}to{opacity:0;transform:translate(-50%,-50%) scale(2.2);}}
-.demo-hl{outline:2px solid #2e75b6;outline-offset:2px;border-radius:4px;animation:pulshl 1s ease-in-out infinite;}
-@keyframes pulshl{0%,100%{outline-color:#2e75b6;}50%{outline-color:#60a5fa;}}
+.callout::before{content:'';position:absolute;border:5px solid transparent;}
+.callout.above::before{top:100%;left:50%;transform:translateX(-50%);border-top-color:#1e293b;}
+.callout.below::before{bottom:100%;left:50%;transform:translateX(-50%);border-bottom-color:#1e293b;}
+.callout.left::before{left:100%;top:50%;transform:translateY(-50%);border-left-color:#1e293b;}
+@keyframes callout-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.click-ripple{position:absolute;width:30px;height:30px;border:2px solid #2e75b6;border-radius:50%;pointer-events:none;z-index:300;animation:ripple .4s ease-out forwards;transform:translate(-50%,-50%);}
+@keyframes ripple{from{opacity:1;transform:translate(-50%,-50%) scale(.4);}to{opacity:0;transform:translate(-50%,-50%) scale(2.5);}}
 
-/* ══════════════════════════════════════════════════════
-   APP SHARED STYLES  (copied from actual app pages)
-══════════════════════════════════════════════════════ */
-.A{
-  --primary:#1f4e79;--accent:#2e75b6;--bg:#f5f7fa;--panel:#ffffff;
-  --border:#d0d7de;--text:#24292f;--muted:#57606a;--danger:#cf222e;
-  --success:#1a7f37;--row-alt:#f6f8fa;
-  font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  background:var(--bg);color:var(--text);min-height:100%;
-}
-.A header{
-  background:linear-gradient(90deg,#1f4e79,#2e75b6);color:#fff;
-  padding:.8rem 1rem;display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:.5rem;
-}
+/* ══════════════════════════════════════════════
+   APP STYLES — exact from actual pages
+══════════════════════════════════════════════ */
+/* Shared */
+.A,:root{--primary:#1f4e79;--accent:#2e75b6;--bg:#f5f7fa;--panel:#fff;--border:#d0d7de;--text:#24292f;--muted:#57606a;--danger:#cf222e;--success:#1a7f37;--row-alt:#f6f8fa;}
+.A{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f5f7fa;color:#24292f;min-height:100%;}
+.A header{background:linear-gradient(90deg,#1f4e79,#2e75b6);color:#fff;padding:.8rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;}
 .A header h1{margin:0;font-size:1.2rem;}
 .A .btn{border:none;padding:.5rem .8rem;border-radius:6px;cursor:default;font-size:.9rem;font-weight:600;}
 .A .btn-sm{padding:.32rem .5rem;font-size:.78rem;}
 .A .btn-danger{background:#cf222e;color:#fff;}
 .A .btn-success{background:#1a7f37;color:#fff;}
 .A .btn-primary{background:#1f4e79;color:#fff;}
-.A .btn-outline{background:#fff;color:#1f4e79;border:1px solid #1f4e79;}
-.A .btn-ghost{background:#fff;color:#cf222e;}
+.A .btn-white{background:#fff;color:#1f4e79;}
+.A .btn-wd{background:#fff;color:#cf222e;}/* white+danger text — admin logout */
 .A .btn-report{background:#7c3aed;color:#fff;}
-.A .container{max-width:1400px;margin:0 auto;padding:.8rem 1rem;}
-.A .card{background:#fff;border:1px solid #d0d7de;border-radius:10px;padding:1.2rem;margin-bottom:.8rem;box-shadow:0 2px 6px rgba(0,0,0,.04);}
-.A .card h2{margin:0 0 .7rem;font-size:1.1rem;color:#1f4e79;}
-.A .toolbar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.7rem;}
-.A label{font-size:.8rem;color:#57606a;display:flex;flex-direction:column;gap:.2rem;}
-.A input,.A select,.A textarea{padding:.42rem .52rem;border:1px solid #d0d7de;border-radius:6px;font-size:.92rem;font-family:inherit;}
+.A .container{max-width:1400px;margin:0 auto;padding:.75rem 1rem;}
+.A .container-md{max-width:1100px;margin:0 auto;padding:.75rem 1rem;}
+.A .card{background:#fff;border:1px solid #d0d7de;border-radius:10px;padding:1.1rem;margin-bottom:.8rem;box-shadow:0 2px 6px rgba(0,0,0,.04);}
+.A .card h2{margin:0 0 .65rem;font-size:1.1rem;color:#1f4e79;}
+.A .hint{font-size:.84rem;color:#57606a;margin-bottom:.7rem;line-height:1.45;}
+.A .toolbar{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;margin-bottom:.7rem;}
+.A label{font-size:.78rem;color:#57606a;display:flex;flex-direction:column;gap:.2rem;}
+.A input,.A select,.A textarea{padding:.45rem .52rem;border:1px solid #d0d7de;border-radius:6px;font-size:.92rem;font-family:inherit;}
 .A textarea{resize:vertical;}
 .A table{width:100%;border-collapse:collapse;font-size:.86rem;}
 .A th,.A td{border:1px solid #d0d7de;padding:.42rem .52rem;text-align:left;white-space:nowrap;}
@@ -159,32 +101,56 @@ body{
 .A .totals-row td{background:#dbe4ee;font-weight:700;}
 .A .table-wrap{overflow-x:auto;}
 .A .section-title{font-size:1rem;color:#1f4e79;margin:.8rem 0 .4rem;font-weight:700;}
-.A .grand-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-bottom:.8rem;}
-.A .gt-box{background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:.65rem;text-align:center;}
-.A .gt-box .lbl{font-size:.78rem;color:#57606a;}
-.A .gt-box .val{font-size:1.05rem;font-weight:700;margin-top:.18rem;font-family:SFMono-Regular,Consolas,monospace;color:#1f4e79;}
+.A .grand-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.55rem;margin-bottom:.8rem;}
+.A .gt-box{background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:.62rem;text-align:center;}
+.A .gt-box .lbl{font-size:.76rem;color:#57606a;}
+.A .gt-box .val{font-size:1.05rem;font-weight:700;margin-top:.15rem;font-family:SFMono-Regular,Consolas,monospace;color:#1f4e79;}
 
-/* Admin WP block */
+/* admin.html — modal */
+.A .modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:1rem;}
+.A .modal-overlay.open{display:flex;}
+.A .modal{background:#fff;border-radius:10px;max-width:800px;width:100%;max-height:90%;overflow-y:auto;padding:1.4rem;}
+.A .modal h3{margin-top:0;color:#1f4e79;}
+.A .modal .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-bottom:.6rem;}
+.A .modal-footer{display:flex;justify-content:flex-end;gap:.55rem;margin-top:.9rem;padding-top:.7rem;border-top:1px solid #d0d7de;}
+
+/* admin.html — WP block */
 .A .wp-block{border:1px solid #d0d7de;border-radius:8px;padding:.75rem;margin-bottom:.55rem;background:#fafbfc;}
-.A .wp-hdr{display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;flex-wrap:wrap;}
+.A .wp-hdr{display:flex;align-items:center;gap:.45rem;margin-bottom:.35rem;flex-wrap:wrap;}
 .A .wp-hdr strong{color:#1f4e79;font-size:.95rem;}
-.A .wp-hdr input[type=text]{font-weight:700;color:#1f4e79;border:none;background:transparent;font-size:.95rem;flex:1;min-width:180px;padding:0;}
-.A .wp-hdr input[type=number]{width:56px;padding:.22rem .38rem;border:1px solid #d0d7de;border-radius:6px;font-size:.82rem;}
-.A .wp-hdr .lbl-sm{font-size:.76rem;color:#57606a;}
-.A .task-list{display:flex;flex-wrap:wrap;gap:.38rem;align-items:flex-start;padding-left:.5rem;}
-.A .task-chip{display:inline-flex;flex-direction:column;gap:.18rem;background:#fff;border:1px solid #d0d7de;border-radius:6px;padding:.32rem .42rem;min-width:190px;}
-.A .task-chip input{border:none;background:transparent;width:100%;font-size:.83rem;}
-.A .task-chip select{font-size:.78rem;padding:.18rem .32rem;}
+.A .wp-hdr .wp-name-inp{font-weight:700;color:#1f4e79;border:none;background:transparent;font-size:.95rem;flex:1;min-width:180px;padding:0;}
+.A .wp-hdr input[type=number]{width:58px;padding:.22rem .38rem;border:1px solid #d0d7de;border-radius:6px;font-size:.82rem;}
+.A .wp-hdr .lbl-sm{font-size:.74rem;color:#57606a;}
+.A .task-list{display:flex;flex-wrap:wrap;gap:.38rem;padding-left:.5rem;}
+.A .task-chip{display:inline-flex;flex-direction:column;gap:.16rem;background:#fff;border:1px solid #d0d7de;border-radius:6px;padding:.3rem .42rem;min-width:185px;}
+.A .task-chip input{border:none;background:transparent;width:100%;font-size:.82rem;}
+.A .task-chip select{font-size:.77rem;padding:.16rem .3rem;}
 
-/* Partner WP block (partner-main.html style) */
+/* partner.html */
+.A .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.65rem;}
+.A .logo-wrap{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem;}
+.A .logo-placeholder{width:110px;height:110px;border:2px dashed #d0d7de;border-radius:8px;display:grid;place-items:center;color:#57606a;font-size:.82rem;}
+.A .url-row{display:grid;grid-template-columns:1fr 1fr auto;gap:.45rem;align-items:end;margin-bottom:.45rem;}
+.A .url-row input{padding:.42rem .52rem;border:1px solid #d0d7de;border-radius:6px;font-size:.9rem;}
+.A .task-table{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:.4rem;}
+.A .task-table td{padding:.32rem .38rem;vertical-align:middle;}
+.A .task-table td:first-child{width:70%;color:#24292f;padding-left:0;}
+.A .task-table td:last-child{width:30%;}
+.A .task-table input{width:100%;padding:.38rem .5rem;}
+.A .saved-msg{color:#1a7f37;font-weight:600;display:none;font-size:.88rem;}
+.A .ai-section{margin:1rem 0;padding:1rem;background:#f6f8fa;border-radius:8px;}
+.A .ai-section h4{margin:0 0 .4rem;color:#1f4e79;font-size:.93rem;}
+.A .ai-section p{margin:0 0 .7rem;font-size:.83rem;color:#57606a;}
+
+/* partner-main.html — WP assignments */
 .A .wp-block-p{background:#eef4fa;border:1px solid #d0d7de;border-radius:8px;padding:.75rem 1rem;margin-bottom:.7rem;}
 .A .wp-block-p.assigned{border-color:#1a7f37;background:#f0f9f4;}
 .A .wp-phdr{font-weight:700;color:#1f4e79;font-size:.92rem;margin-bottom:.55rem;padding-bottom:.38rem;border-bottom:1px solid #d0e0ed;}
-.A .flowchart{display:flex;flex-direction:column;align-items:center;gap:.35rem;margin-bottom:.5rem;}
+.A .flowchart{display:flex;flex-direction:column;align-items:center;gap:.35rem;}
 .A .fc-wp-box{background:#1f4e79;color:#fff;padding:.45rem .9rem;border-radius:8px;font-weight:600;font-size:.82rem;text-align:center;}
 .A .fc-line{width:2px;height:16px;background:#b0c4de;}
 .A .fc-tasks{display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center;width:100%;}
-.A .fc-task{background:#fff;border:1px solid #d0d7de;border-radius:6px;padding:.35rem .6rem;min-width:130px;max-width:240px;}
+.A .fc-task{background:#fff;border:1px solid #d0d7de;border-radius:6px;padding:.35rem .6rem;min-width:125px;max-width:230px;}
 .A .fc-task.assigned{border-color:#1a7f37;background:#f0f9f4;}
 .A .fc-task .t-name{font-size:.76rem;font-weight:600;color:#24292f;line-height:1.2;}
 .A .fc-task .t-lead{font-size:.7rem;color:#57606a;margin-top:.1rem;}
@@ -193,147 +159,125 @@ body{
 .A .leg-box{width:16px;height:16px;border-radius:3px;border:2px solid #d0d7de;background:#fff;flex-shrink:0;}
 .A .leg-box.asgn{border-color:#1a7f37;background:#f0f9f4;}
 
-/* Gantt (partner-main.html exact structure) */
+/* partner-main.html — Gantt */
 .A .gantt-outer{display:flex;border:1px solid #d0d7de;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);}
 .A .gantt-names{width:230px;min-width:230px;flex-shrink:0;border-right:2px solid #d0d7de;background:#fff;}
 .A .gnhdr{height:48px;background:#f6f8fa;border-bottom:1px solid #d0d7de;display:flex;align-items:center;padding:0 .8rem;font-size:.72rem;font-weight:700;color:#57606a;text-transform:uppercase;letter-spacing:.04em;}
 .A .gn-row{display:flex;align-items:center;gap:.32rem;padding:0 .5rem 0 .8rem;border-bottom:1px solid #f0f2f4;font-size:.8rem;}
 .A .gn-row.gn-wp{height:44px;background:#f0f4f8;font-weight:700;color:#1f4e79;border-bottom:1px solid #dde3ea;}
-.A .gn-row.gn-task{height:40px;padding-left:1.2rem;color:#24292f;}
+.A .gn-row.gn-task{height:40px;padding-left:1.2rem;}
 .A .gn-row.gn-task.mine{color:#1f4e79;font-weight:600;}
 .A .gn-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .A .gn-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
 .A .gantt-scroll{flex:1;overflow-x:auto;overflow-y:hidden;}
 .A .gantt-inner{position:relative;}
-.A .gantt-mhdr{display:flex;height:48px;background:#f6f8fa;border-bottom:1px solid #d0d7de;}
-.A .gmcell-hdr{flex-shrink:0;width:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#57606a;border-right:1px solid #eaecef;line-height:1.2;}
-.A .gmcell-hdr.qs{border-left:2px solid #bac4ce;}
-.A .gmcell-hdr .ql{font-size:.56rem;color:#94a3b8;font-weight:600;}
+.A .gmhdr{display:flex;height:48px;background:#f6f8fa;border-bottom:1px solid #d0d7de;}
+.A .gm-hcell{flex-shrink:0;width:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.64rem;font-weight:700;color:#57606a;border-right:1px solid #eaecef;line-height:1.2;}
+.A .gm-hcell.qs{border-left:2px solid #bac4ce;}
+.A .gm-hcell .ql{font-size:.54rem;color:#94a3b8;font-weight:600;}
 .A .g-row{display:flex;border-bottom:1px solid #f0f2f4;}
 .A .g-row.g-wp{height:44px;background:#f8fafc;border-bottom:1px solid #dde3ea;}
 .A .g-row.g-task{height:40px;}
-.A .gmcell{flex-shrink:0;width:46px;height:100%;display:flex;align-items:center;justify-content:center;border-right:1px solid #eaecef;position:relative;}
-.A .mcfill{position:absolute;inset:3px 2px;border-radius:4px;}
-.A .mclbl{position:relative;z-index:1;font-size:.58rem;font-weight:700;color:#fff;}
+.A .gmcell{flex-shrink:0;width:44px;height:100%;display:flex;align-items:center;justify-content:center;border-right:1px solid #eaecef;position:relative;}
+.A .mcfill{position:absolute;inset:3px 2px;border-radius:4px;transition:background .25s;}
+.A .mclbl{position:relative;z-index:1;font-size:.56rem;font-weight:700;color:#fff;}
 .A .wp-strip{position:absolute;inset:18px 0;background:#cbd5e1;opacity:.42;}
-.A .wp-strip.ws-first{left:2px;border-radius:4px 0 0 4px;}
-.A .wp-strip.ws-last{right:2px;border-radius:0 4px 4px 0;}
+.A .wp-strip.wf{left:2px;border-radius:4px 0 0 4px;}
+.A .wp-strip.wl{right:2px;border-radius:0 4px 4px 0;}
 .A .gantt-legend{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:.6rem;align-items:center;}
 .A .gl-item{display:flex;align-items:center;gap:.3rem;font-size:.76rem;color:#57606a;}
 .A .gl-dot{width:10px;height:10px;border-radius:2px;}
 
-/* Consortium / skill pool */
-.A .consortium-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.9rem;}
-.A .consortium-item{background:#fafbfc;border:1px solid #d0d7de;border-radius:8px;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.38rem;align-items:center;}
-.A .c-placeholder{width:68px;height:68px;border:1px dashed #d0d7de;border-radius:6px;display:grid;place-items:center;color:#57606a;font-size:.68rem;background:#fff;}
-.A .c-name{font-size:.88rem;font-weight:600;color:#24292f;text-align:center;word-break:break-word;}
-.A .c-badge{display:inline-block;font-size:.63rem;padding:.13rem .38rem;border-radius:4px;font-weight:600;}
-.A .c-contact{font-size:.75rem;color:#57606a;text-align:center;line-height:1.35;}
-.A .c-avg{font-size:.83rem;color:#24292f;text-align:center;margin-top:.15rem;}
-.A .c-avg strong{color:#1f4e79;font-size:.98rem;}
+/* consortium cards */
+.A .consortium-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:.9rem;}
+.A .consortium-item{background:#fafbfc;border:1px solid #d0d7de;border-radius:8px;padding:.75rem .6rem;display:flex;flex-direction:column;gap:.35rem;align-items:center;}
+.A .c-placeholder{width:66px;height:66px;border:1px dashed #d0d7de;border-radius:6px;display:grid;place-items:center;color:#57606a;font-size:.66rem;background:#fff;}
+.A .c-name{font-size:.88rem;font-weight:600;color:#24292f;text-align:center;}
+.A .c-badge{display:inline-block;font-size:.62rem;padding:.12rem .36rem;border-radius:4px;font-weight:600;}
+.A .c-contact{font-size:.74rem;color:#57606a;text-align:center;line-height:1.35;}
+.A .c-avg{font-size:.82rem;color:#24292f;text-align:center;margin-top:.12rem;}
+.A .c-avg strong{color:#1f4e79;font-size:.96rem;}
+.A .c-chart{height:170px;display:flex;align-items:center;justify-content:center;}
 
-/* ── Login / Signup specific ── */
-.auth-bg{
-  min-height:100%;background:#f5f7fa;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:1rem;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-}
-.auth-card{
-  background:#fff;border:1px solid #d0d7de;border-radius:12px;
-  padding:2rem;width:100%;max-width:420px;
-  box-shadow:0 6px 20px rgba(0,0,0,.08);
-}
+/* loading overlay */
+.A .loading-overlay{position:absolute;inset:0;background:rgba(31,78,121,.9);backdrop-filter:blur(4px);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;}
+.A .loading-overlay.active{display:flex;}
+.A .loading-spinner{width:56px;height:56px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1.3rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.A .loading-text{font-size:1.25rem;font-weight:600;margin-bottom:.4rem;}
+.A .loading-subtext{font-size:.9rem;opacity:.82;max-width:380px;text-align:center;line-height:1.5;}
+
+/* ── Login / Signup ── */
+.auth-bg{min-height:100%;background:#f5f7fa;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+.auth-card{background:#fff;border:1px solid #d0d7de;border-radius:12px;padding:2rem;width:100%;max-width:420px;box-shadow:0 6px 20px rgba(0,0,0,.08);}
 .auth-card h1{margin:0;color:#1f4e79;font-size:1.4rem;text-align:center;}
-.auth-sub{text-align:center;color:#57606a;font-size:.85rem;margin:.3rem 0 1.4rem;}
-.afg{margin-bottom:.9rem;}
-.afg label{display:block;font-size:.83rem;color:#57606a;margin-bottom:.28rem;}
+.auth-sub{text-align:center;color:#57606a;font-size:.85rem;margin:.28rem 0 1.3rem;}
+.afg{margin-bottom:.88rem;}
+.afg label{display:block;font-size:.83rem;color:#57606a;margin-bottom:.26rem;}
 .afg input{width:100%;padding:.6rem .78rem;border:1px solid #d0d7de;border-radius:8px;font-size:.95rem;font-family:inherit;}
-.afg input:focus{outline:none;border-color:#2e75b6;}
-.auth-btn-main{
-  width:100%;padding:.7rem;border:none;border-radius:8px;
-  background:#1f4e79;color:#fff;font-size:.98rem;font-weight:600;cursor:default;
-}
-.auth-btn-sec{
-  width:100%;padding:.68rem;border:1px solid #1f4e79;border-radius:8px;
-  background:#fff;color:#1f4e79;font-size:.98rem;font-weight:600;cursor:default;margin-top:.5rem;
-}
-.auth-divider{text-align:center;margin:1.2rem 0;position:relative;}
-.auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:#d0d7de;}
-.auth-divider span{background:#fff;padding:0 1rem;position:relative;color:#57606a;font-size:.83rem;}
-.auth-link{text-align:center;margin-top:1.3rem;font-size:.88rem;}
-.auth-link a{color:#2e75b6;text-decoration:none;}
-.step-ind{display:flex;justify-content:center;gap:.5rem;margin-bottom:1.3rem;}
+.auth-btn-p{width:100%;padding:.7rem;border:none;border-radius:8px;background:#1f4e79;color:#fff;font-size:.98rem;font-weight:600;cursor:default;}
+.auth-btn-s{width:100%;padding:.68rem;border:1px solid #1f4e79;border-radius:8px;background:#fff;color:#1f4e79;font-size:.98rem;font-weight:600;cursor:default;margin-top:.5rem;}
+.auth-footer{margin-top:1.35rem;font-size:.73rem;color:#57606a;text-align:center;}
+.step-ind{display:flex;justify-content:center;gap:.5rem;margin-bottom:1.25rem;}
 .sdot{width:28px;height:28px;border-radius:50%;background:#d0d7de;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:600;color:#57606a;}
-.sdot.active{background:#1f4e79;color:#fff;}
-.sdot.done{background:#1a7f37;color:#fff;}
-.proj-info{background:#f6f8fa;padding:.9rem;border-radius:6px;margin-bottom:.9rem;}
-.proj-info h3{margin:0 0 .4rem;font-size:.98rem;color:#1f4e79;}
-.proj-info p{margin:0;font-size:.83rem;color:#57606a;}
-.hint-txt{font-size:.78rem;color:#57606a;margin-top:.28rem;}
-.error-box{background:#ffeaea;color:#cf222e;padding:.68rem;border-radius:6px;font-size:.88rem;margin-bottom:.9rem;display:none;}
-.info-box{background:#fff8e1;color:#7c5c00;border:1px solid #f0d070;border-radius:6px;padding:.62rem .88rem;font-size:.86rem;margin-top:.78rem;text-align:center;display:none;}
-.success-box{background:#e8f5e9;color:#1a7f37;padding:.68rem;border-radius:6px;font-size:.88rem;margin-bottom:.9rem;display:none;}
-.pending-screen{text-align:center;padding:1.5rem .5rem;}
-.pending-screen .pi{font-size:2.5rem;margin-bottom:.7rem;}
-.pending-screen h2{color:#1f4e79;margin:0 0 .7rem;font-size:1.2rem;}
-.pending-screen p{color:#57606a;font-size:.88rem;line-height:1.6;margin:0 0 .9rem;}
-.pending-box{background:#f0f9f4;border:1px solid #b7e4c7;border-radius:8px;padding:.9rem;font-size:.85rem;color:#1a7f37;margin-bottom:1.3rem;}
-.auth-footer{margin-top:1.4rem;font-size:.73rem;color:#57606a;text-align:center;}
+.sdot.active{background:#1f4e79;color:#fff;}.sdot.done{background:#1a7f37;color:#fff;}
+.proj-info{background:#f6f8fa;padding:.88rem;border-radius:6px;margin-bottom:.88rem;}
+.proj-info h3{margin:0 0 .38rem;font-size:.96rem;color:#1f4e79;}
+.proj-info p{margin:0;font-size:.82rem;color:#57606a;}
+.hint-txt{font-size:.77rem;color:#57606a;margin-top:.26rem;}
+.pending-screen{text-align:center;padding:1.4rem .5rem;}
+.pending-screen .pi{font-size:2.4rem;margin-bottom:.65rem;}
+.pending-screen h2{color:#1f4e79;margin:0 0 .65rem;font-size:1.15rem;}
+.pending-screen p{color:#57606a;font-size:.87rem;line-height:1.6;margin:0 0 .85rem;}
+.pending-box{background:#f0f9f4;border:1px solid #b7e4c7;border-radius:8px;padding:.85rem;font-size:.83rem;color:#1a7f37;margin-bottom:1.2rem;}
 
-/* ── Email preview scene ── */
-.email-client{background:#fff;max-width:680px;margin:1rem auto;border:1px solid #d0d7de;border-radius:10px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.09);font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
-.email-client-bar{background:#1f4e79;color:#fff;padding:.55rem 1rem;display:flex;align-items:center;gap:.7rem;font-size:.82rem;}
-.email-list-hdr{background:#f0f4f8;border-bottom:1px solid #d0d7de;padding:.48rem 1rem;font-size:.75rem;color:#57606a;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
-.email-list-item{padding:.7rem 1rem;border-bottom:2px solid #2e75b6;background:#f0f6ff;display:flex;gap:.7rem;align-items:flex-start;cursor:default;}
-.email-list-item .avatar{width:34px;height:34px;border-radius:50%;background:#1f4e79;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;}
-.email-body-wrap{padding:1.2rem 1.4rem;}
-.email-subj{font-size:1.05rem;font-weight:700;color:#1f4e79;margin-bottom:.35rem;}
-.email-meta{font-size:.8rem;color:#57606a;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:1px solid #d0d7de;}
-.email-body-txt{font-size:.88rem;line-height:1.7;color:#24292f;}
-.email-detail-box{background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:.9rem;margin:.9rem 0;}
-.email-detail-box table{border:none;}
-.email-detail-box td{border:none;padding:.22rem .38rem;font-size:.86rem;}
-.email-detail-box td:first-child{color:#57606a;width:130px;}
-.email-detail-box td:last-child{font-weight:600;}
-.ebtn-row{display:flex;gap:.8rem;margin-top:1.1rem;}
-.ebtn-approve{padding:.55rem 1.3rem;border:none;border-radius:6px;background:#1a7f37;color:#fff;font-size:.92rem;font-weight:600;cursor:default;}
-.ebtn-deny{padding:.55rem 1.3rem;border:none;border-radius:6px;background:#cf222e;color:#fff;font-size:.92rem;font-weight:600;cursor:default;}
-.approve-confirmed{background:#f0f9f4;border:1px solid #b7e4c7;border-radius:10px;padding:1.3rem 1.5rem;margin:1rem auto;max-width:680px;text-align:center;display:none;}
-.approve-confirmed h3{color:#1a7f37;margin:0 0 .4rem;}
-.approve-confirmed p{color:#57606a;font-size:.88rem;margin:0;}
+/* ── Email client ── */
+.email-wrap{background:#f5f7fa;min-height:100%;padding:.7rem .9rem;}
+.email-client{background:#fff;max-width:700px;margin:0 auto;border:1px solid #d0d7de;border-radius:10px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.09);}
+.ecl-bar{background:#1f4e79;color:#fff;padding:.5rem .9rem;display:flex;align-items:center;gap:.7rem;font-size:.81rem;}
+.ecl-list-hdr{background:#f0f4f8;border-bottom:1px solid #d0d7de;padding:.44rem .9rem;font-size:.73rem;color:#57606a;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.ecl-item{padding:.65rem .9rem;border-bottom:2px solid #2e75b6;background:#f0f6ff;display:flex;gap:.65rem;align-items:flex-start;}
+.ecl-item .av{width:32px;height:32px;border-radius:50%;background:#1f4e79;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0;}
+.ecl-body{padding:1.1rem 1.3rem;}
+.ecl-subj{font-size:1rem;font-weight:700;color:#1f4e79;margin-bottom:.32rem;}
+.ecl-meta{font-size:.79rem;color:#57606a;margin-bottom:.9rem;padding-bottom:.75rem;border-bottom:1px solid #d0d7de;}
+.ecl-txt{font-size:.87rem;line-height:1.7;color:#24292f;}
+.ecl-detail{background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:.85rem;margin:.85rem 0;}
+.ecl-detail table{border:none;}
+.ecl-detail td{border:none;padding:.2rem .35rem;font-size:.85rem;}
+.ecl-detail td:first-child{color:#57606a;width:125px;}
+.ecl-detail td:last-child{font-weight:600;}
+.ebtn-row{display:flex;gap:.7rem;margin-top:1rem;}
+.ebtn-approve{padding:.52rem 1.2rem;border:none;border-radius:6px;background:#1a7f37;color:#fff;font-size:.9rem;font-weight:600;cursor:default;}
+.ebtn-deny{padding:.52rem 1.2rem;border:none;border-radius:6px;background:#cf222e;color:#fff;font-size:.9rem;font-weight:600;cursor:default;}
+.approve-ok{background:#f0f9f4;border:1px solid #b7e4c7;border-radius:10px;padding:1.1rem 1.4rem;margin:.7rem auto;max-width:700px;text-align:center;display:none;}
+.approve-ok h3{color:#1a7f37;margin:0 0 .35rem;}
+.approve-ok p{color:#57606a;font-size:.87rem;margin:0;}
 </style>
 </head>
 <body>
 <div id="demo-wrap">
 
-  <!-- Part tabs -->
   <div id="part-tabs">
     <span class="tab-lbl">Demo:</span>
-    <button class="part-tab active" id="tab-coord" onclick="switchPart('coord')">&#128101; For Coordinators</button>
-    <button class="part-tab" id="tab-partner" onclick="switchPart('partner')">&#128203; For Partners</button>
-    <span style="margin-left:auto;color:rgba(255,255,255,.35);font-size:.72rem;align-self:center;">alloc8.org</span>
+    <button class="part-tab active" id="tab-c" onclick="switchPart('coord')">&#128101; For Coordinators</button>
+    <button class="part-tab" id="tab-p" onclick="switchPart('partner')">&#128203; For Partners</button>
+    <span style="margin-left:auto;color:rgba(255,255,255,.3);font-size:.7rem;align-self:center;">alloc8.org</span>
   </div>
 
-  <!-- Browser chrome -->
   <div id="browser-chrome">
-    <div class="bc-dots"><div class="bc-dot red"></div><div class="bc-dot yellow"></div><div class="bc-dot green"></div></div>
+    <div class="bc-dots"><div class="bc-dot r"></div><div class="bc-dot y"></div><div class="bc-dot g"></div></div>
     <span style="font-size:.8rem;color:#57606a;">&#128274;</span>
     <div class="bc-addr" id="bc-url">alloc8.org/login</div>
   </div>
 
-  <!-- Scenes -->
   <div id="screen">
-    <div id="cursor">
-      <svg viewBox="0 0 20 20" fill="none">
-        <path d="M3 2l13 8-7 1-3 7z" fill="#1e293b" stroke="#fff" stroke-width="1.2"/>
-      </svg>
-    </div>
 
-    <!-- ════════════════════════════════════════
+    <!-- ═══════════════════════════════════════
          COORDINATOR SCENES
-    ════════════════════════════════════════ -->
+    ═══════════════════════════════════════ -->
 
-    <!-- C1: Login page (login.html exact) -->
+    <!-- C1: login.html -->
     <div class="scene active" id="scene-c1">
       <div class="auth-bg">
         <div class="auth-card">
@@ -342,19 +286,18 @@ body{
           <form onsubmit="return false;">
             <div class="afg"><label>Username</label><input id="c1-user" type="text" autocomplete="off"></div>
             <div class="afg"><label>Password</label><input id="c1-pass" type="password"></div>
-            <button class="auth-btn-main" type="button">Log in</button>
-            <div class="error-box" id="c1-err">Invalid credentials</div>
+            <button class="auth-btn-p" type="button">Log in</button>
           </form>
-          <div style="text-align:center;margin-top:1.4rem;padding-top:1.4rem;border-top:1px solid #d0d7de;">
-            <p style="margin:0 0 .5rem;font-size:.88rem;color:#57606a;">Don't have an account?</p>
-            <button class="auth-btn-sec" id="c1-signup-btn" type="button">Create New Project</button>
+          <div style="text-align:center;margin-top:1.3rem;padding-top:1.3rem;border-top:1px solid #d0d7de;">
+            <p style="margin:0 0 .45rem;font-size:.87rem;color:#57606a;">Don't have an account?</p>
+            <button class="auth-btn-s" id="c1-signup" type="button">Create New Project</button>
           </div>
         </div>
         <p class="auth-footer">© 2026 Alloc8 — Intelligent Resource Allocation</p>
       </div>
     </div>
 
-    <!-- C2: Signup (signup.html exact — 3 steps) -->
+    <!-- C2: signup.html -->
     <div class="scene" id="scene-c2">
       <div class="auth-bg">
         <div class="auth-card">
@@ -365,39 +308,28 @@ body{
             <div class="sdot" id="c2-d2">2</div>
             <div class="sdot" id="c2-d3">3</div>
           </div>
-          <div class="error-box" id="c2-err"></div>
-
           <!-- Step 1 -->
           <div id="c2-s1">
-            <div class="proj-info">
-              <h3>Create Your Project</h3>
-              <p>Sign up to create your own project workspace where you can manage work packages, partners, and budgets.</p>
-            </div>
-            <div class="afg">
-              <label>Email Address</label>
-              <input type="email" id="c2-email" placeholder="your.email@gmail.com">
-              <div class="hint-txt">We accept Gmail, Google Workspace, iCloud, and other email providers</div>
-            </div>
-            <button class="auth-btn-main" type="button">Continue</button>
+            <div class="proj-info"><h3>Create Your Project</h3><p>Sign up to create your own project workspace where you can manage work packages, partners, and budgets.</p></div>
+            <div class="afg"><label>Email Address</label><input type="email" id="c2-email" placeholder="your.email@gmail.com"><div class="hint-txt">We accept Gmail, Google Workspace, iCloud, and other email providers</div></div>
+            <button class="auth-btn-p" type="button">Continue</button>
           </div>
-
           <!-- Step 2 -->
           <div id="c2-s2" style="display:none;">
             <div class="afg"><label>Project Name</label><input type="text" id="c2-proj" placeholder="My Research Project"></div>
             <div class="afg"><label>Username</label><input type="text" id="c2-uname" placeholder="lowercase_no_spaces"></div>
             <div class="afg"><label>Password</label><input type="password" id="c2-pwd" placeholder="Create a secure password"></div>
             <div class="afg"><label>Confirm Password</label><input type="password" id="c2-pwd2" placeholder="Confirm your password"></div>
-            <button class="auth-btn-main" type="button">Create Account</button>
+            <button class="auth-btn-p" type="button">Create Account</button>
           </div>
-
-          <!-- Step 3 pending -->
+          <!-- Step 3 -->
           <div id="c2-s3" style="display:none;">
             <div class="pending-screen">
               <div class="pi">📬</div>
               <h2>Request Submitted!</h2>
-              <p>Our team has been notified of your request.<br>You will receive an email notification once your account is approved and ready to use.</p>
-              <div class="pending-box">Please check your inbox at <strong id="c2-pemail">coordinator@university.eu</strong> for a confirmation once approved.</div>
-              <button class="auth-btn-main" type="button">Back to Login</button>
+              <p>Our team has been notified of your request.<br>You will receive an email once your account is approved.</p>
+              <div class="pending-box">Please check your inbox at <strong>coordinator@university.eu</strong> for a confirmation once approved.</div>
+              <button class="auth-btn-p" type="button">Back to Login</button>
             </div>
           </div>
         </div>
@@ -407,58 +339,42 @@ body{
 
     <!-- C3: Email approval -->
     <div class="scene" id="scene-c3">
-      <div style="background:#f5f7fa;min-height:100%;padding:.8rem 1rem;">
+      <div class="email-wrap">
         <div class="email-client">
-          <div class="email-client-bar">
-            <span style="font-weight:700;">📧 Mail</span>
-            <span style="opacity:.7;">Inbox (1 unread)</span>
-            <span style="margin-left:auto;opacity:.65;">admin@alloc8.org</span>
-          </div>
-          <div class="email-list-hdr">Inbox</div>
-          <div class="email-list-item" id="c3-list-item">
-            <div class="avatar">A8</div>
+          <div class="ecl-bar"><span style="font-weight:700;">📧 Mail</span><span style="opacity:.7;">Inbox</span><span style="margin-left:auto;opacity:.6;">admin@alloc8.org</span></div>
+          <div class="ecl-list-hdr">Inbox</div>
+          <div class="ecl-item" id="c3-item">
+            <div class="av">A8</div>
             <div style="flex:1;min-width:0;">
-              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.18rem;">
-                <span style="font-weight:700;font-size:.88rem;">Alloc8 — New Account Request</span>
-                <span style="font-size:.73rem;color:#57606a;white-space:nowrap;">Just now</span>
-              </div>
-              <div style="font-size:.8rem;color:#57606a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                New signup request from coordinator@university.eu — Project: Horizon Europe 2025
-              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:.16rem;"><span style="font-weight:700;font-size:.87rem;">Alloc8 — New Account Request</span><span style="font-size:.72rem;color:#57606a;">Just now</span></div>
+              <div style="font-size:.79rem;color:#57606a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">New signup request from coordinator@university.eu — Project: Horizon Europe 2025</div>
             </div>
           </div>
-          <div class="email-body-wrap">
-            <div class="email-subj">New Account Request — Alloc8</div>
-            <div class="email-meta">
-              From: <strong>noreply@alloc8.org</strong> &nbsp;·&nbsp; To: <strong>admin@alloc8.org</strong>
-            </div>
-            <div class="email-body-txt">
-              <p style="margin:0 0 .75rem;">Hello,</p>
-              <p style="margin:0 0 .75rem;">A new account request has been submitted on Alloc8. Please review the details below and approve or deny the request.</p>
-              <div class="email-detail-box">
-                <table style="width:100%;">
-                  <tr><td>Email</td><td>coordinator@university.eu</td></tr>
-                  <tr><td>Project Name</td><td>Horizon Europe 2025</td></tr>
-                  <tr><td>Username</td><td>horizon2025</td></tr>
-                  <tr><td>Requested</td><td>Just now</td></tr>
-                </table>
+          <div class="ecl-body">
+            <div class="ecl-subj">New Account Request — Alloc8</div>
+            <div class="ecl-meta">From: <strong>noreply@alloc8.org</strong> &nbsp;·&nbsp; To: <strong>admin@alloc8.org</strong></div>
+            <div class="ecl-txt">
+              <p style="margin:0 0 .7rem;">Hello,</p>
+              <p style="margin:0 0 .7rem;">A new account request has been submitted. Please review the details below and approve or deny the request.</p>
+              <div class="ecl-detail">
+                <table style="width:100%;"><tr><td>Email</td><td>coordinator@university.eu</td></tr><tr><td>Project Name</td><td>Horizon Europe 2025</td></tr><tr><td>Username</td><td>horizon2025</td></tr><tr><td>Requested</td><td>Just now</td></tr></table>
               </div>
               <div class="ebtn-row">
-                <button class="ebtn-approve" id="c3-approve-btn">✓ Approve Access</button>
+                <button class="ebtn-approve" id="c3-approve">✓ Approve Access</button>
                 <button class="ebtn-deny">✗ Deny Request</button>
               </div>
             </div>
           </div>
         </div>
-        <div class="approve-confirmed" id="c3-confirmed">
-          <div style="font-size:2rem;margin-bottom:.4rem;">✅</div>
+        <div class="approve-ok" id="c3-ok">
+          <div style="font-size:1.8rem;margin-bottom:.35rem;">✅</div>
           <h3>Account Approved!</h3>
           <p>A welcome email has been sent to coordinator@university.eu. They can now log in to Alloc8.</p>
         </div>
       </div>
     </div>
 
-    <!-- C4: Admin Dashboard — Global Settings + Analytics -->
+    <!-- C4: admin.html — Global Settings -->
     <div class="scene" id="scene-c4">
       <div class="A">
         <header>
@@ -468,103 +384,55 @@ body{
             <span style="color:#fff;font-weight:600;font-size:.9rem;">Horizon Europe 2025</span>
           </div>
           <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-primary">+ Add Admin</button>
-            <button class="btn btn-ghost">Log out</button>
+            <button class="btn btn-white">+ Add Admin</button>
+            <button class="btn btn-wd">Log out</button>
           </div>
         </header>
         <div class="container">
           <div class="card">
             <h2>Global Settings</h2>
-            <div style="margin-bottom:.9rem;">
-              <label style="display:block;margin-bottom:.28rem;font-weight:600;font-size:.88rem;">Project Description</label>
+            <div style="margin-bottom:.85rem;">
+              <label style="display:block;margin-bottom:.25rem;font-weight:600;font-size:.88rem;">Project Description</label>
               <textarea id="c4-desc" rows="3" style="width:100%;padding:.48rem;border:1px solid #d0d7de;border-radius:6px;font-family:inherit;font-size:.88rem;"></textarea>
-              <div style="font-size:.73rem;color:#57606a;margin-top:.25rem;">This description will be used by the AI to better understand your project context when analyzing partner capabilities.</div>
+              <div style="font-size:.73rem;color:#57606a;margin-top:.22rem;">This description will be used by the AI to better understand your project context when analyzing partner capabilities.</div>
             </div>
             <div style="display:flex;align-items:center;gap:1.3rem;flex-wrap:wrap;">
               <label style="margin:0;">Indirect Cost (%)
-                <div style="display:flex;align-items:center;gap:.5rem;margin-top:.2rem;">
-                  <input type="number" id="c4-indirect" value="25" style="width:78px;padding:.42rem .52rem;border:1px solid #d0d7de;border-radius:6px;font-size:.92rem;">
+                <div style="display:flex;align-items:center;gap:.45rem;margin-top:.18rem;">
+                  <input type="number" id="c4-ic" value="25" style="width:74px;padding:.4rem .5rem;border:1px solid #d0d7de;border-radius:6px;font-size:.9rem;">
                   <span style="color:#57606a;">%</span>
                 </div>
               </label>
               <label style="margin:0;">Project Duration (months)
-                <div style="display:flex;align-items:center;gap:.5rem;margin-top:.2rem;">
-                  <input type="number" id="c4-dur" value="48" style="width:78px;padding:.42rem .52rem;border:1px solid #d0d7de;border-radius:6px;font-size:.92rem;">
+                <div style="display:flex;align-items:center;gap:.45rem;margin-top:.18rem;">
+                  <input type="number" id="c4-dur" value="48" style="width:74px;padding:.4rem .5rem;border:1px solid #d0d7de;border-radius:6px;font-size:.9rem;">
                   <span style="color:#57606a;">months</span>
                 </div>
               </label>
-              <button class="btn btn-success" style="margin-top:1.3rem;">Save Settings</button>
-              <span id="c4-saved" style="color:#1a7f37;font-size:.88rem;display:none;margin-top:1.3rem;">✓ Saved!</span>
+              <button class="btn btn-success" id="c4-save-btn" style="margin-top:1.25rem;">Save Settings</button>
+              <span id="c4-saved" style="color:#1a7f37;font-size:.88rem;display:none;margin-top:1.25rem;">✓ Saved!</span>
             </div>
+            <div style="font-size:.78rem;color:#57606a;margin-top:.45rem;"><strong>Tip:</strong> Edit all values, then click "Save Settings" once to save everything together.</div>
           </div>
           <div class="card">
             <h2>Analytics</h2>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
-              <div>
-                <div style="font-size:.82rem;color:#1f4e79;font-weight:600;margin-bottom:.35rem;text-align:center;">Funding by Country</div>
-                <div style="height:150px;background:#f6f8fa;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                  <svg width="110" height="110" viewBox="0 0 110 110">
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#e8ecf1" stroke-width="16"/>
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#1f4e79" stroke-width="16" stroke-dasharray="83 276" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#2e75b6" stroke-width="16" stroke-dasharray="55 276" stroke-dashoffset="-83" transform="rotate(-90 55 55)"/>
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#5ba3d9" stroke-width="16" stroke-dasharray="138 276" stroke-dashoffset="-138" transform="rotate(-90 55 55)"/>
-                    <text x="55" y="59" text-anchor="middle" font-size="10" fill="#1f4e79" font-weight="700">€2.4M</text>
-                  </svg>
-                </div>
-              </div>
-              <div>
-                <div style="font-size:.82rem;color:#1f4e79;font-weight:600;margin-bottom:.35rem;text-align:center;">Person-Months by Country</div>
-                <div style="height:150px;background:#f6f8fa;border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding:.8rem .3rem .5rem;">
-                  <svg width="100" height="110" viewBox="0 0 100 110">
-                    <rect x="5"  y="25" width="18" height="75" fill="#1f4e79" rx="2"/><text x="14" y="108" text-anchor="middle" font-size="8" fill="#57606a">DE</text>
-                    <rect x="28" y="45" width="18" height="55" fill="#2e75b6" rx="2"/><text x="37" y="108" text-anchor="middle" font-size="8" fill="#57606a">FR</text>
-                    <rect x="51" y="15" width="18" height="85" fill="#5ba3d9" rx="2"/><text x="60" y="108" text-anchor="middle" font-size="8" fill="#57606a">UK</text>
-                    <rect x="74" y="55" width="18" height="45" fill="#8ec4e8" rx="2"/><text x="83" y="108" text-anchor="middle" font-size="8" fill="#57606a">IT</text>
-                  </svg>
-                </div>
-              </div>
-              <div>
-                <div style="font-size:.82rem;color:#1f4e79;font-weight:600;margin-bottom:.35rem;text-align:center;">Funding by Org Type</div>
-                <div style="height:150px;background:#f6f8fa;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                  <svg width="110" height="110" viewBox="0 0 110 110">
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#e8ecf1" stroke-width="16"/>
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#1a7f37" stroke-width="16" stroke-dasharray="138 276" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#28a745" stroke-width="16" stroke-dasharray="83 276" stroke-dashoffset="-138" transform="rotate(-90 55 55)"/>
-                    <circle cx="55" cy="55" r="44" fill="none" stroke="#7bd47e" stroke-width="16" stroke-dasharray="55 276" stroke-dashoffset="-221" transform="rotate(-90 55 55)"/>
-                    <text x="55" y="57" text-anchor="middle" font-size="9" fill="#1a7f37" font-weight="700">HES</text>
-                    <text x="55" y="68" text-anchor="middle" font-size="9" fill="#1a7f37" font-weight="700">50%</text>
-                  </svg>
-                </div>
-              </div>
-              <div>
-                <div style="font-size:.82rem;color:#1f4e79;font-weight:600;margin-bottom:.35rem;text-align:center;">PM by Org Type</div>
-                <div style="height:150px;background:#f6f8fa;border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding:.8rem .5rem .5rem;">
-                  <svg width="80" height="110" viewBox="0 0 80 110">
-                    <rect x="5"  y="10" width="22" height="90" fill="#1a7f37" rx="2"/><text x="16" y="108" text-anchor="middle" font-size="8" fill="#57606a">HES</text>
-                    <rect x="31" y="38" width="22" height="62" fill="#28a745" rx="2"/><text x="42" y="108" text-anchor="middle" font-size="8" fill="#57606a">REC</text>
-                    <rect x="57" y="58" width="22" height="42" fill="#7bd47e" rx="2"/><text x="68" y="108" text-anchor="middle" font-size="8" fill="#57606a">IND</text>
-                  </svg>
-                </div>
-              </div>
+              <div style="text-align:center;"><div style="font-size:.8rem;color:#1f4e79;font-weight:600;margin-bottom:.32rem;">Funding by Country</div><div style="height:145px;background:#f6f8fa;border-radius:8px;display:flex;align-items:center;justify-content:center;"><svg width="108" height="108" viewBox="0 0 108 108"><circle cx="54" cy="54" r="43" fill="none" stroke="#e8ecf1" stroke-width="15"/><circle cx="54" cy="54" r="43" fill="none" stroke="#1f4e79" stroke-width="15" stroke-dasharray="81 270" stroke-dashoffset="0" transform="rotate(-90 54 54)"/><circle cx="54" cy="54" r="43" fill="none" stroke="#2e75b6" stroke-width="15" stroke-dasharray="54 270" stroke-dashoffset="-81" transform="rotate(-90 54 54)"/><circle cx="54" cy="54" r="43" fill="none" stroke="#5ba3d9" stroke-width="15" stroke-dasharray="135 270" stroke-dashoffset="-135" transform="rotate(-90 54 54)"/><text x="54" y="58" text-anchor="middle" font-size="10" fill="#1f4e79" font-weight="700">€2.4M</text></svg></div></div>
+              <div style="text-align:center;"><div style="font-size:.8rem;color:#1f4e79;font-weight:600;margin-bottom:.32rem;">Person-Months by Country</div><div style="height:145px;background:#f6f8fa;border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding:.7rem .3rem .45rem;"><svg width="98" height="108" viewBox="0 0 98 108"><rect x="5" y="25" width="17" height="73" fill="#1f4e79" rx="2"/><text x="13" y="106" text-anchor="middle" font-size="8" fill="#57606a">DE</text><rect x="27" y="42" width="17" height="56" fill="#2e75b6" rx="2"/><text x="35" y="106" text-anchor="middle" font-size="8" fill="#57606a">FR</text><rect x="49" y="14" width="17" height="84" fill="#5ba3d9" rx="2"/><text x="57" y="106" text-anchor="middle" font-size="8" fill="#57606a">UK</text><rect x="71" y="52" width="17" height="46" fill="#8ec4e8" rx="2"/><text x="79" y="106" text-anchor="middle" font-size="8" fill="#57606a">IT</text></svg></div></div>
+              <div style="text-align:center;"><div style="font-size:.8rem;color:#1f4e79;font-weight:600;margin-bottom:.32rem;">Funding by Org Type</div><div style="height:145px;background:#f6f8fa;border-radius:8px;display:flex;align-items:center;justify-content:center;"><svg width="108" height="108" viewBox="0 0 108 108"><circle cx="54" cy="54" r="43" fill="none" stroke="#e8ecf1" stroke-width="15"/><circle cx="54" cy="54" r="43" fill="none" stroke="#1a7f37" stroke-width="15" stroke-dasharray="135 270" stroke-dashoffset="0" transform="rotate(-90 54 54)"/><circle cx="54" cy="54" r="43" fill="none" stroke="#28a745" stroke-width="15" stroke-dasharray="81 270" stroke-dashoffset="-135" transform="rotate(-90 54 54)"/><circle cx="54" cy="54" r="43" fill="none" stroke="#7bd47e" stroke-width="15" stroke-dasharray="54 270" stroke-dashoffset="-216" transform="rotate(-90 54 54)"/><text x="54" y="56" text-anchor="middle" font-size="9" fill="#1a7f37" font-weight="700">HES</text><text x="54" y="67" text-anchor="middle" font-size="9" fill="#1a7f37" font-weight="700">50%</text></svg></div></div>
+              <div style="text-align:center;"><div style="font-size:.8rem;color:#1f4e79;font-weight:600;margin-bottom:.32rem;">PM by Org Type</div><div style="height:145px;background:#f6f8fa;border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding:.7rem .4rem .45rem;"><svg width="78" height="108" viewBox="0 0 78 108"><rect x="5" y="10" width="20" height="88" fill="#1a7f37" rx="2"/><text x="15" y="106" text-anchor="middle" font-size="8" fill="#57606a">HES</text><rect x="30" y="37" width="20" height="61" fill="#28a745" rx="2"/><text x="40" y="106" text-anchor="middle" font-size="8" fill="#57606a">REC</text><rect x="55" y="57" width="20" height="41" fill="#7bd47e" rx="2"/><text x="65" y="106" text-anchor="middle" font-size="8" fill="#57606a">IND</text></svg></div></div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- C5: Admin — Partners table (admin.html exact layout) -->
+    <!-- C5: admin.html — Add Partner modal -->
     <div class="scene" id="scene-c5">
       <div class="A">
         <header>
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <h1>Alloc8</h1>
-            <span style="color:rgba(255,255,255,.7);font-size:.87rem;">Project:</span>
-            <span style="color:#fff;font-weight:600;font-size:.9rem;">Horizon Europe 2025</span>
-          </div>
-          <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-primary">+ Add Admin</button>
-            <button class="btn btn-ghost">Log out</button>
-          </div>
+          <div style="display:flex;align-items:center;gap:1rem;"><h1>Alloc8</h1><span style="color:rgba(255,255,255,.9);font-weight:600;font-size:.9rem;">Horizon Europe 2025</span></div>
+          <div style="display:flex;gap:.5rem;"><button class="btn btn-white">+ Add Admin</button><button class="btn btn-wd">Log out</button></div>
         </header>
         <div class="container">
           <div class="card">
@@ -572,123 +440,100 @@ body{
             <div class="toolbar">
               <button class="btn btn-primary" id="c5-add-btn">+ Add Partner</button>
               <button class="btn btn-success">Export JSON</button>
-              <button class="btn btn-success" id="c5-analyze-btn">Force Global Re-analysis</button>
+              <button class="btn btn-success">Force Global Re-analysis</button>
               <button class="btn btn-report" style="margin-left:auto;">&#128196; Generate Report</button>
             </div>
             <div class="table-wrap">
-              <table id="c5-table">
-                <thead>
-                  <tr><th>#</th><th>Logo</th><th>Name</th><th>Username</th><th>Type</th><th>Country</th><th>Rate (€)</th><th>PM</th><th>Budget (€)</th><th>Funding (€)</th><th>Contact Email</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="c5-tbody">
-                  <tr>
-                    <td>1</td>
-                    <td><div style="width:38px;height:38px;border:1px dashed #d0d7de;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#57606a;">Logo</div></td>
-                    <td><strong>University of Leeds</strong></td>
-                    <td>leeds_uni</td><td>HES</td><td>🇬🇧 GB</td><td>8,000</td><td>36</td><td>288,000</td><td>259,200</td>
-                    <td>admin@leeds.ac.uk</td>
-                    <td><div style="display:flex;gap:.28rem;"><button class="btn btn-sm btn-primary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></div></td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td><div style="width:38px;height:38px;border:1px dashed #d0d7de;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#57606a;">Logo</div></td>
-                    <td><strong>TU Berlin</strong></td>
-                    <td>tu_berlin</td><td>HES</td><td>🇩🇪 DE</td><td>7,500</td><td>42</td><td>315,000</td><td>283,500</td>
-                    <td>admin@tu-berlin.de</td>
-                    <td><div style="display:flex;gap:.28rem;"><button class="btn btn-sm btn-primary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></div></td>
-                  </tr>
-                  <tr id="c5-new-row" style="display:none;background:#f0f9f4;">
-                    <td>3</td>
-                    <td><div style="width:38px;height:38px;border:2px dashed #1a7f37;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#1a7f37;">+ Logo</div></td>
-                    <td><input id="c5-new-name" type="text" style="width:140px;padding:.28rem .45rem;border:1px solid #1a7f37;border-radius:4px;font-size:.84rem;" placeholder="Partner name..."></td>
-                    <td><input id="c5-new-uname" type="text" style="width:110px;padding:.28rem .45rem;border:1px solid #1a7f37;border-radius:4px;font-size:.84rem;" placeholder="username..."></td>
-                    <td><select style="padding:.25rem;border:1px solid #d0d7de;border-radius:4px;font-size:.82rem;"><option>HES</option><option>REC</option><option>IND</option></select></td>
-                    <td><select style="padding:.25rem;border:1px solid #d0d7de;border-radius:4px;font-size:.82rem;"><option>🇫🇷 FR</option><option>🇮🇹 IT</option><option>🇪🇸 ES</option></select></td>
-                    <td><input type="number" value="7200" style="width:75px;padding:.25rem .38rem;border:1px solid #d0d7de;border-radius:4px;font-size:.82rem;"></td>
-                    <td><input type="number" value="28" style="width:55px;padding:.25rem .38rem;border:1px solid #d0d7de;border-radius:4px;font-size:.82rem;"></td>
-                    <td>201,600</td><td>181,440</td>
-                    <td><input type="text" value="admin@inria.fr" style="width:130px;padding:.25rem .38rem;border:1px solid #d0d7de;border-radius:4px;font-size:.82rem;"></td>
-                    <td><button class="btn btn-sm btn-success">Save</button></td>
-                  </tr>
+              <table>
+                <thead><tr><th>#</th><th>Logo</th><th>Name</th><th>Username</th><th>Type</th><th>Country</th><th>Rate (€)</th><th>PM</th><th>Budget (€)</th><th>Funding (€)</th><th>Contact Email</th><th>Links</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td><div style="width:38px;height:38px;border:1px dashed #d0d7de;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#57606a;">Logo</div></td><td><strong>University of Leeds</strong></td><td>leeds_uni</td><td>university</td><td>GB</td><td>8,000</td><td>36</td><td>288,000</td><td>259,200</td><td>admin@leeds.ac.uk</td><td>3</td><td><div style="display:flex;gap:.28rem;"><button class="btn btn-sm btn-primary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></div></td></tr>
+                  <tr><td>2</td><td><div style="width:38px;height:38px;border:1px dashed #d0d7de;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#57606a;">Logo</div></td><td><strong>TU Berlin</strong></td><td>tu_berlin</td><td>university</td><td>DE</td><td>7,500</td><td>42</td><td>315,000</td><td>283,500</td><td>admin@tu-berlin.de</td><td>2</td><td><div style="display:flex;gap:.28rem;"><button class="btn btn-sm btn-primary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></div></td></tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
+        <!-- Add Partner Modal -->
+        <div class="modal-overlay" id="c5-modal">
+          <div class="modal">
+            <h3>Add Partner</h3>
+            <div class="grid2">
+              <label>Name<input id="c5-name" type="text"></label>
+              <label>Username (auto if empty)<input id="c5-uname" type="text" placeholder="lowercase no spaces"></label>
+              <label>Password (auto if empty)<input id="c5-pwd" type="text" placeholder="default = username"></label>
+              <label>PIC<input id="c5-pic" type="text"></label>
+              <label>Monthly Rate (€)<input id="c5-rate" type="number" value="0"></label>
+              <label>Type<select id="c5-type"><option>university</option><option>Research Institution</option><option>Industry</option><option>SME</option><option>Non-profit</option></select></label>
+              <label>Country<input id="c5-country" type="text"></label>
+              <label>Funding Rate (0–1)<input id="c5-fr" type="number" step="0.01" min="0" max="1" value="1"></label>
+            </div>
+            <div style="margin:.55rem 0 .18rem;font-weight:600;font-size:.88rem;">Primary Contact</div>
+            <div class="grid2">
+              <label>Contact Name<input id="c5-cname" type="text"></label>
+              <label>Contact Position<input id="c5-cpos" type="text"></label>
+              <label>Contact Email<input id="c5-cemail" type="email"></label>
+              <label>Contact Phone<input id="c5-cphone" type="tel"></label>
+            </div>
+            <div style="margin:.75rem 0 .35rem;font-weight:600;font-size:.88rem;">Company Links &amp; Evidence</div>
+            <div style="font-size:.83rem;color:#57606a;margin-bottom:.38rem;">Add URLs that showcase the organisation's activities, skills, services and past work (LinkedIn, portfolios, GitHub, publications, etc.) so AI can analyse the skill pool.</div>
+            <div id="c5-urls">
+              <div class="url-row"><label>Label<input type="text" id="c5-u1l" placeholder="e.g. LinkedIn"></label><label>URL<input type="url" id="c5-u1u" placeholder="https://..."></label><button class="btn btn-sm btn-danger" style="align-self:flex-end;">Remove</button></div>
+            </div>
+            <div class="toolbar" style="margin-bottom:.75rem;"><button class="btn btn-sm btn-primary">+ Add URL</button></div>
+            <div class="modal-footer">
+              <button class="btn" style="background:#e0e0e0;color:#333;" id="c5-cancel">Cancel</button>
+              <button class="btn btn-primary" id="c5-invite-btn">Send Invitation</button>
+              <button class="btn btn-success">Save Partner</button>
+            </div>
+          </div>
+        </div>
+        <!-- Invite sent confirm -->
+        <div id="c5-invite-ok" style="display:none;position:absolute;bottom:1rem;right:1rem;background:#f0f9f4;border:1px solid #b7e4c7;border-radius:8px;padding:.7rem 1rem;font-size:.85rem;color:#1a7f37;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:200;">
+          ✅ Invitation sent to inria@example.eu with login credentials
+        </div>
       </div>
     </div>
 
-    <!-- C6: Admin — Work Packages & Tasks -->
+    <!-- C6: admin.html — Work Packages & Tasks -->
     <div class="scene" id="scene-c6">
       <div class="A">
         <header>
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <h1>Alloc8</h1>
-            <span style="color:rgba(255,255,255,.9);font-size:.9rem;font-weight:600;">Horizon Europe 2025</span>
-          </div>
-          <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-primary">+ Add Admin</button>
-            <button class="btn btn-ghost">Log out</button>
-          </div>
+          <div style="display:flex;align-items:center;gap:1rem;"><h1>Alloc8</h1><span style="color:rgba(255,255,255,.9);font-weight:600;font-size:.9rem;">Horizon Europe 2025</span></div>
+          <div style="display:flex;gap:.5rem;"><button class="btn btn-white">+ Add Admin</button><button class="btn btn-wd">Log out</button></div>
         </header>
         <div class="container">
-          <div class="card" id="wpCard">
+          <div class="card">
             <h2>Work Packages &amp; Tasks</h2>
-            <div class="toolbar">
-              <button class="btn btn-primary">+ Add WP</button>
-            </div>
+            <div class="toolbar"><button class="btn btn-primary" id="c6-addwp">+ Add WP</button></div>
             <!-- WP1 -->
             <div class="wp-block">
               <div class="wp-hdr">
                 <strong>WP1</strong>
-                <input type="text" value="Project Management &amp; Coordination">
-                <span class="lbl-sm">Start:</span><input type="number" value="1">
-                <span class="lbl-sm">End:</span><input type="number" value="48">
+                <input class="wp-name-inp" type="text" value="Project Management &amp; Coordination">
+                <span class="lbl-sm">Start M:</span><input type="number" value="1">
+                <span class="lbl-sm">End M:</span><input type="number" value="48">
                 <button class="btn btn-sm btn-success">+ Task</button>
                 <button class="btn btn-sm btn-danger">Delete WP</button>
               </div>
               <div class="task-list">
-                <div class="task-chip">
-                  <input type="text" value="Consortium Management">
-                  <div style="display:flex;gap:.28rem;align-items:center;flex-wrap:wrap;">
-                    <span style="font-size:.73rem;color:#57606a;">Lead:</span>
-                    <select><option>University of Leeds</option><option>TU Berlin</option></select>
-                  </div>
-                </div>
-                <div class="task-chip">
-                  <input type="text" value="Reporting &amp; Dissemination">
-                  <div style="display:flex;gap:.28rem;align-items:center;flex-wrap:wrap;">
-                    <span style="font-size:.73rem;color:#57606a;">Lead:</span>
-                    <select><option>TU Berlin</option><option>University of Leeds</option></select>
-                  </div>
-                </div>
+                <div class="task-chip"><input type="text" value="Consortium Management &amp; Oversight"><div style="display:flex;gap:.25rem;align-items:center;flex-wrap:wrap;"><span style="font-size:.72rem;color:#57606a;">Lead:</span><select><option>University of Leeds</option><option>TU Berlin</option></select></div></div>
+                <div class="task-chip"><input type="text" value="Reporting &amp; Dissemination"><div style="display:flex;gap:.25rem;align-items:center;"><span style="font-size:.72rem;color:#57606a;">Lead:</span><select><option>TU Berlin</option><option>University of Leeds</option></select></div></div>
               </div>
             </div>
             <!-- WP2 -->
             <div class="wp-block">
               <div class="wp-hdr">
                 <strong>WP2</strong>
-                <input type="text" value="Research &amp; Development">
-                <span class="lbl-sm">Start:</span><input type="number" value="3">
-                <span class="lbl-sm">End:</span><input type="number" value="36">
-                <button class="btn btn-sm btn-success">+ Task</button>
+                <input class="wp-name-inp" type="text" value="Research &amp; Development">
+                <span class="lbl-sm">Start M:</span><input type="number" id="c6-wp2-start" value="3">
+                <span class="lbl-sm">End M:</span><input type="number" id="c6-wp2-end" value="36">
+                <button class="btn btn-sm btn-success" id="c6-addtask">+ Task</button>
                 <button class="btn btn-sm btn-danger">Delete WP</button>
               </div>
-              <div class="task-list">
-                <div class="task-chip">
-                  <input type="text" value="Literature Review &amp; State of Art">
-                  <div style="display:flex;gap:.28rem;align-items:center;">
-                    <span style="font-size:.73rem;color:#57606a;">Lead:</span>
-                    <select><option>University of Leeds</option></select>
-                  </div>
-                </div>
-                <div class="task-chip" id="c6-new-task" style="display:none;border-color:#1a7f37;background:#f0f9f4;">
-                  <input type="text" id="c6-new-task-name" placeholder="New task name...">
-                  <div style="display:flex;gap:.28rem;align-items:center;">
-                    <span style="font-size:.73rem;color:#57606a;">Lead:</span>
-                    <select><option>TU Berlin</option><option>University of Leeds</option></select>
-                  </div>
-                </div>
+              <div class="task-list" id="c6-task-list">
+                <div class="task-chip"><input type="text" value="Literature Review &amp; State of Art"><div style="display:flex;gap:.25rem;align-items:center;"><span style="font-size:.72rem;color:#57606a;">Lead:</span><select><option>University of Leeds</option></select></div></div>
+                <div class="task-chip" id="c6-new-chip" style="display:none;border-color:#1a7f37;background:#f0f9f4;"><input type="text" id="c6-new-task" placeholder="New task name..."><div style="display:flex;gap:.25rem;align-items:center;"><span style="font-size:.72rem;color:#57606a;">Lead:</span><select><option>TU Berlin</option><option>University of Leeds</option><option>INRIA Paris</option></select></div></div>
               </div>
             </div>
           </div>
@@ -696,66 +541,48 @@ body{
       </div>
     </div>
 
-    <!-- C7: Admin — Budget + Generate Report -->
+    <!-- C7: admin.html — Partners toolbar (Export JSON + Generate Report) -->
     <div class="scene" id="scene-c7">
       <div class="A">
         <header>
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <h1>Alloc8</h1>
-            <span style="color:rgba(255,255,255,.9);font-size:.9rem;font-weight:600;">Horizon Europe 2025</span>
-          </div>
-          <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-primary">+ Add Admin</button>
-            <button class="btn btn-ghost">Log out</button>
-          </div>
+          <div style="display:flex;align-items:center;gap:1rem;"><h1>Alloc8</h1><span style="color:rgba(255,255,255,.9);font-weight:600;font-size:.9rem;">Horizon Europe 2025</span></div>
+          <div style="display:flex;gap:.5rem;"><button class="btn btn-white">+ Add Admin</button><button class="btn btn-wd">Log out</button></div>
         </header>
         <div class="container">
-          <div class="section-title">Grand Totals</div>
           <div class="card">
-            <div class="grand-totals">
-              <div class="gt-box"><div class="lbl">Total Person-Months</div><div class="val">384</div></div>
-              <div class="gt-box"><div class="lbl">Total PM Cost (€)</div><div class="val" style="color:#2e75b6;">2,880,000</div></div>
-              <div class="gt-box"><div class="lbl">Total Direct Cost (€)</div><div class="val">3,200,000</div></div>
-              <div class="gt-box"><div class="lbl">Total Indirect (25%) (€)</div><div class="val" style="color:#7c3aed;">800,000</div></div>
-              <div class="gt-box"><div class="lbl">Total Budget (€)</div><div class="val" style="color:#1a7f37;">4,000,000</div></div>
-              <div class="gt-box"><div class="lbl">Total Funding (€)</div><div class="val" style="color:#1a7f37;">3,600,000</div></div>
-            </div>
-          </div>
-          <div class="section-title">Budget Summary</div>
-          <div class="card">
+            <h2>Partners</h2>
             <div class="toolbar">
-              <button class="btn btn-success">&#128229; Export Excel</button>
-              <button class="btn btn-report" id="c7-report-btn" style="margin-left:auto;">&#128196; Generate Report</button>
+              <button class="btn btn-primary">+ Add Partner</button>
+              <button class="btn btn-success" id="c7-export">Export JSON</button>
+              <button class="btn btn-success">Force Global Re-analysis</button>
+              <button class="btn btn-report" style="margin-left:auto;" id="c7-report">&#128196; Generate Report</button>
             </div>
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr><th>#</th><th>Partner</th><th>PM Cost</th><th>Other Direct</th><th>Total Direct</th><th>Indirect (25%)</th><th>Total Budget</th><th>Funding Rate</th><th>Total Funding</th><th>PM</th><th>Type</th></tr>
-                </thead>
+                <thead><tr><th>#</th><th>Logo</th><th>Name</th><th>Username</th><th>Type</th><th>Country</th><th>Rate (€)</th><th>PM</th><th>Budget (€)</th><th>Funding (€)</th><th>Contact Email</th><th>Links</th><th>Actions</th></tr></thead>
                 <tbody>
-                  <tr><td>1</td><td>University of Leeds</td><td>288,000</td><td>45,000</td><td>333,000</td><td>83,250</td><td>416,250</td><td>100%</td><td>374,625</td><td>36</td><td>HES</td></tr>
-                  <tr><td>2</td><td>TU Berlin</td><td>315,000</td><td>38,000</td><td>353,000</td><td>88,250</td><td>441,250</td><td>90%</td><td>397,125</td><td>42</td><td>HES</td></tr>
-                  <tr><td>3</td><td>INRIA Paris</td><td>201,600</td><td>22,000</td><td>223,600</td><td>55,900</td><td>279,500</td><td>100%</td><td>251,550</td><td>28</td><td>REC</td></tr>
-                  <tr class="totals-row"><td colspan="2"><strong>TOTALS</strong></td><td><strong>804,600</strong></td><td><strong>105,000</strong></td><td><strong>909,600</strong></td><td><strong>227,400</strong></td><td><strong>1,137,000</strong></td><td>—</td><td><strong>1,023,300</strong></td><td><strong>106</strong></td><td>—</td></tr>
+                  <tr><td>1</td><td><div style="width:38px;height:38px;border:1px dashed #d0d7de;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#57606a;">Logo</div></td><td><strong>University of Leeds</strong></td><td>leeds_uni</td><td>university</td><td>GB</td><td>8,000</td><td>36</td><td>288,000</td><td>259,200</td><td>admin@leeds.ac.uk</td><td>3</td><td><div style="display:flex;gap:.28rem;"><button class="btn btn-sm btn-primary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></div></td></tr>
+                  <tr><td>2</td><td><div style="width:38px;height:38px;border:1px dashed #d0d7de;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#57606a;">Logo</div></td><td><strong>TU Berlin</strong></td><td>tu_berlin</td><td>university</td><td>DE</td><td>7,500</td><td>42</td><td>315,000</td><td>283,500</td><td>admin@tu-berlin.de</td><td>2</td><td><div style="display:flex;gap:.28rem;"><button class="btn btn-sm btn-primary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></div></td></tr>
+                  <tr><td>3</td><td><div style="width:38px;height:38px;border:1px dashed #d0d7de;border-radius:4px;background:#fff;display:grid;place-items:center;font-size:.62rem;color:#57606a;">Logo</div></td><td><strong>INRIA Paris</strong></td><td>inria_paris</td><td>Research Institution</td><td>FR</td><td>7,200</td><td>28</td><td>201,600</td><td>201,600</td><td>admin@inria.fr</td><td>4</td><td><div style="display:flex;gap:.28rem;"><button class="btn btn-sm btn-primary">Edit</button><button class="btn btn-sm btn-danger">Delete</button></div></td></tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <!-- Report generating overlay -->
-          <div id="c7-gen-overlay" style="display:none;position:absolute;inset:0;background:rgba(31,78,121,.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;color:#fff;">
-            <div style="width:56px;height:56px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1.4rem;"></div>
-            <div style="font-size:1.2rem;font-weight:600;margin-bottom:.4rem;">Generating Report...</div>
-            <div style="font-size:.9rem;opacity:.8;">Building charts, tables, and Gantt — please wait</div>
+          <!-- Loading overlay for report generation -->
+          <div class="loading-overlay" id="c7-gen-ov">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Generating Report…</div>
+            <div class="loading-subtext">Building charts, Gantt, budget tables, and skill analysis — please wait</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════
+    <!-- ═══════════════════════════════════════
          PARTNER SCENES
-    ════════════════════════════════════════ -->
+    ═══════════════════════════════════════ -->
 
-    <!-- P1: Partner Login (login.html exact) -->
+    <!-- P1: login.html — partner -->
     <div class="scene" id="scene-p1">
       <div class="auth-bg">
         <div class="auth-card">
@@ -764,72 +591,232 @@ body{
           <form onsubmit="return false;">
             <div class="afg"><label>Username</label><input id="p1-user" type="text" autocomplete="off"></div>
             <div class="afg"><label>Password</label><input id="p1-pass" type="password"></div>
-            <button class="auth-btn-main" type="button">Log in</button>
+            <button class="auth-btn-p" type="button">Log in</button>
           </form>
-          <div style="text-align:center;margin-top:1.4rem;padding-top:1.4rem;border-top:1px solid #d0d7de;">
-            <p style="margin:0 0 .5rem;font-size:.88rem;color:#57606a;">Don't have an account?</p>
-            <button class="auth-btn-sec" type="button">Create New Project</button>
+          <div style="text-align:center;margin-top:1.3rem;padding-top:1.3rem;border-top:1px solid #d0d7de;">
+            <p style="margin:0 0 .45rem;font-size:.87rem;color:#57606a;">Don't have an account?</p>
+            <button class="auth-btn-s" type="button">Create New Project</button>
+          </div>
+          <div style="margin-top:.9rem;background:#fff8e1;border:1px solid #f0d070;border-radius:6px;padding:.6rem .85rem;font-size:.83rem;color:#7c5c00;text-align:center;">
+            Your credentials were provided by your project coordinator
           </div>
         </div>
         <p class="auth-footer">© 2026 Alloc8 — Intelligent Resource Allocation</p>
       </div>
     </div>
 
-    <!-- P2: Partner Dashboard — WP Assignments (partner-main.html) -->
+    <!-- P2: partner.html — organisation info + logo -->
     <div class="scene" id="scene-p2">
       <div class="A">
         <header>
-          <h1 id="p2-title">Alloc8 Partner Dashboard</h1>
+          <h1>Alloc8 — Partner</h1>
           <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-primary">Edit Info &amp; Budget</button>
-            <button class="btn btn-danger">Log out</button>
+            <button class="btn btn-primary">Dashboard</button>
+            <button class="btn btn-danger" style="background:#fff;color:#cf222e;">Log out</button>
           </div>
         </header>
-        <div class="container">
+        <div class="container-md">
           <div class="card">
-            <h2>Work Package &amp; Task Assignments</h2>
-            <p style="font-size:.83rem;color:#57606a;margin-bottom:.7rem;">This page shows the complete Alloc8 workflow. Green borders highlight the Work Packages and tasks assigned to your organisation.</p>
-            <div class="legend-row">
-              <div class="leg-item"><div class="leg-box asgn"></div> Assigned to you</div>
-              <div class="leg-item"><div class="leg-box"></div> Assigned to another partner</div>
-            </div>
-            <!-- WP1 — not assigned -->
-            <div class="wp-block-p">
-              <div class="wp-phdr">WP1 — Project Management &amp; Coordination <span style="font-weight:400;color:#57606a;font-size:.78rem;margin-left:.4rem;">M1–M48</span></div>
-              <div class="flowchart">
-                <div class="fc-wp-box">WP1: Project Management &amp; Coordination</div>
-                <div class="fc-line"></div>
-                <div class="fc-tasks">
-                  <div class="fc-task">
-                    <div class="t-name">Consortium Management</div>
-                    <div class="t-lead">Lead: University of Leeds</div>
-                  </div>
-                  <div class="fc-task assigned">
-                    <div class="t-name">Reporting &amp; Dissemination</div>
-                    <div class="t-lead">Lead: <strong style="color:#1a7f37;">TU Berlin ★</strong></div>
-                  </div>
-                </div>
+            <h2 id="p2-title">TU Berlin</h2>
+            <div class="logo-wrap">
+              <div class="logo-placeholder">No logo</div>
+              <div style="display:flex;flex-direction:column;gap:.4rem;">
+                <label style="display:flex;flex-direction:column;gap:.2rem;font-size:.78rem;color:#57606a;">Upload / Change Logo (PNG)<input type="file" accept="image/png" style="font-size:.83rem;"></label>
+                <span style="font-size:.78rem;color:#1a7f37;display:none;">Logo uploaded!</span>
               </div>
             </div>
-            <!-- WP2 — assigned -->
+            <div class="meta-grid">
+              <label>PIC<input id="p2-pic" type="text"></label>
+              <label>Personnel Monthly Rate (€)<input id="p2-rate" type="number" step="0.01"></label>
+              <label>Type<select id="p2-type"><option>university</option><option>Research Institution</option><option>Industry</option><option>SME</option></select></label>
+              <label>Country<input id="p2-country" type="text"></label>
+              <label>Funding Rate (%)
+                <div style="display:flex;align-items:center;gap:.3rem;">
+                  <input id="p2-fr" type="number" step="1" min="0" max="100" style="flex:1;">
+                  <span style="color:#57606a;">%</span>
+                </div>
+              </label>
+            </div>
+            <div style="margin-top:.75rem;"><strong>Primary Contact</strong></div>
+            <div class="meta-grid" style="margin-top:.38rem;">
+              <label>Contact Name<input id="p2-cn" type="text"></label>
+              <label>Contact Position<input id="p2-cp" type="text"></label>
+              <label>Contact Email<input id="p2-ce" type="email"></label>
+              <label>Contact Phone<input id="p2-cph" type="tel"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P3: partner.html — Company Links (URLs for AI) -->
+    <div class="scene" id="scene-p3">
+      <div class="A">
+        <header>
+          <h1>Alloc8 — Partner</h1>
+          <div style="display:flex;gap:.5rem;"><button class="btn btn-primary">Dashboard</button><button class="btn btn-danger" style="background:#fff;color:#cf222e;">Log out</button></div>
+        </header>
+        <div class="container-md">
+          <div class="card">
+            <h2>Company Links &amp; Evidence</h2>
+            <div class="hint">Add URLs that showcase your organisation's activities, skills, services and past work. Include <strong>LinkedIn profiles</strong>, <strong>project portfolios</strong>, <strong>publications</strong>, <strong>GitHub repositories</strong>, or any evidence that helps AI analyse your expertise and skill pool for consortium matching.</div>
+            <div id="p3-urls">
+              <div class="url-row"><label>Label<input type="text" id="p3-l1" value="LinkedIn Profile"></label><label>URL<input type="url" id="p3-u1" value="https://linkedin.com/company/tu-berlin"></label><button class="btn btn-sm btn-danger" style="align-self:flex-end;">Remove</button></div>
+              <div class="url-row"><label>Label<input type="text" id="p3-l2" placeholder="e.g. GitHub"></label><label>URL<input type="url" id="p3-u2" placeholder="https://..."></label><button class="btn btn-sm btn-danger" style="align-self:flex-end;">Remove</button></div>
+            </div>
+            <div class="toolbar" style="margin-top:.55rem;">
+              <button class="btn btn-primary" id="p3-addurl">+ Add URL</button>
+            </div>
+            <div id="p3-new-url" style="display:none;" class="url-row">
+              <label>Label<input type="text" id="p3-l3" placeholder="e.g. Research Portfolio"></label>
+              <label>URL<input type="url" id="p3-u3" placeholder="https://..."></label>
+              <button class="btn btn-sm btn-danger" style="align-self:flex-end;">Remove</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Why do URLs matter?</h2>
+            <div class="hint">The AI scrapes these URLs to understand your team's capabilities, publications, and past projects. This data is used to generate <strong>skill compatibility scores</strong> for each assigned Work Package — visible to all consortium partners as radar charts.</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:.5rem;">
+              <div style="background:#f0f4f8;border-radius:8px;padding:.8rem;text-align:center;"><div style="font-size:1.4rem;margin-bottom:.35rem;">🔗</div><div style="font-size:.8rem;font-weight:700;color:#1f4e79;margin-bottom:.25rem;">LinkedIn / Website</div><div style="font-size:.76rem;color:#57606a;">Shows team expertise, size, and domain focus</div></div>
+              <div style="background:#f0f4f8;border-radius:8px;padding:.8rem;text-align:center;"><div style="font-size:1.4rem;margin-bottom:.35rem;">📄</div><div style="font-size:.8rem;font-weight:700;color:#1f4e79;margin-bottom:.25rem;">Publications / Portfolios</div><div style="font-size:.76rem;color:#57606a;">Demonstrates research output and track record</div></div>
+              <div style="background:#f0f4f8;border-radius:8px;padding:.8rem;text-align:center;"><div style="font-size:1.4rem;margin-bottom:.35rem;">💻</div><div style="font-size:.8rem;font-weight:700;color:#1f4e79;margin-bottom:.25rem;">GitHub / Code Repos</div><div style="font-size:.76rem;color:#57606a;">Reveals technical skills and open-source contributions</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P4: partner.html — WP tasks + PM + Save + AI Analysis -->
+    <div class="scene" id="scene-p4">
+      <div class="A">
+        <header>
+          <h1>Alloc8 — Partner</h1>
+          <div style="display:flex;gap:.5rem;"><button class="btn btn-primary">Dashboard</button><button class="btn btn-danger" style="background:#fff;color:#cf222e;">Log out</button></div>
+        </header>
+        <div class="container-md">
+          <div class="card">
+            <h2>Your Assigned Work Packages &amp; Tasks</h2>
+            <div class="hint">Enter your estimated person-months (PM) for each assigned task. These values feed directly into the budget calculation.</div>
+            <!-- WP1 tasks -->
+            <div class="wp-block-p" style="background:#eef4fa;">
+              <div class="wp-phdr">WP1 — Project Management &amp; Coordination <span style="font-weight:400;color:#57606a;font-size:.77rem;">M1–M48</span></div>
+              <div class="flowchart" style="align-items:flex-start;flex-direction:row;gap:1rem;flex-wrap:wrap;">
+                <table class="task-table" style="width:100%;">
+                  <tr><td>Reporting &amp; Dissemination <span style="font-size:.72rem;color:#1a7f37;font-weight:600;">(Lead)</span></td><td><input type="number" id="p4-pm1" value="12" min="0" style="width:90px;"> <span style="font-size:.78rem;color:#57606a;">PM</span></td></tr>
+                </table>
+              </div>
+            </div>
+            <!-- WP2 tasks -->
             <div class="wp-block-p assigned">
-              <div class="wp-phdr">WP2 — Research &amp; Development <span style="font-weight:400;color:#57606a;font-size:.78rem;margin-left:.4rem;">M3–M36</span></div>
-              <div class="flowchart">
-                <div class="fc-wp-box">WP2: Research &amp; Development</div>
-                <div class="fc-line"></div>
-                <div class="fc-tasks">
-                  <div class="fc-task">
-                    <div class="t-name">Literature Review &amp; State of Art</div>
-                    <div class="t-lead">Lead: University of Leeds</div>
-                  </div>
-                  <div class="fc-task assigned">
-                    <div class="t-name">Algorithm Development</div>
-                    <div class="t-lead">Lead: <strong style="color:#1a7f37;">TU Berlin ★</strong></div>
-                  </div>
-                  <div class="fc-task assigned">
-                    <div class="t-name">Prototype Testing &amp; Validation</div>
-                    <div class="t-lead">Contributor: <strong style="color:#1a7f37;">TU Berlin</strong></div>
-                  </div>
+              <div class="wp-phdr">WP2 — Research &amp; Development <span style="font-weight:400;color:#57606a;font-size:.77rem;">M3–M36</span></div>
+              <table class="task-table" style="width:100%;">
+                <tr><td>Algorithm Development <span style="font-size:.72rem;color:#1a7f37;font-weight:600;">(Lead)</span></td><td><input type="number" id="p4-pm2" value="24" min="0" style="width:90px;"> <span style="font-size:.78rem;color:#57606a;">PM</span></td></tr>
+                <tr><td>Prototype Testing &amp; Validation <span style="font-size:.72rem;color:#2e75b6;font-weight:600;">(Contributor)</span></td><td><input type="number" id="p4-pm3" value="6" min="0" style="width:90px;"> <span style="font-size:.78rem;color:#57606a;">PM</span></td></tr>
+              </table>
+            </div>
+            <!-- AI Analysis section -->
+            <div class="ai-section">
+              <h4>AI Skill Analysis</h4>
+              <p>Scrape partner URLs and analyze your capabilities against assigned Work Packages and Tasks. Results are shown as radar charts visible to all consortium partners.</p>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <button class="btn btn-primary" id="p4-analyze" style="font-size:.85rem;padding:.4rem .8rem;">Scrape &amp; Analyze</button>
+                <button class="btn" style="font-size:.85rem;padding:.4rem .8rem;background:#e8ecf1;color:#24292f;" disabled>View Results</button>
+              </div>
+            </div>
+            <!-- Toolbar -->
+            <div class="toolbar" style="margin-top:.85rem;padding-top:.85rem;border-top:1px solid #d0d7de;">
+              <button class="btn btn-success" id="p4-save">Save All Data</button>
+              <span id="p4-saved" style="color:#1a7f37;font-weight:600;display:none;font-size:.87rem;">✓ Saved!</span>
+            </div>
+          </div>
+          <!-- Loading overlay -->
+          <div class="loading-overlay" id="p4-loading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="p4-loading-txt">Analyzing Skills…</div>
+            <div class="loading-subtext">AI is scraping your URLs and analyzing capabilities against Work Packages and Tasks.<br>This may take a few minutes. Please do not close the browser.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- P5: partner-main.html — Consortium with radar charts (post-AI) -->
+    <div class="scene" id="scene-p5">
+      <div class="A">
+        <header>
+          <h1>Alloc8 Partner Dashboard</h1>
+          <div style="display:flex;gap:.5rem;"><button class="btn btn-primary">Edit Info &amp; Budget</button><button class="btn btn-danger">Log out</button></div>
+        </header>
+        <div class="container-md">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.65rem;">
+              <h2 style="margin:0;">Consortium Partners &amp; Skill Pool</h2>
+              <button class="btn btn-primary">Refresh</button>
+            </div>
+            <p class="hint" style="margin-bottom:.85rem;">AI-analysed skill relevance per Work Package for each partner (1.0–5.0). Scoped to this project only. Radar charts show compatibility of assigned WPs — visible to all consortium partners.</p>
+            <div class="consortium-grid">
+              <!-- Leeds -->
+              <div class="consortium-item">
+                <div class="c-placeholder">Logo</div>
+                <div class="c-name">University of Leeds</div>
+                <span class="c-badge" style="background:#1a7f37;color:#fff;">Coordinator</span>
+                <div class="c-contact">admin@leeds.ac.uk · GB · university</div>
+                <div class="c-avg">Avg WP Compatibility: <strong>7.4</strong>/10</div>
+                <div class="c-chart">
+                  <svg width="150" height="150" viewBox="-12 -12 124 124">
+                    <polygon points="50,2 94,27 94,73 50,98 6,73 6,27" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,17 79,34 79,66 50,83 21,66 21,34" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,32 64,41 64,59 50,68 36,59 36,41" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,6 91,29 88,70 50,94 12,70 9,29" fill="#1f4e79" fill-opacity=".18" stroke="#1f4e79" stroke-width="1.8"/>
+                    <text x="50" y="-3" text-anchor="middle" font-size="8" fill="#57606a">WP1</text>
+                    <text x="100" y="30" font-size="8" fill="#57606a">WP2</text>
+                    <text x="100" y="76" font-size="8" fill="#57606a">WP3</text>
+                    <text x="50" y="110" text-anchor="middle" font-size="8" fill="#57606a">WP4</text>
+                    <text x="-5" y="76" font-size="8" fill="#57606a">WP5</text>
+                    <text x="-5" y="30" font-size="8" fill="#57606a">WP6</text>
+                  </svg>
+                </div>
+              </div>
+              <!-- TU Berlin -->
+              <div class="consortium-item">
+                <div class="c-placeholder">Logo</div>
+                <div class="c-name">TU Berlin</div>
+                <span class="c-badge" style="background:#2e75b6;color:#fff;">You</span>
+                <div class="c-contact">admin@tu-berlin.de · DE · university</div>
+                <div class="c-avg">Avg WP Compatibility: <strong>8.1</strong>/10</div>
+                <div class="c-chart">
+                  <svg width="150" height="150" viewBox="-12 -12 124 124">
+                    <polygon points="50,2 94,27 94,73 50,98 6,73 6,27" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,17 79,34 79,66 50,83 21,66 21,34" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,32 64,41 64,59 50,68 36,59 36,41" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,4 93,28 91,72 50,96 9,72 7,28" fill="#2e75b6" fill-opacity=".18" stroke="#2e75b6" stroke-width="1.8"/>
+                    <text x="50" y="-3" text-anchor="middle" font-size="8" fill="#57606a">WP1</text>
+                    <text x="100" y="30" font-size="8" fill="#57606a">WP2</text>
+                    <text x="100" y="76" font-size="8" fill="#57606a">WP3</text>
+                    <text x="50" y="110" text-anchor="middle" font-size="8" fill="#57606a">WP4</text>
+                    <text x="-5" y="76" font-size="8" fill="#57606a">WP5</text>
+                    <text x="-5" y="30" font-size="8" fill="#57606a">WP6</text>
+                  </svg>
+                </div>
+              </div>
+              <!-- INRIA -->
+              <div class="consortium-item">
+                <div class="c-placeholder">Logo</div>
+                <div class="c-name">INRIA Paris</div>
+                <div class="c-contact">admin@inria.fr · FR · Research Institution</div>
+                <div class="c-avg">Avg WP Compatibility: <strong>7.8</strong>/10</div>
+                <div class="c-chart">
+                  <svg width="150" height="150" viewBox="-12 -12 124 124">
+                    <polygon points="50,2 94,27 94,73 50,98 6,73 6,27" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,17 79,34 79,66 50,83 21,66 21,34" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,32 64,41 64,59 50,68 36,59 36,41" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
+                    <polygon points="50,7 90,29 89,71 50,95 11,71 10,29" fill="#5ba3d9" fill-opacity=".18" stroke="#5ba3d9" stroke-width="1.8"/>
+                    <text x="50" y="-3" text-anchor="middle" font-size="8" fill="#57606a">WP1</text>
+                    <text x="100" y="30" font-size="8" fill="#57606a">WP2</text>
+                    <text x="100" y="76" font-size="8" fill="#57606a">WP3</text>
+                    <text x="50" y="110" text-anchor="middle" font-size="8" fill="#57606a">WP4</text>
+                    <text x="-5" y="76" font-size="8" fill="#57606a">WP5</text>
+                    <text x="-5" y="30" font-size="8" fill="#57606a">WP6</text>
+                  </svg>
                 </div>
               </div>
             </div>
@@ -838,30 +825,26 @@ body{
       </div>
     </div>
 
-    <!-- P3: Partner Dashboard — Gantt (partner-main.html exact structure) -->
-    <div class="scene" id="scene-p3">
+    <!-- P6: partner-main.html — Gantt with status cycling -->
+    <div class="scene" id="scene-p6">
       <div class="A">
         <header>
           <h1>Alloc8 Partner Dashboard</h1>
-          <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-primary">Edit Info &amp; Budget</button>
-            <button class="btn btn-danger">Log out</button>
-          </div>
+          <div style="display:flex;gap:.5rem;"><button class="btn btn-primary">Edit Info &amp; Budget</button><button class="btn btn-danger">Log out</button></div>
         </header>
-        <div class="container">
+        <div class="container-md">
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
               <h2 style="margin:0;">Project Timeline</h2>
-              <span style="font-size:.76rem;color:#57606a;">Click each month cell in your assigned tasks to cycle status</span>
+              <span style="font-size:.75rem;color:#57606a;">Click each month cell in your assigned tasks to cycle status</span>
             </div>
             <div class="gantt-legend">
               <div class="gl-item"><div class="gl-dot" style="background:#e2e8f0;border:1px solid #cbd5e1;"></div>Not Started</div>
               <div class="gl-item"><div class="gl-dot" style="background:#3b82f6;"></div>In Progress ▶</div>
               <div class="gl-item"><div class="gl-dot" style="background:#059669;"></div>Completed ✓</div>
-              <div class="gl-item" style="margin-left:auto;font-weight:600;color:#1f4e79;font-size:.76rem;">● Your assigned tasks are interactive</div>
+              <div class="gl-item" style="margin-left:auto;font-weight:600;color:#1f4e79;font-size:.75rem;">● Your assigned tasks are interactive</div>
             </div>
             <div class="gantt-outer">
-              <!-- Names column -->
               <div class="gantt-names">
                 <div class="gnhdr">Work Package / Task</div>
                 <div class="gn-row gn-wp"><span class="gn-name">WP1 — Project Management</span></div>
@@ -872,98 +855,23 @@ body{
                 <div class="gn-row gn-task mine"><div class="gn-dot" style="background:#1f4e79;"></div><span class="gn-name">Algorithm Development</span></div>
                 <div class="gn-row gn-task mine"><div class="gn-dot" style="background:#5ba3d9;"></div><span class="gn-name">Prototype Testing</span></div>
               </div>
-              <!-- Timeline scroll -->
               <div class="gantt-scroll">
-                <div class="gantt-inner" id="p3-gantt-inner">
-                  <!-- Built by JS -->
-                </div>
+                <div class="gantt-inner" id="p6-gantt"><!-- built by JS --></div>
               </div>
             </div>
+            <!-- Status callout -->
+            <div id="p6-status-note" style="margin-top:.6rem;background:#f0f6ff;border:1px solid #b3d4f5;border-radius:6px;padding:.55rem .8rem;font-size:.83rem;color:#1f4e79;display:none;">
+              <strong>Status updated:</strong> <span id="p6-status-txt"></span>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- P4: Partner — Consortium & Skill Pool (partner-main.html exact) -->
-    <div class="scene" id="scene-p4">
-      <div class="A">
-        <header>
-          <h1>Alloc8 Partner Dashboard</h1>
-          <div style="display:flex;gap:.5rem;">
-            <button class="btn btn-primary">Edit Info &amp; Budget</button>
-            <button class="btn btn-danger">Log out</button>
-          </div>
-        </header>
-        <div class="container">
+          <!-- Partner progress info -->
           <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;">
-              <h2 style="margin:0;">Consortium Partners &amp; Skill Pool</h2>
-              <button class="btn btn-primary">Refresh</button>
-            </div>
-            <p style="font-size:.83rem;color:#57606a;margin-bottom:.9rem;">AI-analysed skill relevance per Work Package for each partner (1.0–5.0). Scoped to this project only.</p>
-            <div class="consortium-grid">
-              <!-- Leeds -->
-              <div class="consortium-item">
-                <div class="c-placeholder">Logo</div>
-                <div class="c-name">University of Leeds</div>
-                <span class="c-badge" style="background:#1a7f37;color:#fff;">Your Partner</span>
-                <div class="c-contact">admin@leeds.ac.uk<br>Leeds, United Kingdom · HES</div>
-                <div class="c-avg">Avg Skill Score: <strong>7.4</strong>/10</div>
-                <div style="height:175px;display:flex;align-items:center;justify-content:center;">
-                  <svg width="155" height="155" viewBox="-10 -10 120 120">
-                    <polygon points="50,2 95,28 95,72 50,98 5,72 5,28" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,15 82,33 82,67 50,85 18,67 18,33" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,28 69,38 69,62 50,72 31,62 31,38" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,6 90,30 88,68 50,93 12,68 10,30" fill="#1f4e79" fill-opacity=".18" stroke="#1f4e79" stroke-width="1.8"/>
-                    <text x="50" y="-2" text-anchor="middle" font-size="8" fill="#57606a">ML/AI</text>
-                    <text x="103" y="31" font-size="8" fill="#57606a">Systems</text>
-                    <text x="98" y="76" font-size="8" fill="#57606a">Research</text>
-                    <text x="1" y="76" font-size="8" fill="#57606a">Mgmt</text>
-                    <text x="-10" y="31" font-size="8" fill="#57606a">Data</text>
-                  </svg>
-                </div>
-              </div>
-              <!-- TU Berlin -->
-              <div class="consortium-item">
-                <div class="c-placeholder">Logo</div>
-                <div class="c-name">TU Berlin</div>
-                <span class="c-badge" style="background:#2e75b6;color:#fff;">You</span>
-                <div class="c-contact">admin@tu-berlin.de<br>Berlin, Germany · HES</div>
-                <div class="c-avg">Avg Skill Score: <strong>8.1</strong>/10</div>
-                <div style="height:175px;display:flex;align-items:center;justify-content:center;">
-                  <svg width="155" height="155" viewBox="-10 -10 120 120">
-                    <polygon points="50,2 95,28 95,72 50,98 5,72 5,28" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,15 82,33 82,67 50,85 18,67 18,33" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,28 69,38 69,62 50,72 31,62 31,38" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,4 93,29 91,70 50,95 9,70 7,29" fill="#2e75b6" fill-opacity=".18" stroke="#2e75b6" stroke-width="1.8"/>
-                    <text x="50" y="-2" text-anchor="middle" font-size="8" fill="#57606a">ML/AI</text>
-                    <text x="103" y="31" font-size="8" fill="#57606a">Systems</text>
-                    <text x="98" y="76" font-size="8" fill="#57606a">Research</text>
-                    <text x="1" y="76" font-size="8" fill="#57606a">Mgmt</text>
-                    <text x="-10" y="31" font-size="8" fill="#57606a">Data</text>
-                  </svg>
-                </div>
-              </div>
-              <!-- INRIA -->
-              <div class="consortium-item">
-                <div class="c-placeholder">Logo</div>
-                <div class="c-name">INRIA Paris</div>
-                <div class="c-contact">admin@inria.fr<br>Paris, France · REC</div>
-                <div class="c-avg">Avg Skill Score: <strong>7.8</strong>/10</div>
-                <div style="height:175px;display:flex;align-items:center;justify-content:center;">
-                  <svg width="155" height="155" viewBox="-10 -10 120 120">
-                    <polygon points="50,2 95,28 95,72 50,98 5,72 5,28" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,15 82,33 82,67 50,85 18,67 18,33" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,28 69,38 69,62 50,72 31,62 31,38" fill="none" stroke="#e8ecf1" stroke-width="1.2"/>
-                    <polygon points="50,7 91,30 90,69 50,94 10,69 9,30" fill="#5ba3d9" fill-opacity=".18" stroke="#5ba3d9" stroke-width="1.8"/>
-                    <text x="50" y="-2" text-anchor="middle" font-size="8" fill="#57606a">ML/AI</text>
-                    <text x="103" y="31" font-size="8" fill="#57606a">Systems</text>
-                    <text x="98" y="76" font-size="8" fill="#57606a">Research</text>
-                    <text x="1" y="76" font-size="8" fill="#57606a">Mgmt</text>
-                    <text x="-10" y="31" font-size="8" fill="#57606a">Data</text>
-                  </svg>
-                </div>
-              </div>
+            <h2>Other Partners' Progress (read-only)</h2>
+            <p class="hint">You can see the progress of other partners' tasks in the Gantt. Only your assigned tasks (highlighted in blue) are interactive.</p>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;">
+              <div style="background:#f6f8fa;border-radius:8px;padding:.75rem;text-align:center;"><div style="font-size:.82rem;font-weight:700;color:#1f4e79;margin-bottom:.35rem;">University of Leeds</div><div style="height:8px;background:#e8ecf1;border-radius:4px;overflow:hidden;"><div style="width:68%;height:100%;background:#059669;border-radius:4px;"></div></div><div style="font-size:.76rem;color:#57606a;margin-top:.3rem;">68% complete</div></div>
+              <div style="background:#f6f8fa;border-radius:8px;padding:.75rem;text-align:center;"><div style="font-size:.82rem;font-weight:700;color:#2e75b6;margin-bottom:.35rem;">TU Berlin (You)</div><div style="height:8px;background:#e8ecf1;border-radius:4px;overflow:hidden;"><div id="p6-own-bar" style="width:35%;height:100%;background:#3b82f6;border-radius:4px;transition:width .5s;"></div></div><div id="p6-own-pct" style="font-size:.76rem;color:#57606a;margin-top:.3rem;">35% complete</div></div>
+              <div style="background:#f6f8fa;border-radius:8px;padding:.75rem;text-align:center;"><div style="font-size:.82rem;font-weight:700;color:#5ba3d9;margin-bottom:.35rem;">INRIA Paris</div><div style="height:8px;background:#e8ecf1;border-radius:4px;overflow:hidden;"><div style="width:42%;height:100%;background:#059669;border-radius:4px;"></div></div><div style="font-size:.76rem;color:#57606a;margin-top:.3rem;">42% complete</div></div>
             </div>
           </div>
         </div>
@@ -972,337 +880,379 @@ body{
 
   </div><!-- #screen -->
 
-  <div id="subtitle-bar"><span id="subtitle-text">&nbsp;</span></div>
-
+  <div id="sub-bar"><span id="sub-txt">&nbsp;</span></div>
   <div id="controls">
     <button id="play-btn" onclick="togglePlay()">&#9654;</button>
-    <div id="progress-track" onclick="seekClick(event)"><div id="progress-fill"></div></div>
-    <span id="time-label">0:00 / 0:00</span>
+    <div id="prog-track" onclick="seekClick(event)"><div id="prog-fill"></div></div>
+    <span id="time-lbl">0:00 / 0:00</span>
     <div id="chapters"></div>
     <button id="restart-btn" onclick="restart()">&#8635; Restart</button>
   </div>
-</div><!-- #demo-wrap -->
-
-<style>
-@keyframes spin{to{transform:rotate(360deg);}}
-</style>
+</div>
 
 <script>
-// ══════════════════════════════════════════════════════
-// BUILD GANTT (scene P3)
-// ══════════════════════════════════════════════════════
-(function buildGantt(){
-  const MONTHS = 16;
-  const W = 46; // px per month
-  const rows = [
-    {type:'wp',  start:1,  end:MONTHS, color:null, mine:false},   // WP1 header
-    {type:'task',start:1,  end:MONTHS, color:'#c9d8e8', mine:false}, // Consortium Mgmt (other)
-    {type:'task',start:1,  end:MONTHS, color:'#1f4e79', mine:true},  // Reporting (mine)
-    {type:'wp',  start:3,  end:MONTHS, color:null, mine:false},   // WP2 header
-    {type:'task',start:3,  end:12,     color:'#c9d8e8', mine:false}, // Lit Review (other)
-    {type:'task',start:3,  end:MONTHS, color:'#1f4e79', mine:true},  // Algorithm (mine)
-    {type:'task',start:6,  end:MONTHS, color:'#5ba3d9', mine:true},  // Prototype (mine/contrib)
+// ══════════════════════════════════════════
+// BUILD GANTT P6
+// ══════════════════════════════════════════
+(function(){
+  const M=14, W=44;
+  // rows: {type, start, end, color, mine, id}
+  const rows=[
+    {type:'wp',  s:1, e:M, c:null,      mine:false},
+    {type:'task',s:1, e:M, c:'#c0d4e8', mine:false},
+    {type:'task',s:1, e:M, c:'#1f4e79', mine:true,  id:'rp'},
+    {type:'wp',  s:3, e:M, c:null,      mine:false},
+    {type:'task',s:3, e:11,c:'#c0d4e8', mine:false},
+    {type:'task',s:3, e:M, c:'#1f4e79', mine:true,  id:'alg'},
+    {type:'task',s:6, e:M, c:'#5ba3d9', mine:true,  id:'prot'},
   ];
-
-  // Build header
-  let hdrHtml = '<div class="gantt-mhdr">';
-  for(let m=1;m<=MONTHS;m++){
-    const q=Math.ceil(m/3), qs=(m-1)%3===0;
-    hdrHtml += `<div class="gmcell-hdr${qs?' qs':''}">`;
-    if(qs) hdrHtml += `<span class="ql">Q${q}</span>`;
-    hdrHtml += `<span>M${m}</span></div>`;
-  }
-  hdrHtml += '</div>';
-
-  // Build rows
-  let rowHtml = '';
-  rows.forEach((row, ri) => {
-    const cls = row.type==='wp' ? 'g-row g-wp' : 'g-row g-task';
-    rowHtml += `<div class="${cls}">`;
-    for(let m=1;m<=MONTHS;m++){
-      const active = row.color && m>=row.start && m<=row.end;
-      const first = active && m===row.start;
-      const last  = active && m===row.end;
-      rowHtml += `<div class="gmcell">`;
-      if(row.type==='wp'){
-        if(m>=row.start&&m<=row.end){
-          const fr=first?' ws-first':'', la=last?' ws-last':'';
-          rowHtml += `<div class="wp-strip${fr}${la}"></div>`;
-        }
-      } else if(active){
-        rowHtml += `<div class="mcfill" style="background:${row.color};"></div>`;
-        if(row.mine && row.color==='#1f4e79') rowHtml += `<span class="mclbl">PM</span>`;
+  let hdr='<div class="gmhdr">';
+  for(let m=1;m<=M;m++){const q=Math.ceil(m/3),qs=(m-1)%3===0;hdr+=`<div class="gm-hcell${qs?' qs':''}">${qs?`<span class="ql">Q${q}</span>`:''}M${m}</div>`;}
+  hdr+='</div>';
+  let body='';
+  rows.forEach(r=>{
+    const cls=r.type==='wp'?'g-row g-wp':'g-row g-task';
+    body+=`<div class="${cls}">`;
+    for(let m=1;m<=M;m++){
+      const active=r.c&&m>=r.s&&m<=r.e;
+      const first=active&&m===r.s, last=active&&m===r.e;
+      const cid=r.id?`id="gcell-${r.id}-${m}"`:'';
+      body+=`<div class="gmcell" ${cid}>`;
+      if(r.type==='wp'&&m>=r.s&&m<=r.e){
+        body+=`<div class="wp-strip${first?' wf':''}${last?' wl':''}"></div>`;
+      }else if(active){
+        const defColor=r.mine?'#e2e8f0':r.c;
+        body+=`<div class="mcfill" id="mf-${r.id||'oth'}-${m}" style="background:${defColor};"></div>`;
+        if(!r.mine)body+=`<div class="mcfill" style="position:absolute;inset:3px 2px;border-radius:4px;background:${r.c};"></div>`;
       }
-      rowHtml += '</div>';
+      body+='</div>';
     }
-    rowHtml += '</div>';
+    body+='</div>';
   });
-
-  document.getElementById('p3-gantt-inner').innerHTML = hdrHtml + rowHtml;
+  document.getElementById('p6-gantt').innerHTML=hdr+body;
 })();
 
-// ══════════════════════════════════════════════════════
+// Gantt cell status cycling (demo-driven)
+const GANTT_STATUSES=[
+  {bg:'#e2e8f0',lbl:''},
+  {bg:'#3b82f6',lbl:'▶'},
+  {bg:'#059669',lbl:'✓'},
+];
+const ganttState={};
+function setGanttCell(id,m,statusIdx){
+  const st=GANTT_STATUSES[statusIdx];
+  const mf=document.getElementById('mf-'+id+'-'+m);
+  if(!mf)return;
+  mf.style.background=st.bg;
+  mf.textContent='';
+  if(st.lbl){const lbl=document.createElement('span');lbl.className='mclbl';lbl.textContent=st.lbl;mf.appendChild(lbl);}
+  ganttState[id+'-'+m]=statusIdx;
+}
+function cycleCells(id,months,statusIdx,note){
+  months.forEach(m=>setGanttCell(id,m,statusIdx));
+  const ntEl=document.getElementById('p6-status-note');
+  const txtEl=document.getElementById('p6-status-txt');
+  if(ntEl&&txtEl){
+    const labels={rp:'Reporting & Dissemination',alg:'Algorithm Development',prot:'Prototype Testing'};
+    const stNames=['Not Started','In Progress','Completed'];
+    txtEl.textContent=`${labels[id]||id} → ${stNames[statusIdx]}`;
+    ntEl.style.display='block';
+  }
+}
+
+// ══════════════════════════════════════════
 // TIMELINE ENGINE
-// ══════════════════════════════════════════════════════
-let currentPart = 'coord';
-let elapsed = 0, playing = false, rafId = null, lastTime = null;
-let duration = 0;
-let fired = new Set();
+// ══════════════════════════════════════════
+let currentPart='coord', elapsed=0, playing=false, rafId=null, lastTime=null, duration=0;
+let fired=new Set();
 
-// ── Coordinator config ────────────────────────────────
-const COORD = {
-  dur: 185,
-  chapters: [
-    {t:0,   label:'Create Account', scene:'c1', url:'alloc8.org/login'},
-    {t:9,   label:'Sign Up',        scene:'c2', url:'alloc8.org/signup'},
-    {t:58,  label:'Email Approval', scene:'c3', url:'📧 Mail — admin@alloc8.org'},
-    {t:82,  label:'Admin Setup',    scene:'c4', url:'alloc8.org/admin'},
-    {t:108, label:'Add Partners',   scene:'c5', url:'alloc8.org/admin#partners'},
-    {t:133, label:'Work Packages',  scene:'c6', url:'alloc8.org/admin#wps'},
-    {t:158, label:'Budget & Report',scene:'c7', url:'alloc8.org/admin#budget'},
+const COORD={
+  dur:200,
+  chapters:[
+    {t:0,   label:'Create Account', url:'alloc8.org/login'},
+    {t:10,  label:'Sign Up',        url:'alloc8.org/signup'},
+    {t:56,  label:'Email Approval', url:'📧 admin@alloc8.org'},
+    {t:76,  label:'Global Settings',url:'alloc8.org/admin'},
+    {t:106, label:'Add Partners',   url:'alloc8.org/admin#partners'},
+    {t:148, label:'Work Packages',  url:'alloc8.org/admin#wps'},
+    {t:178, label:'Export & Report',url:'alloc8.org/admin#partners'},
   ],
-  subtitles: [
-    {t:0,   dur:8,  text:'Coordinators start by creating a new project — click "Create New Project" on the login page'},
-    {t:9,   dur:8,  text:'Step 1: Enter your institutional email address'},
-    {t:18,  dur:12, text:'Step 2: Set your project name, username, and a secure password'},
-    {t:32,  dur:10, text:'Your request is submitted — account activation requires admin approval'},
-    {t:44,  dur:13, text:'An approval email is automatically sent to the project admin at admin@alloc8.org'},
-    {t:58,  dur:13, text:'The admin reviews the request details and clicks Approve Access'},
-    {t:72,  dur:9,  text:'Account approved — the coordinator receives a welcome email and can now log in'},
-    {t:82,  dur:13, text:'After login, configure your project: description, duration, and indirect cost rate'},
-    {t:96,  dur:11, text:'Analytics charts update in real-time as budget and partner data is entered'},
-    {t:108, dur:13, text:'Add consortium partners — name, country, type, and set their login credentials here'},
-    {t:122, dur:10, text:'Partners receive their username to log in directly — no sign-up process needed'},
-    {t:133, dur:13, text:'Define Work Packages with start and end months, then add tasks within each WP'},
-    {t:147, dur:10, text:'Assign task leads and contributors from your registered partner list'},
-    {t:158, dur:12, text:'The budget table automatically calculates PM costs, indirect costs, and total funding'},
-    {t:171, dur:13, text:'Generate a comprehensive PDF report with one click — includes charts, Gantt, and skill analysis'},
+  subtitles:[
+    {t:0,   dur:9,  text:'Coordinators start at the login page — click "Create New Project" to register'},
+    {t:10,  dur:9,  text:'Step 1: Enter your institutional email address to begin'},
+    {t:20,  dur:12, text:'Step 2: Set your project name, username, and password'},
+    {t:34,  dur:11, text:'Your request is submitted — requires admin approval before access is granted'},
+    {t:46,  dur:9,  text:'An automatic approval email is sent to the admin inbox at admin@alloc8.org'},
+    {t:56,  dur:13, text:'The admin reviews the request and clicks Approve — coordinator receives a welcome email'},
+    {t:70,  dur:5,  text:'Account approved — coordinator logs in to start configuring the project'},
+    {t:76,  dur:14, text:'In Global Settings: write a project description — this helps the AI analyze partner skills accurately'},
+    {t:91,  dur:14, text:'Set Indirect Cost % and Project Duration in months, then click Save Settings'},
+    {t:106, dur:14, text:'In the Partners section: click "+ Add Partner" to open the Add Partner form'},
+    {t:121, dur:14, text:'Fill in partner name, username, and password — these become their login credentials'},
+    {t:136, dur:11, text:'Click "Send Invitation" to email the login credentials directly to the partner\'s contact email'},
+    {t:148, dur:14, text:'In Work Packages: click "+ Add WP", enter the WP name and start/end months'},
+    {t:163, dur:14, text:'Click "+ Task" to add tasks, then assign a lead partner from the dropdown for each task'},
+    {t:178, dur:10, text:'"Export JSON" downloads a full project backup — "Generate Report" builds a comprehensive PDF'},
+    {t:189, dur:10, text:'The PDF report includes charts, Gantt timeline, budget tables, and AI skill analysis'},
   ],
-  actions: [
-    {t:0,   fn:()=>{ showScene('c1'); setUrl('alloc8.org/login'); showCursor(640,420); }},
-    {t:4,   fn:()=>{ moveCursor(640,490); hl('c1-signup-btn'); }},
-    {t:8,   fn:()=>{ clearHl(); clickFx(640,490); }},
-    {t:9,   fn:()=>{ showScene('c2'); setUrl('alloc8.org/signup'); showCursor(640,350); }},
-    {t:11,  fn:()=>{ moveCursor(640,360); typeInto('c2-email','coordinator@university.eu',7); }},
-    {t:19,  fn:()=>{ moveCursor(640,400); }},
-    {t:20,  fn:()=>{ // advance to step 2
-      document.getElementById('c2-s1').style.display='none';
-      document.getElementById('c2-s2').style.display='block';
-      document.getElementById('c2-d1').className='sdot done';
-      document.getElementById('c2-d2').className='sdot active';
-    }},
-    {t:22,  fn:()=>{ typeInto('c2-proj','Horizon Europe 2025',7); }},
-    {t:30,  fn:()=>{ typeInto('c2-uname','horizon2025',5); }},
-    {t:36,  fn:()=>{ typeInto('c2-pwd','securePass1',4); typeInto('c2-pwd2','securePass1',4); }},
-    {t:43,  fn:()=>{ // advance to step 3
-      document.getElementById('c2-s2').style.display='none';
-      document.getElementById('c2-s3').style.display='block';
-      document.getElementById('c2-d2').className='sdot done';
-      document.getElementById('c2-d3').className='sdot active';
-    }},
-    {t:58,  fn:()=>{ showScene('c3'); setUrl('📧 Mail — admin@alloc8.org'); showCursor(400,340); }},
-    {t:63,  fn:()=>{ moveCursor(400,380); hl('c3-approve-btn'); }},
-    {t:69,  fn:()=>{
-      clearHl(); clickFx(400,380);
-      document.getElementById('c3-confirmed').style.display='block';
-      document.getElementById('c3-list-item').style.opacity='.45';
-    }},
-    {t:82,  fn:()=>{ showScene('c4'); setUrl('alloc8.org/admin'); }},
-    {t:85,  fn:()=>{ typeInto('c4-desc','EU-funded 4-year research project on distributed AI systems for smart city infrastructure. 5 international partners across Germany, UK, France, Italy.',11); }},
-    {t:97,  fn:()=>{ document.getElementById('c4-saved').style.display='inline'; setTimeout(()=>document.getElementById('c4-saved').style.display='none',2200); }},
-    {t:108, fn:()=>{ showScene('c5'); setUrl('alloc8.org/admin#partners'); }},
-    {t:111, fn:()=>{ moveCursor(160,195); hl('c5-add-btn'); }},
-    {t:114, fn:()=>{ clearHl(); clickFx(160,195); document.getElementById('c5-new-row').style.display='table-row'; }},
-    {t:116, fn:()=>{ typeInto('c5-new-name','INRIA Paris',5); }},
-    {t:122, fn:()=>{ typeInto('c5-new-uname','inria_paris',4); }},
-    {t:133, fn:()=>{ showScene('c6'); setUrl('alloc8.org/admin#wps'); }},
-    {t:139, fn:()=>{
-      document.getElementById('c6-new-task').style.display='flex';
-      typeInto('c6-new-task-name','Algorithm Development & Benchmarking',8);
-    }},
-    {t:158, fn:()=>{ showScene('c7'); setUrl('alloc8.org/admin#budget'); }},
-    {t:165, fn:()=>{ moveCursor(1050,195); hl('c7-report-btn'); }},
-    {t:170, fn:()=>{
-      clearHl(); clickFx(1050,195);
-      const ov=document.getElementById('c7-gen-overlay');
-      ov.style.display='flex';
-      setTimeout(()=>{ ov.style.display='none'; },4500);
-    }},
+  actions:[
+    {t:0,   fn:()=>{ showScene('c1'); setUrl('alloc8.org/login'); }},
+    {t:5,   fn:()=>{ hl('c1-signup'); }},
+    {t:9,   fn:()=>{ clearHl(); }},
+    {t:10,  fn:()=>{ showScene('c2'); setUrl('alloc8.org/signup'); }},
+    {t:12,  fn:()=>{ typeInto('c2-email','coordinator@university.eu',7); }},
+    {t:20,  fn:()=>{ stepTo2(); }},
+    {t:22,  fn:()=>{ typeInto('c2-proj','Horizon Europe 2025',6); }},
+    {t:29,  fn:()=>{ typeInto('c2-uname','horizon2025',4); }},
+    {t:34,  fn:()=>{ typeInto('c2-pwd','SecurePass1',4); typeInto('c2-pwd2','SecurePass1',4); }},
+    {t:42,  fn:()=>{ stepTo3(); }},
+    {t:56,  fn:()=>{ showScene('c3'); setUrl('📧 Mail — admin@alloc8.org'); }},
+    {t:62,  fn:()=>{ hl('c3-approve'); }},
+    {t:68,  fn:()=>{ clearHl(); rippleAt(420,370); document.getElementById('c3-ok').style.display='block'; document.getElementById('c3-item').style.opacity='.4'; }},
+    {t:76,  fn:()=>{ showScene('c4'); setUrl('alloc8.org/admin'); }},
+    {t:79,  fn:()=>{ hl('c4-desc'.replace('c4-desc','c4-desc')); typeInto('c4-desc','EU-funded 4-year research project on distributed AI systems for smart city infrastructure. Partners across DE, UK, FR, IT.',12); }},
+    {t:92,  fn:()=>{ clearHl(); hl('c4-save-btn'); }},
+    {t:97,  fn:()=>{ clearHl(); rippleAt(500,225); document.getElementById('c4-saved').style.display='inline'; setTimeout(()=>document.getElementById('c4-saved').style.display='none',2500); }},
+    {t:106, fn:()=>{ showScene('c5'); setUrl('alloc8.org/admin#partners'); }},
+    {t:109, fn:()=>{ hl('c5-add-btn'); }},
+    {t:112, fn:()=>{ clearHl(); rippleAt(145,190); document.getElementById('c5-modal').classList.add('open'); }},
+    {t:114, fn:()=>{ typeInto('c5-name','INRIA Paris',5); }},
+    {t:120, fn:()=>{ typeInto('c5-uname','inria_paris',4); hl('c5-uname'); }},
+    {t:125, fn:()=>{ clearHl(); typeInto('c5-pwd','inria2025',4); hl('c5-pwd'); }},
+    {t:130, fn:()=>{ clearHl(); typeInto('c5-cemail','admin@inria.fr',3); }},
+    {t:134, fn:()=>{ typeInto('c5-cname','Dr. Sophie Martin',4); }},
+    {t:138, fn:()=>{ hl('c5-invite-btn'); }},
+    {t:142, fn:()=>{ clearHl(); rippleAt(640,490); document.getElementById('c5-modal').classList.remove('open'); document.getElementById('c5-invite-ok').style.display='block'; setTimeout(()=>document.getElementById('c5-invite-ok').style.display='none',3000); }},
+    {t:148, fn:()=>{ showScene('c6'); setUrl('alloc8.org/admin#wps'); }},
+    {t:152, fn:()=>{ hl('c6-addwp'); }},
+    {t:155, fn:()=>{ clearHl(); }},
+    {t:158, fn:()=>{ hl('c6-wp2-start'); }},
+    {t:161, fn:()=>{ clearHl(); hl('c6-addtask'); }},
+    {t:164, fn:()=>{ clearHl(); document.getElementById('c6-new-chip').style.display='flex'; typeInto('c6-new-task','Algorithm Development & Benchmarking',8); }},
+    {t:178, fn:()=>{ showScene('c7'); setUrl('alloc8.org/admin#partners'); }},
+    {t:182, fn:()=>{ hl('c7-export'); }},
+    {t:186, fn:()=>{ clearHl(); hl('c7-report'); }},
+    {t:191, fn:()=>{ clearHl(); rippleAt(1080,192); document.getElementById('c7-gen-ov').classList.add('active'); setTimeout(()=>document.getElementById('c7-gen-ov').classList.remove('active'),5000); }},
   ]
 };
 
-// ── Partner config ────────────────────────────────────
-const PARTNER = {
-  dur: 130,
-  chapters: [
-    {t:0,  label:'Login',       scene:'p1', url:'alloc8.org/login'},
-    {t:12, label:'WP Overview', scene:'p2', url:'alloc8.org/partner'},
-    {t:52, label:'Gantt Chart', scene:'p3', url:'alloc8.org/partner#timeline'},
-    {t:90, label:'Skill Pool',  scene:'p4', url:'alloc8.org/partner#consortium'},
+const PARTNER={
+  dur:165,
+  chapters:[
+    {t:0,   label:'Login',          url:'alloc8.org/login'},
+    {t:13,  label:'Organisation Info',url:'alloc8.org/partner'},
+    {t:38,  label:'Company Links',  url:'alloc8.org/partner#links'},
+    {t:68,  label:'Tasks & AI Analysis',url:'alloc8.org/partner#tasks'},
+    {t:105, label:'Skill Radar',    url:'alloc8.org/partner-main#consortium'},
+    {t:128, label:'Gantt & Progress',url:'alloc8.org/partner-main#timeline'},
   ],
-  subtitles: [
-    {t:0,  dur:11, text:'Partners log in using credentials set up by their project coordinator — no sign-up needed'},
-    {t:11, dur:1,  text:'Logging in...'},
-    {t:12, dur:13, text:'The partner dashboard shows all Work Packages and tasks in the project'},
-    {t:26, dur:13, text:'Tasks assigned to your organisation are highlighted in green — showing your role'},
-    {t:40, dur:11, text:'Each WP shows a task flowchart with lead and contributor assignments clearly labelled'},
-    {t:52, dur:13, text:'The Project Timeline (Gantt) shows the full schedule across all Work Packages'},
-    {t:66, dur:13, text:'Your assigned tasks are highlighted in blue — lead tasks in dark blue, contributions in light blue'},
-    {t:80, dur:9,  text:'Click any cell in your assigned tasks to cycle through progress status'},
-    {t:90, dur:13, text:'The Consortium page shows all partner organisations and their AI-analysed skill profiles'},
-    {t:104,dur:13, text:'Radar charts visualise each partner\'s competency across key skill areas for this project'},
-    {t:118,dur:12, text:'Skill scores are AI-analysed against the project description and Work Package requirements'},
+  subtitles:[
+    {t:0,   dur:12, text:'Partners log in using the username and password provided by their coordinator — no sign-up needed'},
+    {t:13,  dur:13, text:'In the Partner page: fill in your organisation details — PIC number, monthly rate, type, country, funding rate'},
+    {t:27,  dur:10, text:'Add primary contact details: name, position, email, and phone number'},
+    {t:38,  dur:13, text:'Company Links: add URLs to your LinkedIn, GitHub, publications, and project portfolios'},
+    {t:52,  dur:15, text:'These URLs are scraped by AI to understand your team\'s expertise — this powers the skill compatibility radar chart'},
+    {t:68,  dur:14, text:'In "Your Assigned Work Packages & Tasks": enter person-months (PM) for each task assigned to you'},
+    {t:83,  dur:10, text:'Click "Save All Data" to save your PM inputs and organisation details'},
+    {t:94,  dur:10, text:'Click "Scrape & Analyze" — AI scrapes your URLs and analyses your capabilities against Work Packages'},
+    {t:105, dur:12, text:'After AI analysis: the Consortium page shows radar charts for all partners, visible to everyone'},
+    {t:118, dur:9,  text:'Each point on the radar represents compatibility with a specific Work Package'},
+    {t:128, dur:12, text:'In the Project Timeline: your assigned tasks (blue) are interactive — click to cycle status'},
+    {t:141, dur:10, text:'Click cells to cycle: Not Started → In Progress → Completed'},
+    {t:152, dur:12, text:'Other partners\' progress is visible in the Gantt (read-only) — everyone can see the overall project status'},
   ],
-  actions: [
-    {t:0,  fn:()=>{ showScene('p1'); setUrl('alloc8.org/login'); showCursor(640,340); }},
-    {t:3,  fn:()=>{ typeInto('p1-user','tu_berlin',5); }},
-    {t:9,  fn:()=>{ typeInto('p1-pass','••••••',3); }},
-    {t:12, fn:()=>{ showScene('p2'); setUrl('alloc8.org/partner'); }},
-    {t:52, fn:()=>{ showScene('p3'); setUrl('alloc8.org/partner#timeline'); }},
-    {t:90, fn:()=>{ showScene('p4'); setUrl('alloc8.org/partner#consortium'); }},
+  actions:[
+    {t:0,   fn:()=>{ showScene('p1'); setUrl('alloc8.org/login'); }},
+    {t:3,   fn:()=>{ typeInto('p1-user','tu_berlin',5); }},
+    {t:9,   fn:()=>{ typeInto('p1-pass','tu_berlin',3); }},
+    {t:13,  fn:()=>{ showScene('p2'); setUrl('alloc8.org/partner'); }},
+    {t:15,  fn:()=>{ typeInto('p2-pic','999752513',4); }},
+    {t:20,  fn:()=>{ typeInto('p2-rate','7500',3); }},
+    {t:24,  fn:()=>{ typeInto('p2-country','Germany',3); }},
+    {t:28,  fn:()=>{ typeInto('p2-fr','90',2); }},
+    {t:31,  fn:()=>{ typeInto('p2-cn','Prof. Klaus Wagner',4); typeInto('p2-cp','Head of Research',4); typeInto('p2-ce','k.wagner@tu-berlin.de',4); }},
+    {t:38,  fn:()=>{ showScene('p3'); setUrl('alloc8.org/partner#links'); }},
+    {t:42,  fn:()=>{ hl('p3-addurl'); }},
+    {t:46,  fn:()=>{ clearHl(); rippleAt(145,215); document.getElementById('p3-new-url').style.display='grid'; typeInto('p3-l3','Research Portfolio',5); typeInto('p3-u3','https://www.tu.berlin/research/ai',6); }},
+    {t:68,  fn:()=>{ showScene('p4'); setUrl('alloc8.org/partner#tasks'); }},
+    {t:72,  fn:()=>{ hl('p4-pm2'); }},
+    {t:75,  fn:()=>{ clearHl(); }},
+    {t:79,  fn:()=>{ hl('p4-save'); }},
+    {t:83,  fn:()=>{ clearHl(); rippleAt(145,390); document.getElementById('p4-saved').style.display='inline'; setTimeout(()=>document.getElementById('p4-saved').style.display='none',2500); }},
+    {t:88,  fn:()=>{ hl('p4-analyze'); }},
+    {t:93,  fn:()=>{
+      clearHl(); rippleAt(145,415);
+      const ov=document.getElementById('p4-loading'); ov.classList.add('active');
+      setTimeout(()=>ov.classList.remove('active'),7000);
+    }},
+    {t:105, fn:()=>{ showScene('p5'); setUrl('alloc8.org/partner-main#consortium'); }},
+    {t:128, fn:()=>{ showScene('p6'); setUrl('alloc8.org/partner-main#timeline'); }},
+    // Cycle status: In Progress on alg M3-M7
+    {t:133, fn:()=>{ cycleCells('alg',[3,4,5,6,7],1,'Algorithm Development M3-M7 → In Progress'); }},
+    // Completed on alg M3-M5
+    {t:140, fn:()=>{ cycleCells('alg',[3,4,5],2,'Algorithm Development M3-M5 → Completed'); updateOwnProgress(52); }},
+    // In Progress on prot M6-M8
+    {t:147, fn:()=>{ cycleCells('prot',[6,7,8],1,'Prototype Testing M6-M8 → In Progress'); updateOwnProgress(60); }},
   ]
 };
 
-// ══════════════════════════════════════════════════════
-// ENGINE
-// ══════════════════════════════════════════════════════
-function cfg(){ return currentPart==='coord' ? COORD : PARTNER; }
+function updateOwnProgress(pct){
+  const bar=document.getElementById('p6-own-bar'), txt=document.getElementById('p6-own-pct');
+  if(bar) bar.style.width=pct+'%';
+  if(txt) txt.textContent=pct+'% complete';
+}
 
+// Step helpers for signup
+function stepTo2(){
+  document.getElementById('c2-s1').style.display='none';
+  document.getElementById('c2-s2').style.display='block';
+  document.getElementById('c2-d1').className='sdot done';
+  document.getElementById('c2-d2').className='sdot active';
+}
+function stepTo3(){
+  document.getElementById('c2-s2').style.display='none';
+  document.getElementById('c2-s3').style.display='block';
+  document.getElementById('c2-d2').className='sdot done';
+  document.getElementById('c2-d3').className='sdot active';
+}
+
+// ── Engine ──────────────────────────────────
+function cfg(){ return currentPart==='coord'?COORD:PARTNER; }
 function tick(ts){
-  if(!playing) return;
-  if(lastTime===null) lastTime=ts;
+  if(!playing)return;
+  if(lastTime===null)lastTime=ts;
   const dt=(ts-lastTime)/1000; lastTime=ts;
-  elapsed=Math.min(elapsed+dt, duration);
-  fireActions(); updateSub(); updateProgress();
-  if(elapsed>=duration){ playing=false; document.getElementById('play-btn').textContent='▶'; return; }
+  elapsed=Math.min(elapsed+dt,duration);
+  fireActions(); updateSub(); updateProg();
+  if(elapsed>=duration){playing=false;document.getElementById('play-btn').textContent='▶';return;}
   rafId=requestAnimationFrame(tick);
 }
-
 function fireActions(){
   const c=cfg();
-  c.actions.forEach(a=>{
-    const key=currentPart+'_'+a.t;
-    if(elapsed>=a.t && !fired.has(key)){ fired.add(key); a.fn(); }
-  });
+  c.actions.forEach(a=>{ const k=currentPart+'_'+a.t; if(elapsed>=a.t&&!fired.has(k)){fired.add(k);a.fn();} });
 }
-
 function updateSub(){
   const c=cfg(); let txt='\u00a0';
-  c.subtitles.forEach(s=>{ if(elapsed>=s.t && elapsed<s.t+s.dur) txt=s.text; });
-  document.getElementById('subtitle-text').textContent=txt;
+  c.subtitles.forEach(s=>{ if(elapsed>=s.t&&elapsed<s.t+s.dur)txt=s.text; });
+  document.getElementById('sub-txt').textContent=txt;
 }
-
-function updateProgress(){
+function updateProg(){
   const pct=duration>0?(elapsed/duration*100):0;
-  document.getElementById('progress-fill').style.width=pct+'%';
-  const mm=Math.floor(elapsed/60), ss=Math.floor(elapsed%60).toString().padStart(2,'0');
-  const dm=Math.floor(duration/60), ds=Math.floor(duration%60).toString().padStart(2,'0');
-  document.getElementById('time-label').textContent=`${mm}:${ss} / ${dm}:${ds}`;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  const mm=Math.floor(elapsed/60),ss=Math.floor(elapsed%60).toString().padStart(2,'0');
+  const dm=Math.floor(duration/60),ds=Math.floor(duration%60).toString().padStart(2,'0');
+  document.getElementById('time-lbl').textContent=`${mm}:${ss} / ${dm}:${ds}`;
   const c=cfg();
   document.querySelectorAll('.chap-dot').forEach((dot,i)=>{
-    const ch=c.chapters[i], nx=c.chapters[i+1];
-    dot.classList.toggle('active', elapsed>=ch.t&&(!nx||elapsed<nx.t));
+    const ch=c.chapters[i],nx=c.chapters[i+1];
+    dot.classList.toggle('active',elapsed>=ch.t&&(!nx||elapsed<nx.t));
   });
 }
-
 function togglePlay(){
   playing=!playing;
   document.getElementById('play-btn').textContent=playing?'⏸':'▶';
-  if(playing){ lastTime=null; rafId=requestAnimationFrame(tick); }
+  if(playing){lastTime=null;rafId=requestAnimationFrame(tick);}
 }
-
 function seekClick(e){
-  const tr=document.getElementById('progress-track'), rect=tr.getBoundingClientRect();
-  const pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
-  jumpTo(pct*duration);
+  const tr=document.getElementById('prog-track'),rect=tr.getBoundingClientRect();
+  jumpTo(Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*duration);
 }
-
 function jumpTo(t){
   elapsed=t; fired.clear();
   resetScenes();
-  const c=cfg(), saved=elapsed;
-  c.actions.forEach(a=>{ if(a.t<=saved){ fired.add(currentPart+'_'+a.t); a.fn(); } });
-  elapsed=saved;
-  updateSub(); updateProgress();
+  const c=cfg(),saved=elapsed;
+  c.actions.forEach(a=>{ if(a.t<=saved){fired.add(currentPart+'_'+a.t);a.fn();} });
+  elapsed=saved; updateSub(); updateProg();
 }
-
 function restart(){
-  playing=false; elapsed=0; fired.clear(); lastTime=null;
+  playing=false;elapsed=0;fired.clear();lastTime=null;
   document.getElementById('play-btn').textContent='▶';
-  resetScenes(); updateProgress();
-  document.getElementById('subtitle-text').textContent='\u00a0';
+  resetScenes();updateProg();document.getElementById('sub-txt').textContent='\u00a0';
 }
-
 function resetScenes(){
   document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
-  // Coordinator resets
-  const s1=document.getElementById('c2-s1'); if(s1) s1.style.display='block';
-  const s2=document.getElementById('c2-s2'); if(s2) s2.style.display='none';
-  const s3=document.getElementById('c2-s3'); if(s3) s3.style.display='none';
-  ['c2-d1','c2-d2','c2-d3'].forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.className=i===0?'sdot active':'sdot'; });
-  ['c2-email','c2-proj','c2-uname','c2-pwd','c2-pwd2','c4-desc','c5-new-name','c5-new-uname','c6-new-task-name'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  const c3conf=document.getElementById('c3-confirmed'); if(c3conf) c3conf.style.display='none';
-  const c3li=document.getElementById('c3-list-item'); if(c3li) c3li.style.opacity='1';
-  const c4sv=document.getElementById('c4-saved'); if(c4sv) c4sv.style.display='none';
-  const c5nr=document.getElementById('c5-new-row'); if(c5nr) c5nr.style.display='none';
-  const c6nt=document.getElementById('c6-new-task'); if(c6nt) c6nt.style.display='none';
-  const c7ov=document.getElementById('c7-gen-overlay'); if(c7ov) c7ov.style.display='none';
-  // Partner resets
-  ['p1-user','p1-pass'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  hideCursor();
-  // Show first scene
+  clearHl();
+  // coord resets
+  const s1=document.getElementById('c2-s1');if(s1)s1.style.display='block';
+  const s2=document.getElementById('c2-s2');if(s2)s2.style.display='none';
+  const s3=document.getElementById('c2-s3');if(s3)s3.style.display='none';
+  ['c2-d1','c2-d2','c2-d3'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.className=i===0?'sdot active':'sdot';});
+  ['c2-email','c2-proj','c2-uname','c2-pwd','c2-pwd2','c4-desc','c5-name','c5-uname','c5-pwd','c5-cname','c5-cemail','c6-new-task'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const c3ok=document.getElementById('c3-ok');if(c3ok)c3ok.style.display='none';
+  const c3it=document.getElementById('c3-item');if(c3it)c3it.style.opacity='1';
+  const c4sv=document.getElementById('c4-saved');if(c4sv)c4sv.style.display='none';
+  const c5m=document.getElementById('c5-modal');if(c5m)c5m.classList.remove('open');
+  const c5ik=document.getElementById('c5-invite-ok');if(c5ik)c5ik.style.display='none';
+  const c6nc=document.getElementById('c6-new-chip');if(c6nc)c6nc.style.display='none';
+  const c7ov=document.getElementById('c7-gen-ov');if(c7ov)c7ov.classList.remove('active');
+  // partner resets
+  ['p1-user','p1-pass','p2-pic','p2-rate','p2-country','p2-fr','p2-cn','p2-cp','p2-ce','p3-l3','p3-u3','p4-pm1','p4-pm2','p4-pm3'].forEach(id=>{const el=document.getElementById(id);if(el&&!['p4-pm1','p4-pm2','p4-pm3'].includes(id))el.value='';});
+  // restore PM defaults
+  const p1=document.getElementById('p4-pm1');if(p1)p1.value='12';
+  const p2=document.getElementById('p4-pm2');if(p2)p2.value='24';
+  const p3=document.getElementById('p4-pm3');if(p3)p3.value='6';
+  const p4sv=document.getElementById('p4-saved');if(p4sv)p4sv.style.display='none';
+  const p4ld=document.getElementById('p4-loading');if(p4ld)p4ld.classList.remove('active');
+  const p3nu=document.getElementById('p3-new-url');if(p3nu)p3nu.style.display='none';
+  const p6sn=document.getElementById('p6-status-note');if(p6sn)p6sn.style.display='none';
+  updateOwnProgress(35);
+  // reset gantt cells
+  ['rp','alg','prot'].forEach(id=>{
+    const counts={rp:14,alg:14,prot:14};
+    const starts={rp:1,alg:3,prot:6};
+    for(let m=starts[id];m<=counts[id];m++) setGanttCell(id,m,0);
+  });
   showScene(currentPart==='coord'?'c1':'p1');
 }
-
 function switchPart(part){
   currentPart=part;
-  document.getElementById('tab-coord').classList.toggle('active',part==='coord');
-  document.getElementById('tab-partner').classList.toggle('active',part==='partner');
+  document.getElementById('tab-c').classList.toggle('active',part==='coord');
+  document.getElementById('tab-p').classList.toggle('active',part==='partner');
   duration=cfg().dur;
   buildChapters();
   restart();
 }
-
 function buildChapters(){
-  const container=document.getElementById('chapters'); container.innerHTML='';
+  const cont=document.getElementById('chapters');cont.innerHTML='';
   cfg().chapters.forEach((ch,i)=>{
-    const dot=document.createElement('div'); dot.className='chap-dot';
-    dot.innerHTML=`<div class="chap-tip">${ch.label}</div>`;
-    dot.onclick=()=>{ jumpTo(ch.t); };
-    container.appendChild(dot);
+    const d=document.createElement('div');d.className='chap-dot';
+    d.innerHTML=`<div class="tip">${ch.label}</div>`;
+    d.onclick=()=>jumpTo(ch.t);
+    cont.appendChild(d);
   });
 }
 
-// ── UI helpers ─────────────────────────────────────────
+// ── Helpers ──────────────────────────────────
 function showScene(id){
   document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
-  const el=document.getElementById('scene-'+id); if(el) el.classList.add('active');
-  const ch=cfg().chapters.find(c=>c.scene===id);
-  if(ch) setUrl(ch.url);
+  const el=document.getElementById('scene-'+id);if(el)el.classList.add('active');
+  const ch=cfg().chapters.find(c=>c.url);// use scene's chapter URL
+  const cCh=cfg().chapters.find((c,i,arr)=>{
+    const nx=arr[i+1];
+    const sceneMap={c1:0,c2:10,c3:56,c4:76,c5:106,c6:148,c7:178,p1:0,p2:13,p3:38,p4:68,p5:105,p6:128};
+    const t=sceneMap[id];
+    return c.t<=t&&(!nx||nx.t>t);
+  });
+  if(cCh)setUrl(cCh.url);
 }
-function setUrl(u){ document.getElementById('bc-url').textContent=u; }
-function showCursor(x,y){ const c=document.getElementById('cursor'); c.style.display='block'; c.style.left=x+'px'; c.style.top=y+'px'; }
-function hideCursor(){ document.getElementById('cursor').style.display='none'; }
-function moveCursor(x,y){ const c=document.getElementById('cursor'); c.style.left=x+'px'; c.style.top=y+'px'; }
-function clickFx(x,y){
-  const sc=document.getElementById('screen'), r=document.createElement('div');
-  r.className='click-ripple'; r.style.left=x+'px'; r.style.top=y+'px';
-  sc.appendChild(r); setTimeout(()=>r.remove(),450);
+function setUrl(u){document.getElementById('bc-url').textContent=u;}
+function hl(id){const el=document.getElementById(id);if(el)el.classList.add('hl-btn');}
+function clearHl(){document.querySelectorAll('.hl,.hl-btn').forEach(el=>el.classList.remove('hl','hl-btn'));}
+function rippleAt(x,y){
+  const sc=document.getElementById('screen');
+  const r=document.createElement('div');r.className='click-ripple';r.style.left=x+'px';r.style.top=y+'px';
+  sc.appendChild(r);setTimeout(()=>r.remove(),420);
 }
-function hl(id){ const el=document.getElementById(id); if(el) el.classList.add('demo-hl'); }
-function clearHl(){ document.querySelectorAll('.demo-hl').forEach(el=>el.classList.remove('demo-hl')); }
-let _typTimers=[];
+let _tt=[];
 function typeInto(id,text,dur){
-  _typTimers.forEach(clearTimeout); _typTimers=[];
-  const el=document.getElementById(id); if(!el) return;
-  el.value='';
-  const chars=text.split(''), interval=(dur*1000)/chars.length;
-  chars.forEach((ch,i)=>{ _typTimers.push(setTimeout(()=>{ el.value+=ch; },i*interval)); });
+  const el=document.getElementById(id);if(!el)return;
+  el.value='';const chars=text.split(''),iv=(dur*1000)/chars.length;
+  chars.forEach((ch,i)=>{_tt.push(setTimeout(()=>el.value+=ch,i*iv));});
 }
 
-// ── Init ───────────────────────────────────────────────
+// Init
 switchPart('coord');
-setTimeout(()=>{ playing=true; document.getElementById('play-btn').textContent='⏸'; lastTime=null; rafId=requestAnimationFrame(tick); }, 700);
+setTimeout(()=>{playing=true;document.getElementById('play-btn').textContent='⏸';lastTime=null;rafId=requestAnimationFrame(tick);},700);
 </script>
 </body>
 </html>
