@@ -252,13 +252,19 @@
       <button class="btn btn-primary" id="nextBtn2">Create Account</button>
     </div>
 
-    <!-- Step 3: Success -->
+    <!-- Step 3: Pending Approval -->
     <div class="step-content" id="step3">
       <div style="text-align: center; padding: 2rem 0;">
-        <div style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--success);">Success!</div>
-        <h2 style="color: var(--success); margin: 0 0 1rem;">Account Created!</h2>
-        <p style="color: var(--muted); margin: 0 0 1.5rem;">Your project workspace is ready. You can now log in and start managing your budget.</p>
-        <a href="/login.html" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Go to Login</a>
+        <div style="font-size: 2.5rem; margin-bottom: .8rem;">📬</div>
+        <h2 style="color: var(--primary); margin: 0 0 .8rem;">Request Submitted!</h2>
+        <p style="color: var(--muted); margin: 0 0 1rem; line-height: 1.6;">
+          Our team has been notified of your request.<br>
+          You will receive an email notification shortly once your account is approved and ready to use.
+        </p>
+        <div style="background:#f0f9f4;border:1px solid #b7e4c7;border-radius:8px;padding:1rem;margin:0 0 1.5rem;font-size:.875rem;color:#1a7f37;">
+          Please check your inbox at <strong id="pendingEmail"></strong> for a confirmation once approved.
+        </div>
+        <a href="/login.html" class="btn btn-primary" style="display: inline-block; text-decoration: none;">Back to Login</a>
       </div>
     </div>
 
@@ -374,6 +380,7 @@
         const result = await res.json();
         
         if (res.ok) {
+          document.getElementById('pendingEmail').textContent = formData.email;
           showStep(3);
         } else {
           showError(result.error || 'Failed to create account');

@@ -315,6 +315,12 @@ app.post('/api/login', (req, res) => {
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
+  if (user.status === 'pending') {
+    return res.status(403).json({ error: 'pending_approval', message: 'Your account is pending approval. You will receive an email once approved.' });
+  }
+  if (user.status === 'denied') {
+    return res.status(403).json({ error: 'account_denied', message: 'Your account request was not approved. Please contact support.' });
+  }
   req.session.userId = user.id;
   req.session.role = user.role;
   req.session.partnerId = user.partner_id;
@@ -384,12 +390,16 @@ app.post('/api/signup', async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
     
-    // Create user
-    const userResult = db.prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, 'admin')").run(
-      username, email, hash(password)
+    // Generate approval token
+    const crypto = require('crypto');
+    const approvalToken = crypto.randomBytes(32).toString('hex');
+
+    // Create user with pending status
+    const userResult = db.prepare("INSERT INTO users (username, email, password_hash, role, status, approval_token) VALUES (?, ?, ?, 'admin', 'pending', ?)").run(
+      username, email, hash(password), approvalToken
     );
     const userId = userResult.lastInsertRowid;
-    
+
     // Create tenant (project)
     const tenantResult = db.prepare("INSERT INTO tenants (name, description, owner_id) VALUES (?, ?, ?)").run(
       projectName,
@@ -397,19 +407,150 @@ app.post('/api/signup', async (req, res) => {
       userId
     );
     const tenantId = tenantResult.lastInsertRowid;
-    
+
     // Add user as tenant owner
     db.prepare("INSERT INTO tenant_memberships (tenant_id, user_id, role) VALUES (?, ?, 'owner')").run(
       tenantId, userId
     );
-    
-    console.log(`New signup: user=${username}, tenant=${projectName} (ID: ${tenantId})`);
-    res.json({ ok: true, userId, tenantId });
+
+    // Send approval request email to admin
+    const BASE_URL = process.env.BASE_URL || 'https://alloc8.org';
+    const approveUrl = `${BASE_URL}/api/approve-user/${approvalToken}`;
+    const denyUrl    = `${BASE_URL}/api/deny-user/${approvalToken}`;
+    try {
+      await resend.emails.send({
+        from: `Alloc8 <${FROM_EMAIL}>`,
+        to: 'sithu.y.htun@gmail.com',
+        subject: `[Alloc8] New Account Request: ${username} (${projectName})`,
+        html: `
+          <div style="font-family:Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;background:#f5f7fa;padding:2rem">
+            <div style="background:#1f4e79;color:#fff;padding:1.2rem 1.5rem;border-radius:10px 10px 0 0">
+              <h1 style="margin:0;font-size:1.3rem">Alloc8 — New Account Request</h1>
+            </div>
+            <div style="background:#fff;padding:1.5rem;border:1px solid #d0d7de;border-top:none;border-radius:0 0 10px 10px">
+              <p style="margin:0 0 1rem;color:#24292f">A new user is requesting access to <strong>Alloc8</strong>:</p>
+              <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem">
+                <tr><td style="padding:.4rem .6rem;font-size:.9rem;color:#57606a;width:120px">Username</td><td style="padding:.4rem .6rem;font-weight:600;color:#24292f">${username}</td></tr>
+                <tr style="background:#f6f8fa"><td style="padding:.4rem .6rem;font-size:.9rem;color:#57606a">Email</td><td style="padding:.4rem .6rem;font-weight:600;color:#24292f">${email}</td></tr>
+                <tr><td style="padding:.4rem .6rem;font-size:.9rem;color:#57606a">Project</td><td style="padding:.4rem .6rem;font-weight:600;color:#24292f">${projectName}</td></tr>
+                <tr style="background:#f6f8fa"><td style="padding:.4rem .6rem;font-size:.9rem;color:#57606a">Requested</td><td style="padding:.4rem .6rem;font-weight:600;color:#24292f">${new Date().toUTCString()}</td></tr>
+              </table>
+              <div style="display:flex;gap:1rem;justify-content:center">
+                <a href="${approveUrl}" style="display:inline-block;padding:.7rem 2rem;background:#1a7f37;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:1rem">Approve</a>
+                <a href="${denyUrl}" style="display:inline-block;padding:.7rem 2rem;background:#cf222e;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:1rem">Deny</a>
+              </div>
+              <p style="margin:1.5rem 0 0;font-size:.8rem;color:#57606a;text-align:center">These links are single-use. Clicking Approve will activate the account and notify the user.</p>
+            </div>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error('Failed to send approval email:', emailErr);
+      // Don't block signup if email fails — admin can still approve via DB
+    }
+
+    console.log(`New signup (pending): user=${username}, tenant=${projectName} (ID: ${tenantId})`);
+    res.json({ ok: true, pending: true });
     
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).json({ error: 'Failed to create account: ' + err.message });
   }
+});
+
+// Approve user account via email link
+app.get('/api/approve-user/:token', async (req, res) => {
+  const user = db.prepare("SELECT * FROM users WHERE approval_token = ?").get(req.params.token);
+  if (!user) {
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;padding:3rem"><h2 style="color:#cf222e">Invalid or already used link.</h2><a href="/login.html">Go to Login</a></body></html>`);
+  }
+  db.prepare("UPDATE users SET status='approved', approval_token=NULL WHERE id=?").run(user.id);
+
+  // Notify the new user by email
+  try {
+    const BASE_URL = process.env.BASE_URL || 'https://alloc8.org';
+    await resend.emails.send({
+      from: `Alloc8 <${FROM_EMAIL}>`,
+      to: user.email,
+      subject: `[Alloc8] Your account has been approved!`,
+      html: `
+        <div style="font-family:Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;background:#f5f7fa;padding:2rem">
+          <div style="background:#1a7f37;color:#fff;padding:1.2rem 1.5rem;border-radius:10px 10px 0 0">
+            <h1 style="margin:0;font-size:1.3rem">Welcome to Alloc8!</h1>
+          </div>
+          <div style="background:#fff;padding:1.5rem;border:1px solid #d0d7de;border-top:none;border-radius:0 0 10px 10px">
+            <p style="margin:0 0 1rem;color:#24292f">Hi <strong>${user.username}</strong>,</p>
+            <p style="margin:0 0 1.5rem;color:#24292f">Your account has been approved. You can now log in and start managing your project budget.</p>
+            <div style="text-align:center">
+              <a href="${BASE_URL}/login.html" style="display:inline-block;padding:.7rem 2rem;background:#1f4e79;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:1rem">Log in to Alloc8</a>
+            </div>
+            <p style="margin:1.5rem 0 0;font-size:.8rem;color:#57606a;text-align:center">© 2026 Alloc8 — Intelligent Resource Allocation</p>
+          </div>
+        </div>
+      `
+    });
+  } catch (e) { console.error('Failed to send approval notification:', e); }
+
+  res.send(`
+    <html>
+    <head><title>Account Approved - Alloc8</title><style>
+      body{font-family:Segoe UI,sans-serif;background:#f5f7fa;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+      .card{background:#fff;border:1px solid #d0d7de;border-radius:12px;padding:2.5rem;text-align:center;max-width:420px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+      h2{color:#1a7f37;margin:0 0 1rem}p{color:#57606a;margin:0 0 1.5rem}
+      a{display:inline-block;padding:.6rem 1.8rem;background:#1f4e79;color:#fff;border-radius:6px;text-decoration:none;font-weight:600}
+    </style></head>
+    <body><div class="card">
+      <h2>Account Approved</h2>
+      <p><strong>${user.username}</strong> has been approved and notified by email.</p>
+      <a href="/login.html">Back to Login</a>
+    </div></body>
+    </html>
+  `);
+});
+
+// Deny user account via email link
+app.get('/api/deny-user/:token', async (req, res) => {
+  const user = db.prepare("SELECT * FROM users WHERE approval_token = ?").get(req.params.token);
+  if (!user) {
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;padding:3rem"><h2 style="color:#cf222e">Invalid or already used link.</h2><a href="/login.html">Go to Login</a></body></html>`);
+  }
+  // Delete user and tenant (cascade handles memberships/partners)
+  const tenantId = db.prepare("SELECT id FROM tenants WHERE owner_id=?").get(user.id)?.id;
+  if (tenantId) db.prepare("DELETE FROM tenants WHERE id=?").run(tenantId);
+  db.prepare("DELETE FROM users WHERE id=?").run(user.id);
+
+  // Optionally notify user of denial
+  try {
+    await resend.emails.send({
+      from: `Alloc8 <${FROM_EMAIL}>`,
+      to: user.email,
+      subject: `[Alloc8] Account Request Update`,
+      html: `
+        <div style="font-family:Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;padding:2rem">
+          <p>Hi <strong>${user.username}</strong>,</p>
+          <p>Thank you for your interest in Alloc8. Unfortunately, your account request was not approved at this time.</p>
+          <p style="color:#57606a;font-size:.85rem">If you believe this is an error, please contact support.</p>
+          <p style="font-size:.8rem;color:#57606a">© 2026 Alloc8 — Intelligent Resource Allocation</p>
+        </div>
+      `
+    });
+  } catch (e) { console.error('Failed to send denial notification:', e); }
+
+  res.send(`
+    <html>
+    <head><title>Account Denied - Alloc8</title><style>
+      body{font-family:Segoe UI,sans-serif;background:#f5f7fa;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+      .card{background:#fff;border:1px solid #d0d7de;border-radius:12px;padding:2.5rem;text-align:center;max-width:420px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+      h2{color:#cf222e;margin:0 0 1rem}p{color:#57606a;margin:0 0 1.5rem}
+      a{display:inline-block;padding:.6rem 1.8rem;background:#1f4e79;color:#fff;border-radius:6px;text-decoration:none;font-weight:600}
+    </style></head>
+    <body><div class="card">
+      <h2>Account Denied</h2>
+      <p>The account for <strong>${user.username}</strong> has been removed and the user notified.</p>
+      <a href="/login.html">Back to Login</a>
+    </div></body>
+    </html>
+  `);
 });
 
 app.post('/api/logout', (req, res) => {

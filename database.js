@@ -171,6 +171,9 @@ try { db.exec("ALTER TABLE wps ADD COLUMN end_month INTEGER DEFAULT 48"); } catc
 try { db.exec("ALTER TABLE tasks ADD COLUMN start_month INTEGER DEFAULT 1"); } catch(e) {}
 try { db.exec("ALTER TABLE tasks ADD COLUMN end_month INTEGER DEFAULT 48"); } catch(e) {}
 try { db.exec("ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT 'not_started'"); } catch(e) {}
+// Account approval workflow
+try { db.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'approved'"); } catch(e) {}
+try { db.exec("ALTER TABLE users ADD COLUMN approval_token TEXT"); } catch(e) {}
 
 // Per-month task progress per partner
 db.exec(`

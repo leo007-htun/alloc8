@@ -39,6 +39,7 @@
     }
     button:hover { background: var(--accent); }
     .error { color: var(--danger); font-size: .9rem; margin-top: .8rem; text-align: center; display: none; }
+    .info-msg { background: #fff8e1; color: #7c5c00; border: 1px solid #f0d070; border-radius: 6px; padding: .65rem .9rem; font-size: .88rem; margin-top: .8rem; text-align: center; display: none; }
     .hint { font-size: .8rem; color: var(--muted); text-align: center; margin-top: 1.2rem; }
     .signup-section {
       text-align: center;
@@ -72,6 +73,7 @@
       <input id="password" name="password" type="password" required autocomplete="current-password" />
       <button type="submit">Log in</button>
       <div class="error" id="errorMsg">Invalid credentials</div>
+      <div class="info-msg" id="infoMsg"></div>
     </form>
     <!--div class="hint">Default admin: <strong>admin / admin</strong><br>Default partner username is partner name lowercase without spaces.</div-->
     <div class="signup-section">
@@ -100,7 +102,22 @@
           window.location.href = '/partner-main.html';
         }
       } else {
-        document.getElementById('errorMsg').style.display = 'block';
+        const data = await res.json().catch(() => ({}));
+        const infoMsg = document.getElementById('infoMsg');
+        const errorMsg = document.getElementById('errorMsg');
+        if (data.error === 'pending_approval') {
+          infoMsg.textContent = data.message || 'Your account is awaiting approval.';
+          infoMsg.style.display = 'block';
+          errorMsg.style.display = 'none';
+        } else if (data.error === 'account_denied') {
+          errorMsg.textContent = data.message || 'Your account request was not approved.';
+          errorMsg.style.display = 'block';
+          infoMsg.style.display = 'none';
+        } else {
+          errorMsg.textContent = 'Invalid credentials';
+          errorMsg.style.display = 'block';
+          infoMsg.style.display = 'none';
+        }
       }
     });
   </script>
