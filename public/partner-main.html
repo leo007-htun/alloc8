@@ -113,20 +113,36 @@
     .gantt-mcell.quarter-start { border-left: 2px solid #bac4ce; }
     .gantt-mcell .qlabel { font-size: .58rem; color: #94a3b8; font-weight: 600; }
     /* Rows */
-    .gantt-brow        { display: flex; border-bottom: 1px solid #f0f2f4; }
+    .gantt-brow           { display: flex; border-bottom: 1px solid #f0f2f4; }
     .gantt-brow.brow-wp   { height: 48px; background: #f8fafc; border-bottom: 1px solid #dde3ea; }
-    .gantt-brow.brow-task { height: 40px; }
+    .gantt-brow.brow-task { height: 44px; cursor: pointer; }
+    .gantt-brow.brow-task:hover { background: #f8fafc; }
+    .gantt-brow.brow-sub  { height: 32px; display: none; background: #fafbfc; }
+    .gantt-brow.brow-sub.brow-sub-mine { background: #f0f7ff; }
+    /* Name sub-rows */
+    .gn-row.gn-sub  { height: 32px; display: none; padding-left: 2rem; font-size: .78rem; background: #fafbfc; color: var(--muted); }
+    .gn-row.gn-sub.gn-sub-mine { background: #f0f7ff; color: var(--primary); font-weight: 600; display: none; }
+    /* Aggregate task name row */
+    .gn-row.gn-task { height: 44px; padding-left: 1.3rem; cursor: pointer; }
+    .gn-row.gn-task:hover { background: #f8fafc; }
+    .expand-caret { font-size: .65rem; color: var(--muted); flex-shrink: 0; transition: transform .15s; }
+    .gn-row.gn-task.open .expand-caret { transform: rotate(90deg); }
+    .task-pcount { font-size: .7rem; color: var(--muted); white-space: nowrap; flex-shrink: 0; background: #f0f2f4; border-radius: 4px; padding: .1rem .35rem; }
     /* Individual month cells */
     .gmcell { flex-shrink: 0; height: 100%; display: flex; align-items: center; justify-content: center; border-right: 1px solid #eaecef; position: relative; }
-    .gantt-brow.brow-wp   .gmcell { border-right-color: #e0e5eb; }
+    .gantt-brow.brow-wp .gmcell { border-right-color: #e0e5eb; }
     .gmcell-active { cursor: pointer; }
-    .gmcell-active:hover .mcell-fill { filter: brightness(1.12); }
-    .gmcell-active:active { transform: scale(.94); }
-    .mcell-fill  { position: absolute; inset: 4px 2px; border-radius: 4px; transition: background .18s; }
-    .mcell-label { position: relative; z-index: 1; font-size: .65rem; font-weight: 700; color: #fff; pointer-events: none; line-height: 1; }
+    .gmcell-active:hover .mcell-fill { filter: brightness(1.15); }
+    .gmcell-active:active { transform: scale(.92); }
+    .mcell-fill  { position: absolute; inset: 3px 2px; border-radius: 4px; transition: background .15s; }
+    .mcell-label { position: relative; z-index: 1; font-size: .62rem; font-weight: 700; color: #fff; pointer-events: none; }
     .gmcell-active[data-status="not_started"] .mcell-label { color: #94a3b8; }
+    /* Heatmap cells (aggregate row) */
+    .gmcell-heat { cursor: default; }
+    .heat-fill { position: absolute; inset: 5px 2px; border-radius: 3px; transition: background .15s; }
+    .heat-label { position: relative; z-index:1; font-size:.58rem; font-weight:700; color:#fff; pointer-events:none; }
     /* WP range strip */
-    .wp-strip { position: absolute; inset: 18px 0; background: #cbd5e1; opacity: .5; }
+    .wp-strip { position: absolute; inset: 19px 0; background: #cbd5e1; opacity: .45; }
     .wp-strip.ws-first { left: 3px; border-radius: 4px 0 0 4px; }
     .wp-strip.ws-last  { right: 3px; border-radius: 0 4px 4px 0; }
     /* Partner chips */
@@ -380,8 +396,33 @@
     const CYCLE = { not_started:'in_progress', in_progress:'completed', completed:'not_started' };
 
     let _ganttScrollLeft = 0;
-    let _ganttSettings  = null;
-    let _monthMap       = {}; // taskId -> partnerId -> month -> status
+    let _ganttSettings   = null;
+    let _monthMap        = {}; // taskId -> partnerId -> month -> status
+    let _expandedTasks   = new Set(); // taskIds currently expanded
+
+    const S_BG  = { not_started:'transparent', in_progress:'#3b82f6', completed:'#059669' };
+    const S_TIP = { not_started:'Not Started',  in_progress:'In Progress', completed:'Completed' };
+
+    // Heatmap colour: % of partners completed that month
+    function heatColor(done, inProg, total) {
+      if (!total) return 'transparent';
+      if (done === total) return '#059669';
+      if (done > 0) return `rgba(5,150,105,${0.3 + 0.5*(done/total)})`;
+      if (inProg > 0) return `rgba(59,130,246,${0.3 + 0.5*(inProg/total)})`;
+      return '#e2e8f0';
+    }
+
+    function toggleTask(taskId) {
+      const wasOpen = _expandedTasks.has(taskId);
+      wasOpen ? _expandedTasks.delete(taskId) : _expandedTasks.add(taskId);
+      // Toggle name sub-rows
+      document.querySelectorAll(`.gn-sub[data-tg="${taskId}"]`).forEach(r => r.style.display = wasOpen ? 'none' : 'flex');
+      // Toggle timeline sub-rows
+      document.querySelectorAll(`.brow-sub[data-tg="${taskId}"]`).forEach(r => r.style.display = wasOpen ? 'none' : 'flex');
+      // Toggle caret on name row
+      const nameRow = document.querySelector(`.gn-task[data-taskid="${taskId}"]`);
+      if (nameRow) nameRow.classList.toggle('open', !wasOpen);
+    }
 
     async function renderGantt() {
       const CELL = 44;
@@ -390,149 +431,153 @@
         _ganttSettings = sr.ok ? await sr.json() : {};
       }
       const totalMonths = _ganttSettings.project_duration_months || 48;
+      const totalWidth  = totalMonths * CELL;
 
       const namesEl  = document.getElementById('ganttNames');
       const innerEl  = document.getElementById('ganttInner');
       const scrollEl = document.getElementById('ganttScroll');
       if (!namesEl || !innerEl) return;
-
       _ganttScrollLeft = scrollEl.scrollLeft;
 
       if (!wps || !wps.length) {
         namesEl.innerHTML = '<div class="gantt-names-hdr">Timeline</div><div style="padding:.8rem;color:var(--muted);font-size:.85rem">No WPs defined yet.</div>';
-        innerEl.innerHTML = '';
-        return;
+        innerEl.innerHTML = ''; return;
       }
 
-      // Fetch month statuses
+      // Fetch all month statuses
       const mr = await fetch('/api/partner/gantt-months');
       _monthMap = mr.ok ? await mr.json() : {};
 
-      // Status colours
-      const S_BG  = { not_started:'transparent', in_progress:'#3b82f6', completed:'#059669' };
-      const S_TIP = { not_started:'Not Started',  in_progress:'In Progress', completed:'Completed' };
-
-      // ── Left name column ─────────────────────────────────────
       let namesHtml = `<div class="gantt-names-hdr">Work Package / Task</div>`;
-
-      // ── Timeline: header + rows ───────────────────────────────
-      // Month header row
-      let mhdrHtml = `<div class="gantt-mhdr">`;
+      let mhdrHtml  = `<div class="gantt-mhdr">`;
       for (let m = 1; m <= totalMonths; m++) {
         const qStart = (m-1) % 3 === 0;
         mhdrHtml += `<div class="gantt-mcell${qStart?' quarter-start':''}" style="width:${CELL}px">
-          ${qStart ? `<span class="qlabel">Q${Math.ceil(m/3)}</span>` : ''}
-          <span>M${m}</span>
-        </div>`;
+          ${qStart?`<span class="qlabel">Q${Math.ceil(m/3)}</span>`:''}
+          <span>M${m}</span></div>`;
       }
       mhdrHtml += '</div>';
-
       let rowsHtml = '';
-      const totalWidth = totalMonths * CELL;
 
       for (const wp of wps) {
         const wpStart = wp.start_month || 1;
         const wpEnd   = wp.end_month   || totalMonths;
         const wpLabel = (wp.name||'').match(/^(WP\d+)/i)?.[1] || wp.name;
         const wpSub   = (wp.name||'').replace(/^WP\d+\s*[-–—]?\s*/i,'').trim();
-
-        // WP derived status from all its tasks' month data
-        const allTaskMonthStatuses = (wp.tasks||[]).flatMap(t => {
-          const partnerData = _monthMap[t.id] || {};
-          return Object.values(partnerData).flatMap(mmap => Object.values(mmap));
-        });
-        const wpStatus = allTaskMonthStatuses.length === 0 ? 'not_started'
-          : allTaskMonthStatuses.every(s=>s==='completed') ? 'completed'
-          : allTaskMonthStatuses.some(s=>s==='in_progress'||s==='completed') ? 'in_progress' : 'not_started';
-        const wpDot = { not_started:'#94a3b8', in_progress:'#3b82f6', completed:'#059669' }[wpStatus];
+        const wpDot   = (() => {
+          const st = (wp.tasks||[]).flatMap(t=>Object.values(_monthMap[t.id]||{}).flatMap(mm=>Object.values(mm)));
+          return st.every(s=>s==='completed')&&st.length ? '#059669' : st.some(s=>s!=='not_started') ? '#3b82f6' : '#94a3b8';
+        })();
 
         // WP name row
-        const wpChips = (wp.assigned_names||[]).slice(0,4).map((n,i) =>
-          `<span class="pchip" style="background:${pColor(wp.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`
-        ).join('');
+        const wpChips = (wp.assigned_names||[]).slice(0,4).map((n,i)=>
+          `<span class="pchip" style="background:${pColor(wp.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`).join('');
         namesHtml += `<div class="gn-row gn-wp" title="${wp.name}">
           <span class="gn-dot" style="background:${wpDot}"></span>
-          <span class="gn-name"><strong>${wpLabel}</strong> <span style="font-weight:400;font-size:.74rem;opacity:.65">${wpSub}</span></span>
-          <span style="display:flex;gap:1px;margin-left:auto;flex-shrink:0">${wpChips}</span>
+          <span class="gn-name"><strong>${wpLabel}</strong> <span style="font-weight:400;font-size:.73rem;opacity:.6">${wpSub}</span></span>
+          <span style="display:flex;gap:1px;margin-left:4px;flex-shrink:0">${wpChips}</span>
         </div>`;
 
-        // WP bar row (spans wp range with solid background strip, no interaction)
+        // WP timeline row (range strip only)
         let wpCells = '';
         for (let m = 1; m <= totalMonths; m++) {
-          const inRange = m >= wpStart && m <= wpEnd;
-          const isFirst = m === wpStart, isLast = m === wpEnd;
-          const br = inRange
-            ? `border-radius:${isFirst?'4px':'0'} ${isLast?'4px':'0'} ${isLast?'4px':'0'} ${isFirst?'4px':'0'}`
-            : '';
+          const inR = m >= wpStart && m <= wpEnd;
           wpCells += `<div class="gmcell" style="width:${CELL}px">
-            ${inRange ? `<div class="wp-strip${isFirst?' ws-first':''}${isLast?' ws-last':''}" style="${br}"></div>` : ''}
+            ${inR?`<div class="wp-strip${m===wpStart?' ws-first':''}${m===wpEnd?' ws-last':''}"></div>`:''}
           </div>`;
         }
         rowsHtml += `<div class="gantt-brow brow-wp" style="width:${totalWidth}px">${wpCells}</div>`;
 
-        // ── Task rows ─────────────────────────────────────────
-        for (const task of wp.tasks) {
-          const tStart     = task.start_month || wpStart;
-          const tEnd       = task.end_month   || wpEnd;
-          const isAssigned = (task.assigned_partner_ids||[]).includes(partner.id);
-          const myMonths   = (_monthMap[task.id]?.[partner.id]) || {};
+        // ── Tasks ──────────────────────────────────────────────
+        for (const task of wps.flatMap(w=>w.id===wp.id?w.tasks:[])) {
+          const tStart      = task.start_month || wpStart;
+          const tEnd        = task.end_month   || wpEnd;
+          const isAssigned  = (task.assigned_partner_ids||[]).includes(partner.id);
+          const assignedIds = task.assigned_partner_ids || [];
+          const nPartners   = assignedIds.length;
+          const isOpen      = _expandedTasks.has(task.id);
 
-          // Name row
-          const taskChips = (task.assigned_names||[]).slice(0,4).map((n,i) =>
-            `<span class="pchip" style="background:${pColor(task.assigned_partner_ids[i]||i)}" title="${n}">${pInitials(n)}</span>`
-          ).join('');
-          namesHtml += `<div class="gn-row gn-task${isAssigned?' mine':''}" title="${task.name}">
-            ${isAssigned ? `<span class="gn-dot" style="background:#3b82f6"></span>` : `<span style="width:7px;flex-shrink:0"></span>`}
+          // ── Aggregate name row ─────────────────────────────
+          const taskChips = assignedIds.slice(0,3).map((pid,i)=>
+            `<span class="pchip" style="background:${pColor(pid)}" title="${task.assigned_names[i]||''}">${pInitials(task.assigned_names[i]||'?')}</span>`
+          ).join('') + (nPartners>3?`<span style="font-size:.65rem;color:var(--muted)">+${nPartners-3}</span>`:'');
+
+          namesHtml += `<div class="gn-row gn-task${isAssigned?' mine':''} ${isOpen?'open':''}" data-taskid="${task.id}" onclick="toggleTask(${task.id})" title="Click to see per-partner progress">
+            <span class="expand-caret">▶</span>
             <span class="gn-name">${task.name}</span>
-            <span style="display:flex;gap:1px;margin-left:auto;flex-shrink:0">${taskChips}</span>
+            <span class="task-pcount">${nPartners}p</span>
+            <span style="display:flex;gap:1px;flex-shrink:0">${taskChips}</span>
           </div>`;
 
-          // Timeline cells for this task
-          let taskCells = '';
+          // ── Aggregate timeline row (heatmap) ───────────────
+          let aggCells = '';
           for (let m = 1; m <= totalMonths; m++) {
-            const inRange = m >= tStart && m <= tEnd;
-            if (!inRange) {
-              taskCells += `<div class="gmcell" style="width:${CELL}px"></div>`;
-              continue;
-            }
-
-            // Collect all partners' statuses for this cell (for non-assigned display)
-            const allForCell = Object.entries(_monthMap[task.id]||{}).map(([pid, mmap]) => ({
-              pid: Number(pid), status: mmap[m]||'not_started'
-            }));
-
-            if (isAssigned) {
-              const cellStatus = myMonths[m] || 'not_started';
-              const bg = S_BG[cellStatus];
-              const isFirst = m === tStart, isLast = m === tEnd;
-              const rd = `border-radius:${isFirst?'5px':'2px'} ${isLast?'5px':'2px'} ${isLast?'5px':'2px'} ${isFirst?'5px':'2px'}`;
-              taskCells += `<div class="gmcell gmcell-active" style="width:${CELL}px"
-                  data-taskid="${task.id}" data-month="${m}" data-status="${cellStatus}"
-                  title="M${m} — ${S_TIP[cellStatus]} (click to cycle)">
-                <div class="mcell-fill" style="background:${bg};${rd}"></div>
-                <span class="mcell-label">${cellStatus==='not_started'?m:cellStatus==='in_progress'?'▶':'✓'}</span>
-              </div>`;
-            } else {
-              // Show dots for each partner who has a status
-              const dots = allForCell.filter(x=>x.status!=='not_started').map(x =>
-                `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${S_BG[x.status]};margin:1px" title="${x.status}"></span>`
-              ).join('');
-              taskCells += `<div class="gmcell gmcell-readonly" style="width:${CELL}px" title="M${m}">
-                <div class="mcell-fill" style="background:${allForCell.every(x=>x.status==='completed')&&allForCell.length?'#059669':allForCell.some(x=>x.status==='in_progress')&&allForCell.length?'#93c5fd':allForCell.length?'#e2e8f0':'transparent'};border-radius:3px;opacity:.5"></div>
-                <span style="display:flex;justify-content:center;flex-wrap:wrap;gap:1px">${dots}</span>
-              </div>`;
-            }
+            const inR = m >= tStart && m <= tEnd;
+            if (!inR) { aggCells += `<div class="gmcell" style="width:${CELL}px"></div>`; continue; }
+            const entries = assignedIds.map(pid => (_monthMap[task.id]?.[pid]?.[m])||'not_started');
+            const done    = entries.filter(s=>s==='completed').length;
+            const inProg  = entries.filter(s=>s==='in_progress').length;
+            const bg      = heatColor(done, inProg, nPartners);
+            const label   = nPartners > 0 ? `${done}/${nPartners}` : '';
+            aggCells += `<div class="gmcell gmcell-heat" style="width:${CELL}px" title="M${m}: ${done} done, ${inProg} in progress of ${nPartners}">
+              <div class="heat-fill" style="background:${bg}"></div>
+              <span class="heat-label" style="color:${done===nPartners&&nPartners?'#fff':done>0?'#fff':'#94a3b8'}">${label}</span>
+            </div>`;
           }
-          rowsHtml += `<div class="gantt-brow brow-task" style="width:${totalWidth}px">${taskCells}</div>`;
+          rowsHtml += `<div class="gantt-brow brow-task" data-taskid="${task.id}" style="width:${totalWidth}px" onclick="toggleTask(${task.id})">${aggCells}</div>`;
+
+          // ── Per-partner sub-rows ──────────────────────────
+          // My row first (if assigned), then others
+          const orderedPartners = [
+            ...assignedIds.filter(pid=>pid===partner.id),
+            ...assignedIds.filter(pid=>pid!==partner.id)
+          ];
+
+          for (const pid of orderedPartners) {
+            const isMine  = pid === partner.id;
+            const pName   = task.assigned_names[assignedIds.indexOf(pid)] || `Partner ${pid}`;
+            const pMonths = (_monthMap[task.id]?.[pid]) || {};
+            const display = isOpen ? 'flex' : 'none';
+
+            // Sub name row
+            namesHtml += `<div class="gn-row gn-sub${isMine?' gn-sub-mine':''}" data-tg="${task.id}" style="display:${display}">
+              <span class="pchip" style="background:${pColor(pid)};flex-shrink:0">${pInitials(pName)}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${isMine?'<strong>You</strong>':pName}</span>
+            </div>`;
+
+            // Sub timeline row
+            let subCells = '';
+            for (let m = 1; m <= totalMonths; m++) {
+              const inR = m >= tStart && m <= tEnd;
+              if (!inR) { subCells += `<div class="gmcell" style="width:${CELL}px"></div>`; continue; }
+              const cellStatus = pMonths[m] || 'not_started';
+              const bg = S_BG[cellStatus];
+              const lbl = cellStatus==='not_started' ? '' : cellStatus==='in_progress' ? '▶' : '✓';
+              if (isMine) {
+                subCells += `<div class="gmcell gmcell-active" style="width:${CELL}px"
+                    data-taskid="${task.id}" data-month="${m}" data-status="${cellStatus}"
+                    title="M${m} — ${S_TIP[cellStatus]} (click to cycle)">
+                  <div class="mcell-fill" style="background:${bg};border-radius:4px"></div>
+                  <span class="mcell-label">${lbl||m}</span>
+                </div>`;
+              } else {
+                subCells += `<div class="gmcell" style="width:${CELL}px" title="M${m} — ${pName}: ${S_TIP[cellStatus]}">
+                  <div class="mcell-fill" style="background:${bg};border-radius:4px;opacity:.7"></div>
+                  <span style="position:relative;z-index:1;font-size:.6rem;font-weight:700;color:${cellStatus==='not_started'?'#cbd5e1':'#fff'}">${lbl}</span>
+                </div>`;
+              }
+            }
+            rowsHtml += `<div class="gantt-brow brow-sub${isMine?' brow-sub-mine':''}" data-tg="${task.id}" style="display:${display};width:${totalWidth}px">${subCells}</div>`;
+          }
         }
       }
 
       namesEl.innerHTML = namesHtml;
       innerEl.style.width = totalWidth + 'px';
-      innerEl.innerHTML = mhdrHtml + rowsHtml;
+      innerEl.innerHTML   = mhdrHtml + rowsHtml;
       scrollEl.scrollLeft = _ganttScrollLeft;
 
-      // ── Month cell click handlers ─────────────────────────────
+      // ── Month cell click handlers (my sub-rows only) ─────────
       innerEl.querySelectorAll('.gmcell-active').forEach(cell => {
         cell.addEventListener('click', async e => {
           e.stopPropagation();
@@ -541,33 +586,65 @@
           const curStatus = cell.dataset.status;
           const newStatus = CYCLE[curStatus] || 'in_progress';
 
-          // Optimistic UI update
+          // Optimistic update
           cell.dataset.status = newStatus;
-          const fill  = cell.querySelector('.mcell-fill');
-          const label = cell.querySelector('.mcell-label');
-          fill.style.background  = S_BG[newStatus];
-          label.textContent = newStatus==='not_started' ? month : newStatus==='in_progress' ? '▶' : '✓';
+          cell.querySelector('.mcell-fill').style.background = S_BG[newStatus];
+          const lbl = cell.querySelector('.mcell-label');
+          lbl.textContent = newStatus==='not_started' ? month : newStatus==='in_progress' ? '▶' : '✓';
           cell.title = `M${month} — ${S_TIP[newStatus]} (click to cycle)`;
 
           try {
             const res = await fetch(`/api/partner/tasks/${taskId}/month/${month}/status`, {
-              method: 'PATCH', headers: {'Content-Type':'application/json'},
+              method:'PATCH', headers:{'Content-Type':'application/json'},
               body: JSON.stringify({ status: newStatus })
             });
             if (!res.ok) {
-              // Revert on failure
               cell.dataset.status = curStatus;
-              fill.style.background = S_BG[curStatus];
-              label.textContent = curStatus==='not_started' ? month : curStatus==='in_progress' ? '▶' : '✓';
+              cell.querySelector('.mcell-fill').style.background = S_BG[curStatus];
+              lbl.textContent = curStatus==='not_started' ? month : curStatus==='in_progress' ? '▶' : '✓';
             } else {
-              // Update local map
               if (!_monthMap[taskId]) _monthMap[taskId] = {};
               if (!_monthMap[taskId][partner.id]) _monthMap[taskId][partner.id] = {};
               _monthMap[taskId][partner.id][month] = newStatus;
+              // Refresh only the aggregate heatmap row for this task
+              refreshAggRow(taskId, tStart, tEnd, totalMonths, CELL, totalWidth);
             }
           } catch(err) { console.error(err); }
+
+          function tStart() { return cell.closest('.brow-sub')?.previousElementSibling ? 1 : 1; }
+          function tEnd()   { return totalMonths; }
         });
       });
+
+      function refreshAggRow(taskId, ts, te, totalMonths, CELL, totalWidth) {
+        // Find the task's start/end from wps
+        let taskObj = null;
+        for (const w of wps) { taskObj = (w.tasks||[]).find(t=>t.id==taskId); if (taskObj) break; }
+        if (!taskObj) return;
+        const wpObj   = wps.find(w=>(w.tasks||[]).some(t=>t.id==taskId));
+        const tS = taskObj.start_month || wpObj?.start_month || 1;
+        const tE = taskObj.end_month   || wpObj?.end_month   || totalMonths;
+        const assignedIds = taskObj.assigned_partner_ids || [];
+        const nP = assignedIds.length;
+
+        const aggRow = innerEl.querySelector(`.brow-task[data-taskid="${taskId}"]`);
+        if (!aggRow) return;
+        let newCells = '';
+        for (let m = 1; m <= totalMonths; m++) {
+          const inR = m >= tS && m <= tE;
+          if (!inR) { newCells += `<div class="gmcell" style="width:${CELL}px"></div>`; continue; }
+          const entries = assignedIds.map(pid => (_monthMap[taskId]?.[pid]?.[m])||'not_started');
+          const done   = entries.filter(s=>s==='completed').length;
+          const inProg = entries.filter(s=>s==='in_progress').length;
+          const bg     = heatColor(done, inProg, nP);
+          newCells += `<div class="gmcell gmcell-heat" style="width:${CELL}px" title="M${m}: ${done} done, ${inProg} in progress of ${nP}">
+            <div class="heat-fill" style="background:${bg}"></div>
+            <span class="heat-label" style="color:${done===nP&&nP?'#fff':done>0?'#fff':'#94a3b8'}">${nP>0?done+'/'+nP:''}</span>
+          </div>`;
+        }
+        aggRow.innerHTML = newCells;
+        aggRow.onclick = () => toggleTask(taskId);
+      }
     }
 
     async function loadSkills() {
