@@ -263,7 +263,7 @@
   <header>
     <h1 id="pageTitle">Alloc8 Partner Dashboard</h1>
     <div style="display:flex;gap:.5rem;">
-      <button class="btn btn-primary" onclick="location.href='partner.html'">Edit Info & Budget</button>
+      <button class="btn btn-primary" onclick="location.href='/partner'">Edit Info & Budget</button>
       <button class="btn btn-danger" id="logoutBtn">Log out</button>
     </div>
   </header>
@@ -373,7 +373,7 @@
 
     async function load() {
       const res = await fetch('/api/partner/overview');
-      if (!res.ok) return window.location.href = '/login.html';
+      if (!res.ok) return window.location.href = '/login';
       const data = await res.json();
       partner = data.partner;
       wps = data.wps;
@@ -769,7 +769,7 @@
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/logout', { method: 'POST' });
-      window.location.href = '/login.html';
+      window.location.href = '/login';
     });
     
     document.getElementById('refreshSkillsBtn').addEventListener('click', async () => {

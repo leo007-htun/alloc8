@@ -3,588 +3,191 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alloc8 Budget Calculator</title>
+  <title>Alloc8 — Smart EU Consortium Budget Management</title>
+  <meta name="description" content="Alloc8 helps EU Horizon consortiums manage work packages, partner budgets, and resource allocation — with AI-powered skill matching and automated PDF reporting." />
+  <meta property="og:title" content="Alloc8 — Smart EU Consortium Budget Management" />
+  <meta property="og:description" content="Manage work packages, partner budgets, and resource allocation for EU Horizon projects. AI-powered skill matching. One-click PDF reports." />
+  <meta property="og:url" content="https://alloc8.org" />
+  <meta property="og:type" content="website" />
+  <link rel="canonical" href="https://alloc8.org/" />
   <style>
-    :root {
-      --primary: #1f4e79;
-      --accent: #2e75b6;
-      --bg: #f5f7fa;
-      --panel: #ffffff;
-      --border: #d0d7de;
-      --text: #24292f;
-      --muted: #57606a;
-      --danger: #cf222e;
-      --success: #1a7f37;
-      --row-alt: #f6f8fa;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg); color: var(--text);
-    }
-    header {
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      color: #fff; padding: 1.2rem 1rem;
-      text-align: center;
-    }
-    header h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.3px; }
-    .container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
-    .toolbar {
-      display: flex; gap: .6rem; flex-wrap: wrap; align-items: center;
-      margin-bottom: .8rem;
-    }
-    .btn {
-      border: none; padding: .55rem .9rem; border-radius: 6px;
-      cursor: pointer; font-size: .95rem; font-weight: 600;
-      transition: transform .05s, opacity .15s;
-    }
-    .btn:active { transform: translateY(1px); }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-danger { background: var(--danger); color: #fff; }
-    .btn-success { background: var(--success); color: #fff; }
-    .card {
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 10px; padding: 1rem; margin-bottom: 1rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,.04);
-    }
-    .card h2 { margin: 0 0 .6rem; font-size: 1.1rem; color: var(--primary); }
-
-    /* Partner cards */
-    .partner-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-    @media (min-width: 1100px) {
-      .partner-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    .partner-card {
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 10px; padding: .9rem;
-      display: flex; flex-direction: column; gap: .6rem;
-    }
-    .partner-header {
-      display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
-    }
-    .partner-header input.name {
-      flex: 1 1 140px; font-weight: 700; font-size: 1.05rem;
-      border: 1px solid var(--border); border-radius: 6px; padding: .35rem .5rem;
-    }
-    .partner-header .num {
-      background: var(--primary); color: #fff; border-radius: 50%;
-      width: 26px; height: 26px; display: grid; place-items: center;
-      font-size: .8rem; font-weight: 700; flex-shrink: 0;
-    }
-    .partner-header .remove {
-      margin-left: auto; font-size: .8rem; padding: .35rem .6rem;
-    }
-    .partner-meta {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: .5rem;
-    }
-    .partner-meta label {
-      font-size: .78rem; color: var(--muted); display: flex; flex-direction: column; gap: .15rem;
-    }
-    .partner-meta input, .partner-meta select {
-      padding: .35rem .45rem; border: 1px solid var(--border); border-radius: 6px; font-size: .9rem;
-    }
-    .wp-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-      gap: .4rem;
-    }
-    .wp-grid label {
-      font-size: .78rem; color: var(--muted); display: flex; flex-direction: column; gap: .15rem;
-    }
-    .wp-grid input {
-      padding: .35rem .45rem; border: 1px solid var(--border); border-radius: 6px; font-size: .9rem;
-    }
-    .cost-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: .5rem;
-      margin-top: .2rem;
-    }
-    .cost-row label {
-      font-size: .78rem; color: var(--muted); display: flex; flex-direction: column; gap: .15rem;
-    }
-    .cost-row input {
-      padding: .35rem .45rem; border: 1px solid var(--border); border-radius: 6px; font-size: .9rem;
-    }
-    .computed {
-      background: #f6f8fa; border-radius: 6px; padding: .5rem .6rem;
-      font-size: .85rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: .4rem .8rem;
-    }
-    .computed div { display: flex; justify-content: space-between; gap: .4rem; }
-    .computed span.lbl { color: var(--muted); }
-    .computed span.val { font-weight: 600; font-family: SFMono-Regular, Consolas, monospace; }
-
-    /* WP config */
-    .wp-config {
-      display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
-    }
-    .wp-chip {
-      display: inline-flex; align-items: center; gap: .3rem;
-      background: #eef4fa; border: 1px solid var(--border); border-radius: 6px;
-      padding: .25rem .4rem; font-size: .85rem;
-    }
-    .wp-chip input {
-      border: none; background: transparent; width: 70px; font-size: .85rem; font-weight: 600; color: var(--primary);
-    }
-
-    /* Summary tables */
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-    th, td { border: 1px solid var(--border); padding: .45rem .55rem; text-align: right; white-space: nowrap; }
-    th { background: #e8ecf1; position: sticky; top: 0; }
-    td:first-child, th:first-child { text-align: left; }
-    tr:nth-child(even) { background: var(--row-alt); }
-    .totals-row td { background: #dbe4ee; font-weight: 700; }
-
-    .section-title { font-size: 1rem; color: var(--primary); margin: 1.2rem 0 .5rem; }
-
-    .grand-totals {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .6rem;
-    }
-    .gt-box {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-      padding: .7rem; text-align: center;
-    }
-    .gt-box .label { font-size: .8rem; color: var(--muted); }
-    .gt-box .value { font-size: 1.15rem; font-weight: 700; margin-top: .2rem; font-family: SFMono-Regular, Consolas, monospace; }
-
-    @media (max-width: 600px) {
-      .partner-grid { grid-template-columns: 1fr; }
-    }
+    :root{--primary:#1f4e79;--accent:#2e75b6;--bg:#f5f7fa;--text:#24292f;--muted:#57606a;--border:#d0d7de;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text);background:#fff;}
+    nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .nav-logo{font-size:1.35rem;font-weight:800;color:var(--primary);text-decoration:none;letter-spacing:-.02em;}
+    .nav-links{display:flex;gap:.5rem;align-items:center;}
+    .btn{display:inline-block;padding:.5rem 1.1rem;border-radius:7px;font-size:.92rem;font-weight:600;text-decoration:none;border:none;cursor:pointer;transition:all .15s;}
+    .btn-ghost{background:transparent;color:var(--primary);border:1px solid var(--border);}
+    .btn-ghost:hover{background:var(--bg);}
+    .btn-primary{background:var(--primary);color:#fff;}
+    .btn-primary:hover{background:var(--accent);}
+    .btn-lg{padding:.75rem 1.8rem;font-size:1rem;border-radius:8px;}
+    .btn-white{background:#fff;color:var(--primary);font-weight:700;}
+    .btn-outline-white{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.5);}
+    .btn-outline-white:hover{background:rgba(255,255,255,.12);border-color:#fff;}
+    .hero{background:linear-gradient(135deg,#1f4e79 0%,#2e75b6 100%);color:#fff;padding:5rem 1.5rem 4rem;text-align:center;}
+    .hero-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:.3rem .9rem;font-size:.82rem;font-weight:600;margin-bottom:1.5rem;letter-spacing:.03em;}
+    .hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;line-height:1.15;margin-bottom:1.2rem;letter-spacing:-.02em;}
+    .hero p{font-size:clamp(.95rem,2vw,1.18rem);opacity:.88;max-width:580px;margin:0 auto 2.2rem;line-height:1.65;}
+    .hero-ctas{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;}
+    .hero-sub{margin-top:2.2rem;font-size:.82rem;opacity:.62;}
+    .demo-link{display:inline-flex;align-items:center;gap:.45rem;color:rgba(255,255,255,.75);font-size:.88rem;text-decoration:none;margin-top:1.1rem;border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:.35rem .9rem;transition:all .15s;}
+    .demo-link:hover{color:#fff;border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.08);}
+    section{padding:4.5rem 1.5rem;}
+    .container{max-width:1100px;margin:0 auto;}
+    .section-label{font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem;}
+    .section-title{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;color:var(--primary);margin-bottom:.75rem;line-height:1.2;}
+    .section-sub{font-size:1rem;color:var(--muted);max-width:580px;line-height:1.65;}
+    .features{background:var(--bg);}
+    .feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem;}
+    .feat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.6rem;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:box-shadow .2s,transform .2s;}
+    .feat-card:hover{box-shadow:0 8px 24px rgba(31,78,121,.1);transform:translateY(-2px);}
+    .feat-icon{font-size:1.8rem;margin-bottom:.9rem;}
+    .feat-card h3{font-size:1.05rem;font-weight:700;color:var(--primary);margin-bottom:.5rem;}
+    .feat-card p{font-size:.9rem;color:var(--muted);line-height:1.6;}
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;margin-top:3rem;}
+    .step{text-align:center;}
+    .step-num{width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;margin:0 auto 1rem;}
+    .step h3{font-size:1rem;font-weight:700;color:var(--primary);margin-bottom:.4rem;}
+    .step p{font-size:.88rem;color:var(--muted);line-height:1.6;}
+    .stats-strip{background:var(--primary);color:#fff;padding:3rem 1.5rem;}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2rem;text-align:center;}
+    .stat-val{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;}
+    .stat-lbl{font-size:.88rem;opacity:.72;margin-top:.3rem;}
+    .cta-banner{background:linear-gradient(135deg,#1f4e79 0%,#2e75b6 100%);color:#fff;text-align:center;padding:4.5rem 1.5rem;}
+    .cta-banner h2{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;margin-bottom:.8rem;}
+    .cta-banner p{font-size:1rem;opacity:.85;max-width:480px;margin:0 auto 2rem;line-height:1.6;}
+    .cta-ctas{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;}
+    footer{background:#0f1923;color:rgba(255,255,255,.52);padding:2.5rem 1.5rem;text-align:center;font-size:.83rem;}
+    footer a{color:rgba(255,255,255,.52);text-decoration:none;}
+    footer a:hover{color:#fff;}
+    .footer-links{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.2rem;}
+    @media(max-width:600px){nav{padding:.65rem 1rem;}.hero{padding:3.5rem 1rem 3rem;}section{padding:3rem 1rem;}}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Alloc8 Budget Calculator</h1>
-  </header>
 
-  <div class="container">
-    <div class="toolbar">
-      <button class="btn btn-primary" id="addPartnerBtn">+ Add Partner</button>
-      <button class="btn btn-danger" id="removePartnerBtn">− Remove Last Partner</button>
-      <button class="btn btn-success" id="exportBtn">Export JSON</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" />
-      <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Import JSON</button>
+  <nav>
+    <a class="nav-logo" href="/">Alloc8</a>
+    <div class="nav-links">
+      <a class="btn btn-ghost" href="/login">Log in</a>
+      <a class="btn btn-primary" href="/signup">Get Started</a>
     </div>
+  </nav>
 
-    <div class="card">
-      <h2>Work Packages</h2>
-      <div class="toolbar" style="margin-bottom:.6rem">
-        <button class="btn btn-primary" id="addWPBtn">+ Add WP</button>
-        <button class="btn btn-danger" id="removeWPBtn">− Remove Last WP</button>
+  <section class="hero">
+    <div class="hero-badge">Built for EU Horizon Consortiums</div>
+    <h1>Smart Resource Allocation<br>for Research Consortiums</h1>
+    <p>Manage work packages, partner budgets, and person-months across your entire EU project — with AI-powered skill matching and one-click PDF reporting.</p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary btn-lg" href="/signup">Create Your Project</a>
+      <a class="btn btn-outline-white btn-lg" href="/login">Log In</a>
+    </div>
+    <div><a class="demo-link" href="/demo">&#9654; Watch a 3-minute demo</a></div>
+    <p class="hero-sub">Free to use &nbsp;&middot;&nbsp; No credit card required</p>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Everything a consortium needs</h2>
+      <p class="section-sub">From budget setup to final reporting — Alloc8 handles the complexity of multi-partner EU projects so you can focus on the research.</p>
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-icon">&#128230;</div>
+          <h3>Work Package Management</h3>
+          <p>Define WPs with start and end months, add tasks, and assign lead partners. The Gantt chart updates automatically as you build.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">&#128182;</div>
+          <h3>Automated Budget Calculation</h3>
+          <p>Person-months &times; monthly rate = direct costs. Indirect costs applied automatically. Budget summaries update in real-time as you enter data.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">&#129302;</div>
+          <h3>AI Skill Matching</h3>
+          <p>Partners add their URLs &mdash; LinkedIn, publications, GitHub. AI scrapes and analyses them against your Work Packages to produce compatibility scores.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">&#128202;</div>
+          <h3>Partner Progress Tracking</h3>
+          <p>Each partner marks task cells as Not Started, In Progress, or Completed. All partners see each other's progress on the shared Gantt.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">&#128196;</div>
+          <h3>One-Click PDF Report</h3>
+          <p>Generate a full landscape A4 report with charts, Gantt timeline, budget tables, skill radar charts, and dependency networks &mdash; instantly, client-side.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">&#128231;</div>
+          <h3>Invite-Based Partner Access</h3>
+          <p>Coordinators add partners and send login credentials by email. Partners log straight in &mdash; no sign-up process, no friction.</p>
+        </div>
       </div>
-      <div class="wp-config" id="wpConfig"></div>
     </div>
+  </section>
 
-    <div class="card">
-      <h2>Partners Detail</h2>
-      <div id="partnersContainer" class="partner-grid"></div>
+  <section style="background:#fff;">
+    <div class="container">
+      <div class="section-label">How it works</div>
+      <h2 class="section-title">Up and running in minutes</h2>
+      <p class="section-sub">No complex setup. No IT department required. Sign up and start building your project immediately.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Coordinator signs up</h3>
+          <p>Create a project workspace. Set your project duration and indirect cost rate. Your account is reviewed and approved.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Add partners &amp; WPs</h3>
+          <p>Register consortium partners with monthly rates. Define Work Packages, tasks, and assign leads.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Partners fill their data</h3>
+          <p>Each partner logs in, enters person-months per task, adds evidence URLs, and runs AI skill analysis.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Track &amp; report</h3>
+          <p>Monitor progress on the shared Gantt. Export to Excel or generate a full PDF report for project reviews.</p>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="card">
-      <h2>Grand Totals</h2>
-      <div class="grand-totals" id="grandTotals"></div>
-    </div>
-
-    <div class="section-title">PM per Work Package (Proposal Table)</div>
-    <div class="card table-wrap">
-      <table id="pmTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Partner</th>
-            <!-- WP headers injected -->
-            <th id="pmThTotal">Total PM</th>
-            <th id="pmThPersons">Persons/year</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <div class="section-title">Budget Summary (Proposal Table)</div>
-    <div class="card table-wrap">
-      <table id="budgetTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Partner</th>
-            <th>PM Cost</th>
-            <th>Other Cost</th>
-            <th>Subcontracting</th>
-            <th>Total Direct Cost</th>
-            <th>Total Indirect Cost</th>
-            <th>Total Budget</th>
-            <th>Funding Rate</th>
-            <th>Total Funding</th>
-            <th>PM</th>
-            <th>Type</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+  <div class="stats-strip">
+    <div class="container">
+      <div class="stats-grid">
+        <div><div class="stat-val">48+</div><div class="stat-lbl">Month projects supported</div></div>
+        <div><div class="stat-val">20+</div><div class="stat-lbl">Partners per consortium</div></div>
+        <div><div class="stat-val">1-click</div><div class="stat-lbl">PDF report generation</div></div>
+        <div><div class="stat-val">AI</div><div class="stat-lbl">Skill analysis per WP</div></div>
+      </div>
     </div>
   </div>
 
-  <script>
-    let wps = ['WP1','WP2','WP3','WP4','WP5','WP6','WP7','WP8'];
+  <div class="cta-banner">
+    <div class="container">
+      <h2>Ready to simplify your consortium management?</h2>
+      <p>Join research coordinators who use Alloc8 to keep their EU projects on budget and on track.</p>
+      <div class="cta-ctas">
+        <a class="btn btn-white btn-lg" href="/signup">Create Your Project</a>
+        <a class="btn btn-outline-white btn-lg" href="/demo">Watch Demo</a>
+      </div>
+    </div>
+  </div>
 
-    const DEFAULT_PARTNERS = [
-      { name: "LJMU", pic: "998079949", rate: 0, type: "university", country: "UK", fundingRate: 1,
-        wp: [0,0,0,0,0,0,0,0], otherCost: 0, subcontracting: 0 },
-      { name: "Loughborough", pic: "999990752", rate: 6800, type: "university", country: "UK", fundingRate: 1,
-        wp: [6,4,40,46,0,0,9,5], otherCost: 92560, subcontracting: 0 },
-      { name: "Oslo", pic: "999975814", rate: 7821.85, type: "university", country: "Norway", fundingRate: 1,
-        wp: [5,7,30,48,0,17,0,6], otherCost: 90960.88, subcontracting: 0 },
-      { name: "OULU", pic: "999844670", rate: 8000, type: "university", country: "Finland", fundingRate: 1,
-        wp: [0,4,18,18,0,0,18,4], otherCost: 104000, subcontracting: 60000 },
-      { name: "PISA", pic: "999862712", rate: 6650, type: "university", country: "Italy", fundingRate: 1,
-        wp: [5,8,0,0,35,0,6,5], otherCost: 79000, subcontracting: 0 },
-      { name: "TRENTO", pic: "999841954", rate: 6650, type: "university", country: "Italy", fundingRate: 1,
-        wp: [5,8,0,36,6,8,0,5], otherCost: 65000, subcontracting: 0 },
-      { name: "Groningen", pic: "999989782", rate: 6900, type: "university", country: "Netherlands", fundingRate: 1,
-        wp: [0,54,0,0,0,0,0,4], otherCost: 36000, subcontracting: 0 },
-      { name: "Glasgow", pic: "999974165", rate: 6908, type: "university", country: "UK", fundingRate: 1,
-        wp: [0,3,0,0,53,41,0,7], otherCost: 54000, subcontracting: 0 },
-      { name: "RWTH", pic: "999591112", rate: 7000, type: "Research Institution", country: "Germany", fundingRate: 1,
-        wp: [0,48,0,3,0,0,22,7], otherCost: 144000, subcontracting: 0 },
-      { name: "Fraunhofer", pic: "999984059", rate: 8968.36, type: "Research Institution", country: "Germany", fundingRate: 1,
-        wp: [9,24.5,0,0,29,0,0,24], otherCost: 94000, subcontracting: 0 },
-      { name: "Vicomtech", pic: "955552336", rate: 5260, type: "Research Institution", country: "Spain", fundingRate: 1,
-        wp: [2,15,10,10,0,0,33,4], otherCost: 79900, subcontracting: 0 },
-      { name: "Beyond Vision", pic: "912509847", rate: 4000, type: "Industry", country: "Portugal", fundingRate: 1,
-        wp: [3.5,17,4,5,2,0,42,5.5], otherCost: 90200, subcontracting: 0 },
-      { name: "Intracom", pic: "999969994", rate: 5700, type: "Industry", country: "Greece", fundingRate: 1,
-        wp: [5,10,0,6,8,48,29,8], otherCost: 85700, subcontracting: 0 },
-      { name: "7bulls", pic: "919795129", rate: 7000, type: "Industry", country: "Poland", fundingRate: 1,
-        wp: [7,8,0,2,3,22,34,14], otherCost: 44000, subcontracting: 0 },
-      { name: "Telefonica", pic: "917790915", rate: 7680, type: "Industry", country: "Spain", fundingRate: 1,
-        wp: [7,6,15,30,15,0,0,12], otherCost: 101000, subcontracting: 0 },
-      { name: "Trialog", pic: "999617884", rate: 8500, type: "Industry", country: "France", fundingRate: 1,
-        wp: [4,20,0,13,17,0,25,14], otherCost: 56000, subcontracting: 0 },
-      { name: "ATC", pic: "999751744", rate: 5500, type: "SME", country: "Greece", fundingRate: 1,
-        wp: [0,10,0,0,20,39,0,25], otherCost: 39000, subcontracting: 0 },
-      { name: "Liv5G", pic: "865996989", rate: 7360, type: "Non-profit", country: "UK", fundingRate: 1,
-        wp: [0,2,5,0,22,0,23,4], otherCost: 86000, subcontracting: 60000 },
-      { name: "IDSA", pic: "919489191", rate: 9000, type: "Non-profit", country: "Germany", fundingRate: 1,
-        wp: [3,0,0,14,0,0,0,18], otherCost: 64500, subcontracting: 0 },
-      { name: "FORTH", pic: "999995893", rate: 6000, type: "Research Institution", country: "Greece", fundingRate: 1,
-        wp: [1,6,29,4,10,5,12,8], otherCost: 66800, subcontracting: 0 },
-      { name: "AI Invest", pic: "899809443", rate: 7000, type: "Industry", country: "Poland", fundingRate: 1,
-        wp: [3,15,0,0,3,5,23,2], otherCost: 39000, subcontracting: 0 },
-      { name: "SWISS SMART", pic: "909553093", rate: 10850, type: "Non-profit", country: "Switzerland", fundingRate: 1,
-        wp: [2,3,40,0,3,8,20,2], otherCost: 73000, subcontracting: 0 },
-      { name: "DEXAI", pic: "888937586", rate: 7500, type: "Industry", country: "Italy", fundingRate: 1,
-        wp: [10,6,0,0,48,0,10,4], otherCost: 37500, subcontracting: 0 },
-      { name: "ITG", pic: "991720047", rate: 4500, type: "Non-profit", country: "Spain", fundingRate: 1,
-        wp: [5,25.5,0,3,0,0,44,2.5], otherCost: 70400, subcontracting: 0 },
-      { name: "Koblenz", pic: "999856407", rate: 8968.36, type: "university", country: "Germany", fundingRate: 1,
-        wp: [9,24.5,0,0,29,0,0,24], otherCost: 94000, subcontracting: 0 },
-      { name: "8BELLS", pic: "917066131", rate: 5500, type: "SME", country: "Cyprus", fundingRate: 1,
-        wp: [1,3,0,0,0,26,18,32], otherCost: 49000, subcontracting: 0 }
-    ];
+  <footer>
+    <div class="footer-links">
+      <a href="/login">Log in</a>
+      <a href="/signup">Sign up</a>
+      <a href="/demo">Demo</a>
+    </div>
+    <p>&copy; 2026 Alloc8 &mdash; Intelligent Resource Allocation</p>
+  </footer>
 
-    let partners = JSON.parse(JSON.stringify(DEFAULT_PARTNERS));
-
-    const TYPE_OPTIONS = [
-      "university",
-      "Research Institution",
-      "Industry",
-      "SME",
-      "Non-profit"
-    ];
-
-    const fmtMoney = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 });
-    const fmtNum = (n) => Number(n).toFixed(n % 1 === 0 ? 0 : 2);
-
-    function calcPartner(p) {
-      const totalPM = p.wp.reduce((a, b) => a + (isNaN(b) ? 0 : Number(b)), 0);
-      const pmCost = totalPM * (isNaN(p.rate) ? 0 : Number(p.rate));
-      const other = isNaN(p.otherCost) ? 0 : Number(p.otherCost);
-      const sub = isNaN(p.subcontracting) ? 0 : Number(p.subcontracting);
-      const tdc = pmCost + other + sub;
-      const indirect = (pmCost + other) * 0.25;
-      const totalBudget = tdc + indirect;
-      const fundingRate = isNaN(p.fundingRate) ? 1 : Number(p.fundingRate);
-      const totalFunding = totalBudget * fundingRate;
-      const personsYear = totalPM / 39;
-      return { totalPM, pmCost, other, sub, tdc, indirect, totalBudget, totalFunding, personsYear, fundingRate };
-    }
-
-    function renderWPConfig() {
-      const container = document.getElementById('wpConfig');
-      container.innerHTML = wps.map((name, i) => `
-        <div class="wp-chip">
-          <input value="${name}" data-wpidx="${i}" title="WP name" />
-        </div>
-      `).join('');
-      container.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('change', e => {
-          const idx = +e.target.dataset.wpidx;
-          wps[idx] = e.target.value || `WP${idx+1}`;
-          render();
-        });
-      });
-    }
-
-    function render() {
-      renderWPConfig();
-      const container = document.getElementById('partnersContainer');
-      container.innerHTML = '';
-      partners.forEach((p, idx) => {
-        const c = calcPartner(p);
-        const card = document.createElement('div');
-        card.className = 'partner-card';
-        card.innerHTML = `
-          <div class="partner-header">
-            <div class="num">${idx + 1}</div>
-            <input class="name" value="${p.name}" data-idx="${idx}" data-field="name" placeholder="Partner name" />
-            <button class="btn btn-danger remove" data-idx="${idx}">Remove</button>
-          </div>
-          <div class="partner-meta">
-            <label>PIC<input type="text" value="${p.pic}" data-idx="${idx}" data-field="pic" /></label>
-            <label>Monthly Rate (€)<input type="number" step="0.01" value="${p.rate}" data-idx="${idx}" data-field="rate" /></label>
-            <label>Type
-              <select data-idx="${idx}" data-field="type">
-                ${TYPE_OPTIONS.map(t => `<option value="${t}" ${p.type === t ? 'selected' : ''}>${t}</option>`).join('')}
-              </select>
-            </label>
-            <label>Country<input type="text" value="${p.country || ''}" data-idx="${idx}" data-field="country" /></label>
-            <label>Funding Rate<input type="number" step="0.01" min="0" max="1" value="${p.fundingRate}" data-idx="${idx}" data-field="fundingRate" /></label>
-          </div>
-          <div><strong>WP Person-Months</strong></div>
-          <div class="wp-grid">
-            ${wps.map((wpName, i) => `
-              <label>${wpName}<input type="number" step="0.1" value="${p.wp[i] ?? 0}" data-idx="${idx}" data-wp="${i}" /></label>
-            `).join('')}
-          </div>
-          <div class="cost-row">
-            <label>Other Cost (€)<input type="number" step="0.01" value="${p.otherCost}" data-idx="${idx}" data-field="otherCost" /></label>
-            <label>Subcontracting (€)<input type="number" step="0.01" value="${p.subcontracting}" data-idx="${idx}" data-field="subcontracting" /></label>
-          </div>
-          <div class="computed">
-            <div><span class="lbl">Total PM</span><span class="val">${fmtNum(c.totalPM)}</span></div>
-            <div><span class="lbl">Persons/year</span><span class="val">${fmtNum(c.personsYear)}</span></div>
-            <div><span class="lbl">PM Cost</span><span class="val">€${fmtMoney(c.pmCost)}</span></div>
-            <div><span class="lbl">Total Direct</span><span class="val">€${fmtMoney(c.tdc)}</span></div>
-            <div><span class="lbl">Indirect (25%)</span><span class="val">€${fmtMoney(c.indirect)}</span></div>
-            <div><span class="lbl">Total Budget</span><span class="val">€${fmtMoney(c.totalBudget)}</span></div>
-            <div><span class="lbl">Total Funding</span><span class="val" style="color:var(--success)">€${fmtMoney(c.totalFunding)}</span></div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      attachListeners();
-      renderTables();
-      renderGrandTotals();
-    }
-
-    function attachListeners() {
-      document.querySelectorAll('#partnersContainer input, #partnersContainer select').forEach(el => {
-        el.addEventListener('input', e => {
-          const idx = +e.target.dataset.idx;
-          if (e.target.dataset.field !== undefined) {
-            const field = e.target.dataset.field;
-            let val = e.target.value;
-            if (['rate','fundingRate','otherCost','subcontracting'].includes(field)) val = parseFloat(val) || 0;
-            partners[idx][field] = val;
-          } else if (e.target.dataset.wp !== undefined) {
-            const wpIdx = +e.target.dataset.wp;
-            partners[idx].wp[wpIdx] = parseFloat(e.target.value) || 0;
-          }
-          render();
-        });
-      });
-      document.querySelectorAll('.remove').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const idx = +e.target.dataset.idx;
-          partners.splice(idx, 1);
-          render();
-        });
-      });
-    }
-
-    function renderTables() {
-      // Build PM table header dynamically
-      const pmHeadRow = document.querySelector('#pmTable thead tr');
-      pmHeadRow.innerHTML = `
-        <th>#</th>
-        <th>Partner</th>
-        ${wps.map(n => `<th>${n}</th>`).join('')}
-        <th>Total PM</th>
-        <th>Persons/year</th>
-      `;
-
-      const pmBody = document.querySelector('#pmTable tbody');
-      let grandWP = new Array(wps.length).fill(0);
-      let grandTotalPM = 0, grandPersons = 0;
-      pmBody.innerHTML = '';
-      partners.forEach((p, i) => {
-        const c = calcPartner(p);
-        p.wp.forEach((v, j) => { grandWP[j] += Number(v); });
-        grandTotalPM += c.totalPM;
-        grandPersons += c.personsYear;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${i+1}</td>
-          <td>${p.name}</td>
-          ${p.wp.map(v => `<td>${fmtNum(v)}</td>`).join('')}
-          <td><strong>${fmtNum(c.totalPM)}</strong></td>
-          <td>${fmtNum(c.personsYear)}</td>
-        `;
-        pmBody.appendChild(tr);
-      });
-      const pmTot = document.createElement('tr'); pmTot.className = 'totals-row';
-      pmTot.innerHTML = `
-        <td></td><td>TOTAL</td>
-        ${grandWP.map(v => `<td>${fmtNum(v)}</td>`).join('')}
-        <td>${fmtNum(grandTotalPM)}</td>
-        <td>${fmtNum(grandPersons)}</td>
-      `;
-      pmBody.appendChild(pmTot);
-
-      // Budget table
-      const budBody = document.querySelector('#budgetTable tbody');
-      let gPmCost=0, gOther=0, gSub=0, gTdc=0, gInd=0, gBudget=0, gFund=0, gPM=0;
-      budBody.innerHTML = '';
-      partners.forEach((p, i) => {
-        const c = calcPartner(p);
-        gPmCost += c.pmCost; gOther += c.other; gSub += c.sub; gTdc += c.tdc;
-        gInd += c.indirect; gBudget += c.totalBudget; gFund += c.totalFunding; gPM += c.totalPM;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${i+1}</td>
-          <td>${p.name}</td>
-          <td>€${fmtMoney(c.pmCost)}</td>
-          <td>€${fmtMoney(c.other)}</td>
-          <td>€${fmtMoney(c.sub)}</td>
-          <td>€${fmtMoney(c.tdc)}</td>
-          <td>€${fmtMoney(c.indirect)}</td>
-          <td>€${fmtMoney(c.totalBudget)}</td>
-          <td>${c.fundingRate}</td>
-          <td>€${fmtMoney(c.totalFunding)}</td>
-          <td>${fmtNum(c.totalPM)}</td>
-          <td>${p.type}</td>
-        `;
-        budBody.appendChild(tr);
-      });
-      const budTot = document.createElement('tr'); budTot.className = 'totals-row';
-      budTot.innerHTML = `
-        <td></td><td>TOTAL</td>
-        <td>€${fmtMoney(gPmCost)}</td>
-        <td>€${fmtMoney(gOther)}</td>
-        <td>€${fmtMoney(gSub)}</td>
-        <td>€${fmtMoney(gTdc)}</td>
-        <td>€${fmtMoney(gInd)}</td>
-        <td>€${fmtMoney(gBudget)}</td>
-        <td></td>
-        <td>€${fmtMoney(gFund)}</td>
-        <td>${fmtNum(gPM)}</td>
-        <td></td>
-      `;
-      budBody.appendChild(budTot);
-    }
-
-    function renderGrandTotals() {
-      let gPmCost=0, gOther=0, gSub=0, gTdc=0, gInd=0, gBudget=0, gFund=0, gPM=0;
-      partners.forEach(p => {
-        const c = calcPartner(p);
-        gPmCost += c.pmCost; gOther += c.other; gSub += c.sub; gTdc += c.tdc;
-        gInd += c.indirect; gBudget += c.totalBudget; gFund += c.totalFunding; gPM += c.totalPM;
-      });
-      const map = [
-        {l:'Total PM', v: fmtNum(gPM)},
-        {l:'PM Cost', v: '€'+fmtMoney(gPmCost)},
-        {l:'Other Cost', v: '€'+fmtMoney(gOther)},
-        {l:'Subcontracting', v: '€'+fmtMoney(gSub)},
-        {l:'Total Direct Cost', v: '€'+fmtMoney(gTdc)},
-        {l:'Total Indirect Cost', v: '€'+fmtMoney(gInd)},
-        {l:'Total Budget', v: '€'+fmtMoney(gBudget)},
-        {l:'Total Funding', v: '€'+fmtMoney(gFund)},
-      ];
-      document.getElementById('grandTotals').innerHTML = map.map(x => `
-        <div class="gt-box"><div class="label">${x.l}</div><div class="value">${x.v}</div></div>
-      `).join('');
-    }
-
-    document.getElementById('addPartnerBtn').addEventListener('click', () => {
-      partners.push({
-        name: "New Partner", pic: "", rate: 0, type: "university", country: "", fundingRate: 1,
-        wp: new Array(wps.length).fill(0), otherCost: 0, subcontracting: 0
-      });
-      render();
-    });
-
-    document.getElementById('removePartnerBtn').addEventListener('click', () => {
-      if (partners.length > 1) {
-        partners.pop();
-        render();
-      } else {
-        alert("At least one partner must remain.");
-      }
-    });
-
-    document.getElementById('addWPBtn').addEventListener('click', () => {
-      const next = wps.length + 1;
-      wps.push(`WP${next}`);
-      partners.forEach(p => p.wp.push(0));
-      render();
-    });
-
-    document.getElementById('removeWPBtn').addEventListener('click', () => {
-      if (wps.length > 1) {
-        wps.pop();
-        partners.forEach(p => p.wp.pop());
-        render();
-      } else {
-        alert("At least one work package must remain.");
-      }
-    });
-
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify({ wps, partners }, null, 2)], {type: 'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'Alloc8_Budget.json'; a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('importFile').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          const data = JSON.parse(ev.target.result);
-          if (Array.isArray(data)) {
-            partners = data;
-            render();
-          } else if (data.partners && Array.isArray(data.partners)) {
-            partners = data.partners;
-            if (Array.isArray(data.wps)) wps = data.wps;
-            render();
-          } else {
-            alert("Invalid JSON format.");
-          }
-        } catch (err) {
-          alert("Failed to parse JSON.");
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    });
-
-    render();
-  </script>
 </body>
 </html>

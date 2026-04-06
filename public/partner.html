@@ -222,7 +222,7 @@
   <header>
     <h1>Alloc8 — Partner</h1>
     <div style="display:flex;gap:.5rem;">
-      <button class="btn btn-primary" onclick="location.href='partner-main.html'">Dashboard</button>
+      <button class="btn btn-primary" onclick="location.href='/partner-main'">Dashboard</button>
       <button class="btn btn-danger" id="logoutBtn">Log out</button>
     </div>
   </header>
@@ -486,7 +486,7 @@
           clearInterval(progressInterval);
           hideLoading();
           // Redirect to dashboard to see updated skills
-          window.location.href = 'partner-main.html';
+          window.location.href = '/partner-main';
         }
       }, 3000);
     }
@@ -504,7 +504,7 @@
         fetch('/api/partner/data'),
         fetch('/api/settings')
       ]);
-      if (!dataRes.ok) return window.location.href = '/login.html';
+      if (!dataRes.ok) return window.location.href = '/login';
       
       // Load settings
       if (settingsRes.ok) {
@@ -1161,7 +1161,7 @@
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/logout', { method: 'POST' });
-      window.location.href = '/login.html';
+      window.location.href = '/login';
     });
 
     load();

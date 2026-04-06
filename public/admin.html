@@ -633,7 +633,7 @@
         fetch('/api/admin/partners'),
         fetch('/api/admin/settings')
       ]);
-      if (!partnersRes.ok) return window.location.href = '/login.html';
+      if (!partnersRes.ok) return window.location.href = '/login';
       const data = await partnersRes.json();
       partners = data.partners;
       wps = data.wps;
@@ -2107,7 +2107,7 @@
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/logout', { method: 'POST' });
-      window.location.href = '/login.html';
+      window.location.href = '/login';
     });
 
     document.getElementById('exportBtn').addEventListener('click', async () => {

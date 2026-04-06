@@ -68,7 +68,16 @@ app.use(session({
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 60 * 8 }
 }));
-app.use(express.static(path.join(__dirname, 'public')));
+// Redirect legacy .html URLs to clean URLs
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html')) {
+    const clean = req.path.slice(0, -5) || '/';
+    return res.redirect(301, clean);
+  }
+  next();
+});
+
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 function requireAuth(role) {
   return (req, res, next) => {
@@ -462,7 +471,7 @@ app.post('/api/signup', async (req, res) => {
 app.get('/api/approve-user/:token', async (req, res) => {
   const user = db.prepare("SELECT * FROM users WHERE approval_token = ?").get(req.params.token);
   if (!user) {
-    return res.send(`<html><body style="font-family:sans-serif;text-align:center;padding:3rem"><h2 style="color:#cf222e">Invalid or already used link.</h2><a href="/login.html">Go to Login</a></body></html>`);
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;padding:3rem"><h2 style="color:#cf222e">Invalid or already used link.</h2><a href="/login">Go to Login</a></body></html>`);
   }
   db.prepare("UPDATE users SET status='approved', approval_token=NULL WHERE id=?").run(user.id);
 
@@ -482,7 +491,7 @@ app.get('/api/approve-user/:token', async (req, res) => {
             <p style="margin:0 0 1rem;color:#24292f">Hi <strong>${user.username}</strong>,</p>
             <p style="margin:0 0 1.5rem;color:#24292f">Your account has been approved. You can now log in and start managing your project budget.</p>
             <div style="text-align:center">
-              <a href="${BASE_URL}/login.html" style="display:inline-block;padding:.7rem 2rem;background:#1f4e79;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:1rem">Log in to Alloc8</a>
+              <a href="${BASE_URL}/login" style="display:inline-block;padding:.7rem 2rem;background:#1f4e79;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:1rem">Log in to Alloc8</a>
             </div>
             <p style="margin:1.5rem 0 0;font-size:.8rem;color:#57606a;text-align:center">© 2026 Alloc8 — Intelligent Resource Allocation</p>
           </div>
@@ -502,7 +511,7 @@ app.get('/api/approve-user/:token', async (req, res) => {
     <body><div class="card">
       <h2>Account Approved</h2>
       <p><strong>${user.username}</strong> has been approved and notified by email.</p>
-      <a href="/login.html">Back to Login</a>
+      <a href="/login">Back to Login</a>
     </div></body>
     </html>
   `);
@@ -512,7 +521,7 @@ app.get('/api/approve-user/:token', async (req, res) => {
 app.get('/api/deny-user/:token', async (req, res) => {
   const user = db.prepare("SELECT * FROM users WHERE approval_token = ?").get(req.params.token);
   if (!user) {
-    return res.send(`<html><body style="font-family:sans-serif;text-align:center;padding:3rem"><h2 style="color:#cf222e">Invalid or already used link.</h2><a href="/login.html">Go to Login</a></body></html>`);
+    return res.send(`<html><body style="font-family:sans-serif;text-align:center;padding:3rem"><h2 style="color:#cf222e">Invalid or already used link.</h2><a href="/login">Go to Login</a></body></html>`);
   }
   // Delete user and tenant (cascade handles memberships/partners)
   const tenantId = db.prepare("SELECT id FROM tenants WHERE owner_id=?").get(user.id)?.id;
@@ -547,7 +556,7 @@ app.get('/api/deny-user/:token', async (req, res) => {
     <body><div class="card">
       <h2>Account Denied</h2>
       <p>The account for <strong>${user.username}</strong> has been removed and the user notified.</p>
-      <a href="/login.html">Back to Login</a>
+      <a href="/login">Back to Login</a>
     </div></body>
     </html>
   `);
@@ -1303,7 +1312,7 @@ app.post('/api/admin/partners/:id/send-invitation', requireAuth('admin'), async 
     const adminUser = db.prepare("SELECT username, email FROM users WHERE id = ?").get(req.session.userId);
     const senderName = adminUser?.username || 'Admin';
     
-    const loginUrl = `${req.protocol}://${req.get('host')}/login.html`;
+    const loginUrl = `${req.protocol}://${req.get('host')}/login`;
     const emailSubject = `You've been invited to ${partner.name}'s Budget Project`;
     
     // HTML email template
@@ -1652,10 +1661,7 @@ app.get('/api/admin/export-excel', requireAuth('admin'), (req, res) => {
   }
 });
 
-// Redirect root
-app.get('/', (req, res) => {
-  res.redirect('/login.html');
-});
+// Root served by static middleware (index.html = public landing page)
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -106,10 +106,10 @@
 
     async function init() {
       const res = await fetch('/api/me');
-      if (!res.ok) return window.location.href = '/login.html';
+      if (!res.ok) return window.location.href = '/login';
       const me = await res.json();
       if (!me.loggedIn || me.role !== 'admin' || me.username !== 'admin') {
-        window.location.href = me.role === 'admin' ? '/admin.html' : '/login.html';
+        window.location.href = me.role === 'admin' ? '/admin' : '/login';
         return;
       }
       await loadAll();
@@ -414,7 +414,7 @@
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/logout', { method: 'POST' });
-      window.location.href = '/login.html';
+      window.location.href = '/login';
     });
 
     init();

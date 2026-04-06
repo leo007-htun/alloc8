@@ -78,10 +78,10 @@
     <!--div class="hint">Default admin: <strong>admin / admin</strong><br>Default partner username is partner name lowercase without spaces.</div-->
     <div class="signup-section">
       <p>Don't have an account?</p>
-      <button class="btn btn-secondary" onclick="window.location.href='/signup.html'">Create New Project</button>
+      <button class="btn btn-secondary" onclick="window.location.href='/signup'">Create New Project</button>
     </div>
     <div style="text-align:center;margin-top:1rem;">
-      <a href="/demo.html" style="font-size:.82rem;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:.35rem;opacity:.8;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">
+      <a href="/demo" style="font-size:.82rem;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:.35rem;opacity:.8;transition:opacity .15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">
         ▶ Watch product demo
       </a>
     </div>
@@ -102,9 +102,9 @@
       if (res.ok) {
         const data = await res.json();
         if (data.role === 'admin') {
-          window.location.href = data.username === 'admin' ? '/primary-admin.html' : '/admin.html';
+          window.location.href = data.username === 'admin' ? '/primary-admin' : '/admin';
         } else {
-          window.location.href = '/partner-main.html';
+          window.location.href = '/partner-main';
         }
       } else {
         const data = await res.json().catch(() => ({}));
