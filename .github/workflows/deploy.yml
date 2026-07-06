@@ -71,7 +71,7 @@ jobs:
               -e SESSION_SECRET="${{ secrets.SESSION_SECRET }}" \
               -e RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
               -e FROM_EMAIL="${{ secrets.FROM_EMAIL }}" \
-              -e BYTEZ_API_KEY="${{ secrets.BYTEZ_API_KEY }}" \
+              -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
               alloc8-app:latest
 
             # SSL cert (first time only)
