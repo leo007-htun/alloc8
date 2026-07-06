@@ -6,16 +6,36 @@ const multer = require('multer');
 const fs = require('fs');
 const { Resend } = require('resend');
 const { db, hash, getPartnerUrls, getSetting, setSetting, getScrapedContent, getPartnerAIAnalysis } = require('./database');
-const Bytez = require('bytez.js');
-const bytezSdk = new Bytez('c83895ef7c4ccca7c35e864c70115b8d');
 
 // Import scraper and analyzer modules
 const { scrapePartner, scrapeAllPartners } = require('./scraper/simple-scraper');
 const { queueAnalysis, analyzePartner, getPartnerAnalysis, isPartnerAnalyzing } = require('./analyzer');
 
 // Resend email configuration
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_GKPT2uXk_3nyTBW298JjSykpTUB5g6b3b';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const resend = new Resend(RESEND_API_KEY);
+
+// OpenAI configuration (used for the partner/WP relevance scoring below)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+async function runOpenAI(messages) {
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { error: data.error?.message || `OpenAI API error (${res.status})` };
+    }
+    return { output: data.choices?.[0]?.message?.content || '' };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
 
 // Default from email (must be verified domain with Resend)
 // For testing, you can use 'onboarding@resend.dev' or your own verified domain
@@ -284,10 +304,9 @@ Reply with ONLY Work Package ID and score on separate lines like:
 2:4.5
 No other text.`;
 
-    const model = bytezSdk.model("Qwen/Qwen3-0.6B");
     let inserted = 0;
     for (let attempt = 1; attempt <= 3; attempt++) {
-      const result = await model.run([{ role: "user", content: prompt }]);
+      const result = await runOpenAI([{ role: "user", content: prompt }]);
       if (result.error) {
         if (attempt === 3) throw new Error(result.error.message || JSON.stringify(result.error));
         await new Promise(r => setTimeout(r, 3000));

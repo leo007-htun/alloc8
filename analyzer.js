@@ -341,7 +341,7 @@ async function performAnalysis(job) {
     throw new Error('Invalid analysis type');
   }
   
-  // Call Bytez API
+  // Call OpenAI API
   console.log(`Analyzing ${type} for partner ${partnerId}...`);
   console.log('Prompt length:', prompt.length);
   
@@ -351,17 +351,17 @@ async function performAnalysis(job) {
       { role: 'user', content: prompt }
     ]);
     error = result.error;
-    // Bytez returns an object with role and content, extract the content
+    // Normalize output shape (string, or object with a content field)
     output = typeof result.output === 'object' ? result.output?.content : result.output;
   } catch (apiError) {
-    console.error('Bytez API error:', apiError.message);
-    throw new Error(`Bytez API error: ${apiError.message}`);
+    console.error('OpenAI API error:', apiError.message);
+    throw new Error(`OpenAI API error: ${apiError.message}`);
   }
   
   if (error) {
     throw new Error(`AI API error: ${error}`);
   }
-  console.log('Bytez API response received, output type:', typeof output, 'length:', output?.length || 0);
+  console.log('OpenAI API response received, output type:', typeof output, 'length:', output?.length || 0);
   
   // Parse JSON from response
   const analysisText = output || '';
@@ -566,7 +566,7 @@ async function analyzeWorkPackage(partnerId, tenantId, wp, urlData) {
     project_description: projectDescription
   });
   
-  console.log(`Calling Bytez API for WP ${wp.id}...`);
+  console.log(`Calling OpenAI API for WP ${wp.id}...`);
   const result = await model.run([{ role: 'user', content: prompt }]);
   
   if (result.error) {
@@ -616,7 +616,7 @@ async function analyzeSkills(partnerId, tenantId, urlData) {
     project_description: projectDescription
   });
   
-  console.log('Calling Bytez API for skill extraction...');
+  console.log('Calling OpenAI API for skill extraction...');
   const result = await model.run([{ role: 'user', content: prompt }]);
   
   if (result.error) {
