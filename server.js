@@ -19,7 +19,7 @@ const resend = new Resend(RESEND_API_KEY);
 
 // Default from email (must be verified domain with Resend)
 // For testing, you can use 'onboarding@resend.dev' or your own verified domain
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@alloc8.org';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@alloc8.vulkron.uk';
 
 console.log('Resend email client configured');
 
@@ -432,7 +432,7 @@ app.post('/api/signup', async (req, res) => {
     );
 
     // Send approval request email to admin
-    const BASE_URL = process.env.BASE_URL || 'https://alloc8.org';
+    const BASE_URL = process.env.BASE_URL || 'https://alloc8.vulkron.uk';
     const approveUrl = `${BASE_URL}/api/approve-user/${approvalToken}`;
     const denyUrl    = `${BASE_URL}/api/deny-user/${approvalToken}`;
     try {
@@ -486,7 +486,7 @@ app.get('/api/approve-user/:token', async (req, res) => {
 
   // Notify the new user by email
   try {
-    const BASE_URL = process.env.BASE_URL || 'https://alloc8.org';
+    const BASE_URL = process.env.BASE_URL || 'https://alloc8.vulkron.uk';
     await resend.emails.send({
       from: `Alloc8 <${FROM_EMAIL}>`,
       to: user.email,
@@ -1668,6 +1668,12 @@ app.get('/api/admin/export-excel', requireAuth('admin'), (req, res) => {
     console.error('Excel export error:', err);
     res.status(500).json({ error: 'Failed to generate Excel: ' + err.message });
   }
+});
+
+// Serve sitemap
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Content-Type', 'application/xml');
+  res.sendFile(path.join(__dirname, 'sitemap.xml'));
 });
 
 // Serve marketing homepage at root
