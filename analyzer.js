@@ -1,16 +1,37 @@
 /**
  * Partner Skill Analysis Module
- * Uses Bytez API with Qwen3-0.6B to analyze partner capabilities
+ * Uses OpenAI (gpt-4o-mini) to analyze partner capabilities
  * against assigned Work Packages and Tasks.
  */
 
-const Bytez = require('bytez.js');
 const { db, getSetting } = require('./database');
 
-// Bytez SDK configuration
-const BYTEZ_API_KEY = process.env.BYTEZ_API_KEY || 'c83895ef7c4ccca7c35e864c70115b8d';
-const sdk = new Bytez(BYTEZ_API_KEY);
-const model = sdk.model('Qwen/Qwen3-0.6B');
+// OpenAI configuration
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_MODEL = 'gpt-4o-mini';
+
+// Mirrors the {error, output} shape the rest of this file expects
+async function runModel(messages) {
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ model: OPENAI_MODEL, messages })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { error: data.error?.message || `OpenAI API error (${res.status})` };
+    }
+    return { output: data.choices?.[0]?.message?.content || '' };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+const model = { run: (messages) => runModel(messages) };
 
 // Analysis queue for sequential processing
 const analysisQueue = [];
@@ -367,7 +388,7 @@ async function performAnalysis(job) {
     content: analysisText,
     skills: JSON.stringify(analysisData),
     confidence: analysisData.confidence || analysisData.suitability_score || 0.5,
-    model: 'Qwen/Qwen3-0.6B',
+    model: OPENAI_MODEL,
     tenantId
   };
   
@@ -577,7 +598,7 @@ async function analyzeWorkPackage(partnerId, tenantId, wp, urlData) {
     content: output,
     skills: JSON.stringify(analysisData),
     confidence: analysisData.confidence || 0.5,
-    model: 'Qwen/Qwen3-0.6B',
+    model: OPENAI_MODEL,
     tenantId
   });
   
@@ -627,7 +648,7 @@ async function analyzeSkills(partnerId, tenantId, urlData) {
     content: output,
     skills: JSON.stringify(analysisData),
     confidence: 0.5,
-    model: 'Qwen/Qwen3-0.6B',
+    model: OPENAI_MODEL,
     tenantId
   });
   

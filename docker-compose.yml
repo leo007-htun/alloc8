@@ -18,8 +18,8 @@ services:
       # Email configuration - set in .env, no default (do not hardcode real keys here)
       - RESEND_API_KEY=${RESEND_API_KEY}
       - FROM_EMAIL=${FROM_EMAIL:-noreply@alloc8.vulkron.uk}
-      # Bytez AI API - set in .env
-      - BYTEZ_API_KEY=${BYTEZ_API_KEY}
+      # AI analysis (OpenAI) - set in .env
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       # Session secret - set in .env, no default (do not hardcode real secrets here)
       - SESSION_SECRET=${SESSION_SECRET}
     restart: unless-stopped

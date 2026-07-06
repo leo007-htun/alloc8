@@ -40,8 +40,8 @@ Create a `.env` file in the project root:
 RESEND_API_KEY=your_resend_api_key
 FROM_EMAIL=noreply@yourdomain.com
 
-# AI Analysis (Bytez)
-BYTEZ_API_KEY=your_bytez_api_key
+# AI Analysis (OpenAI)
+OPENAI_API_KEY=your_openai_api_key
 
 # Session Secret (generate a random string)
 SESSION_SECRET=your-random-secret-key
