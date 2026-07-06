@@ -15,11 +15,11 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - DB_PATH=/app/data/data.sqlite
-      # Email configuration (optional - can be set in .env)
-      - RESEND_API_KEY=${RESEND_API_KEY:-re_GKPT2uXk_3nyTBW298JjSykpTUB5g6b3b}
-      - FROM_EMAIL=${FROM_EMAIL:-noreply@alloc8.org}
-      # Bytez AI API (optional)
-      - BYTEZ_API_KEY=${BYTEZ_API_KEY:-c83895ef7c4ccca7c35e864c70115b8d}
-      # Session secret (generate a random string for production)
-      - SESSION_SECRET=${SESSION_SECRET:-alloc8-default-secret-change-in-production}
+      # Email configuration - set in .env, no default (do not hardcode real keys here)
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL:-noreply@alloc8.vulkron.uk}
+      # Bytez AI API - set in .env
+      - BYTEZ_API_KEY=${BYTEZ_API_KEY}
+      # Session secret - set in .env, no default (do not hardcode real secrets here)
+      - SESSION_SECRET=${SESSION_SECRET}
     restart: unless-stopped
